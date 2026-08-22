@@ -1,0 +1,2587 @@
+{
+  "annotations": {
+    "wallet|680a9ce23b2296d86127109c|2026-07-27": {
+      "targetType": "wallet",
+      "targetId": "680a9ce23b2296d86127109c",
+      "referenceDate": "2026-07-27",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "Verificando XML",
+      "author": "efigueira",
+      "updatedAt": "2026-07-30T14:28:02"
+    },
+    "wallet|68c963dc93b1ff687e71a294|2026-07-27": {
+      "targetType": "wallet",
+      "targetId": "68c963dc93b1ff687e71a294",
+      "referenceDate": "2026-07-27",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "Verificando XML",
+      "author": "efigueira",
+      "updatedAt": "2026-07-30T14:28:02"
+    },
+    "wallet|69e675ba86e64d52561ac5d2|2026-07-27": {
+      "targetType": "wallet",
+      "targetId": "69e675ba86e64d52561ac5d2",
+      "referenceDate": "2026-07-27",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Verificando",
+      "author": "efigueira",
+      "updatedAt": "2026-07-30T14:28:02"
+    },
+    "wallet|680a9ce23b2296d86127106a|2026-07-27": {
+      "targetType": "wallet",
+      "targetId": "680a9ce23b2296d86127106a",
+      "referenceDate": "2026-07-27",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "Verificando XML",
+      "author": "efigueira",
+      "updatedAt": "2026-07-30T15:14:25"
+    },
+    "wallet|68fff65647170dafb2f8fe37|2026-07-27": {
+      "targetType": "wallet",
+      "targetId": "68fff65647170dafb2f8fe37",
+      "referenceDate": "2026-07-27",
+      "responsavel": "Yuri",
+      "comentarioAtuacao": "Verificando com o Renan",
+      "author": "efigueira",
+      "updatedAt": "2026-07-30T18:21:28"
+    },
+    "wallet|680a9cdd3b2296d861270ce1|2026-07-28": {
+      "targetType": "wallet",
+      "targetId": "680a9cdd3b2296d861270ce1",
+      "referenceDate": "2026-07-28",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T11:36:55"
+    },
+    "wallet|680aa45c72f927b92d97bd9a|2026-07-28": {
+      "targetType": "wallet",
+      "targetId": "680aa45c72f927b92d97bd9a",
+      "referenceDate": "2026-07-28",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T11:36:55"
+    },
+    "wallet|69e6758486e64d52561ac554|2026-07-28": {
+      "targetType": "wallet",
+      "targetId": "69e6758486e64d52561ac554",
+      "referenceDate": "2026-07-28",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T11:36:55"
+    },
+    "wallet|680aa45c72f927b92d97bdb6|2026-07-28": {
+      "targetType": "wallet",
+      "targetId": "680aa45c72f927b92d97bdb6",
+      "referenceDate": "2026-07-28",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Baixa diferença",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T11:36:55"
+    },
+    "wallet|680a9ce93b2296d8612715c9|2026-07-28": {
+      "targetType": "wallet",
+      "targetId": "680a9ce93b2296d8612715c9",
+      "referenceDate": "2026-07-28",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Problemas Rentabilidade - Oikos - 28-07-2026",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T11:36:55"
+    },
+    "wallet|68643c303111a24e3f7ef856|2026-07-28": {
+      "targetType": "wallet",
+      "targetId": "68643c303111a24e3f7ef856",
+      "referenceDate": "2026-07-28",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Problemas Rentabilidade - Oikos - 28-07-2026",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T11:36:55"
+    },
+    "wallet|68643e0f3111a24e3f7ef917|2026-07-28": {
+      "targetType": "wallet",
+      "targetId": "68643e0f3111a24e3f7ef917",
+      "referenceDate": "2026-07-28",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Problemas Rentabilidade - Oikos - 28-07-2026",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T11:36:55"
+    },
+    "wallet|680a9ce23b2296d86127106a|2026-07-28": {
+      "targetType": "wallet",
+      "targetId": "680a9ce23b2296d86127106a",
+      "referenceDate": "2026-07-28",
+      "responsavel": "Yuri",
+      "comentarioAtuacao": "Problemas Rentabilidade - Oikos - 28-07",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T14:08:11"
+    },
+    "wallet|680a9ce83b2296d86127149d|2026-07-28": {
+      "targetType": "wallet",
+      "targetId": "680a9ce83b2296d86127149d",
+      "referenceDate": "2026-07-28",
+      "responsavel": "Yuri",
+      "comentarioAtuacao": "Problemas Rentabilidade - Oikos - 28-07",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T14:08:11"
+    },
+    "wallet|680a9cdd3b2296d861270cd2|2026-07-28": {
+      "targetType": "wallet",
+      "targetId": "680a9cdd3b2296d861270cd2",
+      "referenceDate": "2026-07-28",
+      "responsavel": "Yuri",
+      "comentarioAtuacao": "Problemas Rentabilidade - Oikos - 28-07",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T14:08:11"
+    },
+    "wallet|680a9ce43b2296d8612711fc|2026-07-28": {
+      "targetType": "wallet",
+      "targetId": "680a9ce43b2296d8612711fc",
+      "referenceDate": "2026-07-28",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Baixa diferença",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T11:36:55"
+    },
+    "wallet|680a9cdf3b2296d861270e90|2026-07-28": {
+      "targetType": "wallet",
+      "targetId": "680a9cdf3b2296d861270e90",
+      "referenceDate": "2026-07-28",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Publicada",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T14:08:11"
+    },
+    "wallet|680a9ce93b2296d861271617|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "680a9ce93b2296d861271617",
+      "referenceDate": "2026-07-29",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T17:48:02"
+    },
+    "wallet|680a9ce93b2296d86127161e|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "680a9ce93b2296d86127161e",
+      "referenceDate": "2026-07-29",
+      "responsavel": "Todos",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T14:06:02"
+    },
+    "wallet|680a9cea3b2296d86127164a|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "680a9cea3b2296d86127164a",
+      "referenceDate": "2026-07-29",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T17:48:02"
+    },
+    "wallet|680a9cea3b2296d86127163a|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "680a9cea3b2296d86127163a",
+      "referenceDate": "2026-07-29",
+      "responsavel": "",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T09:10:32"
+    },
+    "wallet|680a9ce23b2296d86127109c|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "680a9ce23b2296d86127109c",
+      "referenceDate": "2026-07-29",
+      "responsavel": "Todos",
+      "comentarioAtuacao": "Lançamentos de Futuros",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T14:06:02"
+    },
+    "wallet|680a9ce23b2296d86127106a|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "680a9ce23b2296d86127106a",
+      "referenceDate": "2026-07-29",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T17:48:02"
+    },
+    "wallet|680a9ce43b2296d8612711f5|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "680a9ce43b2296d8612711f5",
+      "referenceDate": "2026-07-29",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T17:48:02"
+    },
+    "wallet|68c963dc93b1ff687e71a294|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "68c963dc93b1ff687e71a294",
+      "referenceDate": "2026-07-29",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T17:48:02"
+    },
+    "wallet|680a9ce33b2296d86127117c|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "680a9ce33b2296d86127117c",
+      "referenceDate": "2026-07-29",
+      "responsavel": "",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T09:10:32"
+    },
+    "wallet|682783bfbff73f3c321e6029|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "682783bfbff73f3c321e6029",
+      "referenceDate": "2026-07-29",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T17:48:02"
+    },
+    "wallet|680a9ce73b2296d861271446|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "680a9ce73b2296d861271446",
+      "referenceDate": "2026-07-29",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T17:48:02"
+    },
+    "wallet|68fff6c847170dafb2f8ff99|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "68fff6c847170dafb2f8ff99",
+      "referenceDate": "2026-07-29",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T17:48:02"
+    },
+    "wallet|680a9cea3b2296d861271659|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "680a9cea3b2296d861271659",
+      "referenceDate": "2026-07-29",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T17:48:02"
+    },
+    "wallet|680aa45e72f927b92d97bf5a|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "680aa45e72f927b92d97bf5a",
+      "referenceDate": "2026-07-29",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T17:48:02"
+    },
+    "wallet|6a22e6c0666abaefd3c7c63f|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "6a22e6c0666abaefd3c7c63f",
+      "referenceDate": "2026-07-29",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T17:48:02"
+    },
+    "wallet|6827825bbff73f3c321e5fb5|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "6827825bbff73f3c321e5fb5",
+      "referenceDate": "2026-07-29",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T17:48:02"
+    },
+    "wallet|680a9cea3b2296d86127162c|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "680a9cea3b2296d86127162c",
+      "referenceDate": "2026-07-29",
+      "responsavel": "",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T09:10:32"
+    },
+    "wallet|680a9ce03b2296d861270eae|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "680a9ce03b2296d861270eae",
+      "referenceDate": "2026-07-29",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "Cobrando Carga no grupo",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T15:20:20"
+    },
+    "wallet|680aa45d72f927b92d97be88|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "680aa45d72f927b92d97be88",
+      "referenceDate": "2026-07-29",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "Cobrando Carga no grupo",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T15:20:20"
+    },
+    "wallet|680a9cdd3b2296d861270d0b|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "680a9cdd3b2296d861270d0b",
+      "referenceDate": "2026-07-29",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "Cobrando Carga no grupo",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T15:20:20"
+    },
+    "wallet|680aa45c72f927b92d97bdcb|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "680aa45c72f927b92d97bdcb",
+      "referenceDate": "2026-07-29",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "Cobrando Carga no grupo",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T15:20:20"
+    },
+    "wallet|680a9cea3b2296d861271676|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "680a9cea3b2296d861271676",
+      "referenceDate": "2026-07-29",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-03T17:48:02"
+    },
+    "wallet|680a9ce73b2296d861271488|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "680a9ce73b2296d861271488",
+      "referenceDate": "2026-07-29",
+      "responsavel": "Todos",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T14:06:02"
+    },
+    "wallet|680a9ce83b2296d86127149d|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "680a9ce83b2296d86127149d",
+      "referenceDate": "2026-07-29",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T14:06:02"
+    },
+    "wallet|680a9ce43b2296d8612711fc|2026-07-29": {
+      "targetType": "wallet",
+      "targetId": "680a9ce43b2296d8612711fc",
+      "referenceDate": "2026-07-29",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T14:06:02"
+    },
+    "wallet|680a9ce93b2296d861271617|2026-07-30": {
+      "targetType": "wallet",
+      "targetId": "680a9ce93b2296d861271617",
+      "referenceDate": "2026-07-30",
+      "responsavel": "",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T17:49:33"
+    },
+    "wallet|680a9ce93b2296d86127161e|2026-07-30": {
+      "targetType": "wallet",
+      "targetId": "680a9ce93b2296d86127161e",
+      "referenceDate": "2026-07-30",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "OK",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T20:13:21"
+    },
+    "wallet|680a9cea3b2296d86127163a|2026-07-30": {
+      "targetType": "wallet",
+      "targetId": "680a9cea3b2296d86127163a",
+      "referenceDate": "2026-07-30",
+      "responsavel": "",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T17:14:30"
+    },
+    "wallet|680a9ce33b2296d86127117c|2026-07-30": {
+      "targetType": "wallet",
+      "targetId": "680a9ce33b2296d86127117c",
+      "referenceDate": "2026-07-30",
+      "responsavel": "",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T17:14:30"
+    },
+    "wallet|682783bfbff73f3c321e6029|2026-07-30": {
+      "targetType": "wallet",
+      "targetId": "682783bfbff73f3c321e6029",
+      "referenceDate": "2026-07-30",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T14:09:02"
+    },
+    "wallet|680a9ce43b2296d8612711ee|2026-07-30": {
+      "targetType": "wallet",
+      "targetId": "680a9ce43b2296d8612711ee",
+      "referenceDate": "2026-07-30",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T14:09:02"
+    },
+    "wallet|680a9ce73b2296d861271446|2026-07-30": {
+      "targetType": "wallet",
+      "targetId": "680a9ce73b2296d861271446",
+      "referenceDate": "2026-07-30",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T14:09:02"
+    },
+    "wallet|68fff6c847170dafb2f8ff99|2026-07-30": {
+      "targetType": "wallet",
+      "targetId": "68fff6c847170dafb2f8ff99",
+      "referenceDate": "2026-07-30",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T14:09:02"
+    },
+    "wallet|680a9cea3b2296d861271659|2026-07-30": {
+      "targetType": "wallet",
+      "targetId": "680a9cea3b2296d861271659",
+      "referenceDate": "2026-07-30",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T14:09:02"
+    },
+    "wallet|680aa45e72f927b92d97bf5a|2026-07-30": {
+      "targetType": "wallet",
+      "targetId": "680aa45e72f927b92d97bf5a",
+      "referenceDate": "2026-07-30",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T14:09:02"
+    },
+    "wallet|6a22e6c0666abaefd3c7c63f|2026-07-30": {
+      "targetType": "wallet",
+      "targetId": "6a22e6c0666abaefd3c7c63f",
+      "referenceDate": "2026-07-30",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T14:09:02"
+    },
+    "wallet|6827825bbff73f3c321e5fb5|2026-07-30": {
+      "targetType": "wallet",
+      "targetId": "6827825bbff73f3c321e5fb5",
+      "referenceDate": "2026-07-30",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T14:09:02"
+    },
+    "wallet|680a9cea3b2296d86127162c|2026-07-30": {
+      "targetType": "wallet",
+      "targetId": "680a9cea3b2296d86127162c",
+      "referenceDate": "2026-07-30",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T14:09:02"
+    },
+    "wallet|680a9ce73b2296d8612713f1|2026-07-30": {
+      "targetType": "wallet",
+      "targetId": "680a9ce73b2296d8612713f1",
+      "referenceDate": "2026-07-30",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "Verificando",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T17:49:33"
+    },
+    "wallet|6800008856efc7ce2275dc6d|2026-07-30": {
+      "targetType": "wallet",
+      "targetId": "6800008856efc7ce2275dc6d",
+      "referenceDate": "2026-07-30",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Auxilio",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T20:15:44"
+    },
+    "wallet|6866e7083111a24e3f7f0237|2026-07-30": {
+      "targetType": "wallet",
+      "targetId": "6866e7083111a24e3f7f0237",
+      "referenceDate": "2026-07-30",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "OK",
+      "author": "efigueira",
+      "updatedAt": "2026-08-04T20:20:47"
+    },
+    "wallet|68643c303111a24e3f7ef856|2026-07-30": {
+      "targetType": "wallet",
+      "targetId": "68643c303111a24e3f7ef856",
+      "referenceDate": "2026-07-30",
+      "responsavel": "",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-05T14:41:16"
+    },
+    "wallet|6a4d643a87c477fd7364f9a9|2026-07-31": {
+      "targetType": "wallet",
+      "targetId": "6a4d643a87c477fd7364f9a9",
+      "referenceDate": "2026-07-31",
+      "responsavel": "",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T09:09:56"
+    },
+    "wallet|680a9ce93b2296d861271617|2026-07-31": {
+      "targetType": "wallet",
+      "targetId": "680a9ce93b2296d861271617",
+      "referenceDate": "2026-07-31",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-07T09:51:28"
+    },
+    "wallet|69dfd6da9b6f5b0dad1428d5|2026-07-31": {
+      "targetType": "wallet",
+      "targetId": "69dfd6da9b6f5b0dad1428d5",
+      "referenceDate": "2026-07-31",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T10:08:05"
+    },
+    "wallet|680aa45d72f927b92d97be73|2026-07-31": {
+      "targetType": "wallet",
+      "targetId": "680aa45d72f927b92d97be73",
+      "referenceDate": "2026-07-31",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T10:08:05"
+    },
+    "wallet|698a373cb2900dbc63938a68|2026-07-31": {
+      "targetType": "wallet",
+      "targetId": "698a373cb2900dbc63938a68",
+      "referenceDate": "2026-07-31",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-07T09:51:28"
+    },
+    "wallet|680a9ce13b2296d861270f5d|2026-07-31": {
+      "targetType": "wallet",
+      "targetId": "680a9ce13b2296d861270f5d",
+      "referenceDate": "2026-07-31",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-07T09:51:28"
+    },
+    "wallet|6866e76b3111a24e3f7f0272|2026-07-31": {
+      "targetType": "wallet",
+      "targetId": "6866e76b3111a24e3f7f0272",
+      "referenceDate": "2026-07-31",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-07T09:51:28"
+    },
+    "wallet|68643c303111a24e3f7ef856|2026-07-31": {
+      "targetType": "wallet",
+      "targetId": "68643c303111a24e3f7ef856",
+      "referenceDate": "2026-07-31",
+      "responsavel": "",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-05T17:49:03"
+    },
+    "wallet|69dfd7319b6f5b0dad142959|2026-07-31": {
+      "targetType": "wallet",
+      "targetId": "69dfd7319b6f5b0dad142959",
+      "referenceDate": "2026-07-31",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "carga estava errada, Adzo ressubiu\nAlém disso, lançado ajuste de aporte 80k",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T15:27:10"
+    },
+    "wallet|6a22e6a3666abaefd3c7c5b9|2026-07-31": {
+      "targetType": "wallet",
+      "targetId": "6a22e6a3666abaefd3c7c5b9",
+      "referenceDate": "2026-07-31",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "carga estava errada. Ressubi manualmente",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T15:27:10"
+    },
+    "wallet|6a4d6bcf87c477fd73656d88|2026-07-31": {
+      "targetType": "wallet",
+      "targetId": "6a4d6bcf87c477fd73656d88",
+      "referenceDate": "2026-07-31",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "saque não identificado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T15:27:10"
+    },
+    "wallet|680a9cea3b2296d86127162c|2026-07-31": {
+      "targetType": "wallet",
+      "targetId": "680a9cea3b2296d86127162c",
+      "referenceDate": "2026-07-31",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "ativo e o caixa diminuiram em 80k, acatei a sugestão da ferramenta (criar provisão e ajuste de caixa)",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T15:27:10"
+    },
+    "wallet|6a4d63b187c477fd735dbd2b|2026-07-31": {
+      "targetType": "wallet",
+      "targetId": "6a4d63b187c477fd735dbd2b",
+      "referenceDate": "2026-07-31",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "saque não identificado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T15:27:10"
+    },
+    "wallet|6a072a220bda35a286ac03ac|2026-07-31": {
+      "targetType": "wallet",
+      "targetId": "6a072a220bda35a286ac03ac",
+      "referenceDate": "2026-07-31",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Dividend Reinvestment mudado para buysell",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T15:27:10"
+    },
+    "wallet|680aa45c72f927b92d97bdcb|2026-07-31": {
+      "targetType": "wallet",
+      "targetId": "680aa45c72f927b92d97bdcb",
+      "referenceDate": "2026-07-31",
+      "responsavel": "",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-05T17:49:03"
+    },
+    "wallet|69e6758486e64d52561ac554|2026-07-31": {
+      "targetType": "wallet",
+      "targetId": "69e6758486e64d52561ac554",
+      "referenceDate": "2026-07-31",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Dividend Reinvestment mudado para buysell",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T15:27:10"
+    },
+    "wallet|680a9cdb3b2296d861270bec|2026-07-31": {
+      "targetType": "wallet",
+      "targetId": "680a9cdb3b2296d861270bec",
+      "referenceDate": "2026-07-31",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-07T09:51:28"
+    },
+    "wallet|680a9ce03b2296d861270f0d|2026-07-31": {
+      "targetType": "wallet",
+      "targetId": "680a9ce03b2296d861270f0d",
+      "referenceDate": "2026-07-31",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Ajuste de caixa",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T15:27:10"
+    },
+    "wallet|69dfd6da9b6f5b0dad1428d5|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "69dfd6da9b6f5b0dad1428d5",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T16:14:02"
+    },
+    "wallet|680aa45d72f927b92d97be73|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "680aa45d72f927b92d97be73",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-07T10:23:10"
+    },
+    "wallet|6a22e6a3666abaefd3c7c5b9|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "6a22e6a3666abaefd3c7c5b9",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T16:14:02"
+    },
+    "wallet|680a9cdb3b2296d861270bec|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "680a9cdb3b2296d861270bec",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-07T10:10:10"
+    },
+    "wallet|680a9ce63b2296d861271396|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "680a9ce63b2296d861271396",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-07T10:10:10"
+    },
+    "wallet|680a9ce03b2296d861270eae|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "680a9ce03b2296d861270eae",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Ian",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T16:14:02"
+    },
+    "wallet|680a9cdd3b2296d861270cd2|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "680a9cdd3b2296d861270cd2",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Havia provisão indevida de venda",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-06T17:57:09"
+    },
+    "wallet|680aa45b72f927b92d97bd93|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "680aa45b72f927b92d97bd93",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Havia provisão indevida de venda",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-06T17:57:09"
+    },
+    "wallet|69e0ed339b6f5b0dad1537c6|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "69e0ed339b6f5b0dad1537c6",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Havia provisão indevida de venda",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-06T17:57:09"
+    },
+    "wallet|6a208987ef02e5d10aa336ee|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "6a208987ef02e5d10aa336ee",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Victor",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T16:49:20"
+    },
+    "wallet|693c778d6c55498714e7cf16|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "693c778d6c55498714e7cf16",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Victor",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T16:49:20"
+    },
+    "wallet|693c763a6c55498714e7caf1|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "693c763a6c55498714e7caf1",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Victor",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T16:49:20"
+    },
+    "wallet|680a9ce93b2296d861271617|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "680a9ce93b2296d861271617",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Victor",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T16:49:20"
+    },
+    "wallet|682783bfbff73f3c321e6029|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "682783bfbff73f3c321e6029",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Victor",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T16:49:20"
+    },
+    "wallet|680a9ce73b2296d861271446|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "680a9ce73b2296d861271446",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Victor",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T16:49:20"
+    },
+    "wallet|68fff6c847170dafb2f8ff99|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "68fff6c847170dafb2f8ff99",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Victor",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T16:49:20"
+    },
+    "wallet|680a9cea3b2296d861271659|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "680a9cea3b2296d861271659",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Victor",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T16:49:20"
+    },
+    "wallet|680aa45e72f927b92d97bf5a|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "680aa45e72f927b92d97bf5a",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Victor",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T16:49:20"
+    },
+    "wallet|6a22e6c0666abaefd3c7c63f|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "6a22e6c0666abaefd3c7c63f",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Victor",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T16:49:20"
+    },
+    "wallet|6827825bbff73f3c321e5fb5|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "6827825bbff73f3c321e5fb5",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Victor",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-06T16:49:20"
+    },
+    "wallet|680a9cea3b2296d86127162c|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "680a9cea3b2296d86127162c",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-07T10:23:10"
+    },
+    "wallet|680a9ce23b2296d86127109c|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "680a9ce23b2296d86127109c",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "Solicitando arquivo",
+      "author": "victor",
+      "updatedAt": "2026-08-06T17:44:36"
+    },
+    "wallet|680a9cea3b2296d8612716b8|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "680a9cea3b2296d8612716b8",
+      "referenceDate": "2026-08-03",
+      "responsavel": "",
+      "comentarioAtuacao": "paulo verificando",
+      "author": "victor",
+      "updatedAt": "2026-08-06T17:47:50"
+    },
+    "wallet|680a9ce23b2296d86127109c|2026-07-31": {
+      "targetType": "wallet",
+      "targetId": "680a9ce23b2296d86127109c",
+      "referenceDate": "2026-07-31",
+      "responsavel": "",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-07T09:51:28"
+    },
+    "wallet|680a9cea3b2296d86127163a|2026-07-31": {
+      "targetType": "wallet",
+      "targetId": "680a9cea3b2296d86127163a",
+      "referenceDate": "2026-07-31",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Problema Carga",
+      "author": "efigueira",
+      "updatedAt": "2026-08-07T09:51:28"
+    },
+    "wallet|680a9ce33b2296d86127117c|2026-07-31": {
+      "targetType": "wallet",
+      "targetId": "680a9ce33b2296d86127117c",
+      "referenceDate": "2026-07-31",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Problema Carga",
+      "author": "efigueira",
+      "updatedAt": "2026-08-07T09:51:28"
+    },
+    "wallet|6a2c6267aee4c2ef28edca43|2026-07-31": {
+      "targetType": "wallet",
+      "targetId": "6a2c6267aee4c2ef28edca43",
+      "referenceDate": "2026-07-31",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Problema Carga",
+      "author": "efigueira",
+      "updatedAt": "2026-08-07T09:51:28"
+    },
+    "wallet|68643c303111a24e3f7ef856|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "68643c303111a24e3f7ef856",
+      "referenceDate": "2026-08-03",
+      "responsavel": "",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-07T10:12:55"
+    },
+    "wallet|680a9ce73b2296d861271488|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "680a9ce73b2296d861271488",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-07T10:10:10"
+    },
+    "wallet|680a9ce43b2296d8612711fc|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "680a9ce43b2296d8612711fc",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Yuri",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-07T10:10:10"
+    },
+    "wallet|680a9ce03b2296d861270ea7|2026-08-03": {
+      "targetType": "wallet",
+      "targetId": "680a9ce03b2296d861270ea7",
+      "referenceDate": "2026-08-03",
+      "responsavel": "Yuri",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-07T10:10:10"
+    },
+    "wallet|680aa45d72f927b92d97be6c|2026-08-04": {
+      "targetType": "wallet",
+      "targetId": "680aa45d72f927b92d97be6c",
+      "referenceDate": "2026-08-04",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-07T16:21:23"
+    },
+    "wallet|6a22e6a3666abaefd3c7c5b9|2026-08-04": {
+      "targetType": "wallet",
+      "targetId": "6a22e6a3666abaefd3c7c5b9",
+      "referenceDate": "2026-08-04",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-07T16:21:23"
+    },
+    "wallet|680aa45c72f927b92d97bd9a|2026-08-04": {
+      "targetType": "wallet",
+      "targetId": "680aa45c72f927b92d97bd9a",
+      "referenceDate": "2026-08-04",
+      "responsavel": "",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-10T09:15:26"
+    },
+    "wallet|680a9ce63b2296d861271396|2026-08-04": {
+      "targetType": "wallet",
+      "targetId": "680a9ce63b2296d861271396",
+      "referenceDate": "2026-08-04",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-07T16:21:23"
+    },
+    "wallet|6800008856efc7ce2275dc75|2026-08-04": {
+      "targetType": "wallet",
+      "targetId": "6800008856efc7ce2275dc75",
+      "referenceDate": "2026-08-04",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-10T09:15:26"
+    },
+    "wallet|680a9cea3b2296d86127162c|2026-08-05": {
+      "targetType": "wallet",
+      "targetId": "680a9cea3b2296d86127162c",
+      "referenceDate": "2026-08-05",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "adzo beehus",
+      "updatedAt": "2026-08-10T10:39:05"
+    },
+    "wallet|6827825bbff73f3c321e5fb5|2026-08-05": {
+      "targetType": "wallet",
+      "targetId": "6827825bbff73f3c321e5fb5",
+      "referenceDate": "2026-08-05",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "adzo beehus",
+      "updatedAt": "2026-08-10T10:39:05"
+    },
+    "wallet|6a22e6c0666abaefd3c7c63f|2026-08-05": {
+      "targetType": "wallet",
+      "targetId": "6a22e6c0666abaefd3c7c63f",
+      "referenceDate": "2026-08-05",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "adzo beehus",
+      "updatedAt": "2026-08-10T10:39:05"
+    },
+    "wallet|680aa45e72f927b92d97bf5a|2026-08-05": {
+      "targetType": "wallet",
+      "targetId": "680aa45e72f927b92d97bf5a",
+      "referenceDate": "2026-08-05",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "adzo beehus",
+      "updatedAt": "2026-08-10T10:39:05"
+    },
+    "wallet|680a9cea3b2296d861271659|2026-08-05": {
+      "targetType": "wallet",
+      "targetId": "680a9cea3b2296d861271659",
+      "referenceDate": "2026-08-05",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "adzo beehus",
+      "updatedAt": "2026-08-10T10:39:05"
+    },
+    "wallet|68fff6c847170dafb2f8ff99|2026-08-05": {
+      "targetType": "wallet",
+      "targetId": "68fff6c847170dafb2f8ff99",
+      "referenceDate": "2026-08-05",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "adzo beehus",
+      "updatedAt": "2026-08-10T10:39:05"
+    },
+    "wallet|680a9ce73b2296d861271446|2026-08-05": {
+      "targetType": "wallet",
+      "targetId": "680a9ce73b2296d861271446",
+      "referenceDate": "2026-08-05",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "adzo beehus",
+      "updatedAt": "2026-08-10T10:39:05"
+    },
+    "wallet|682783bfbff73f3c321e6029|2026-08-05": {
+      "targetType": "wallet",
+      "targetId": "682783bfbff73f3c321e6029",
+      "referenceDate": "2026-08-05",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "adzo beehus",
+      "updatedAt": "2026-08-10T10:39:05"
+    },
+    "wallet|680a9ce93b2296d86127161e|2026-08-05": {
+      "targetType": "wallet",
+      "targetId": "680a9ce93b2296d86127161e",
+      "referenceDate": "2026-08-05",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "adzo beehus",
+      "updatedAt": "2026-08-10T10:39:05"
+    },
+    "wallet|680a9ce93b2296d861271617|2026-08-05": {
+      "targetType": "wallet",
+      "targetId": "680a9ce93b2296d861271617",
+      "referenceDate": "2026-08-05",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Resolvido 04/08 e 05/08",
+      "author": "efigueira",
+      "updatedAt": "2026-08-11T09:57:56"
+    },
+    "wallet|693c763a6c55498714e7caf1|2026-08-05": {
+      "targetType": "wallet",
+      "targetId": "693c763a6c55498714e7caf1",
+      "referenceDate": "2026-08-05",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "adzo beehus",
+      "updatedAt": "2026-08-10T10:39:05"
+    },
+    "wallet|693c778d6c55498714e7cf16|2026-08-05": {
+      "targetType": "wallet",
+      "targetId": "693c778d6c55498714e7cf16",
+      "referenceDate": "2026-08-05",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "adzo beehus",
+      "updatedAt": "2026-08-10T10:39:05"
+    },
+    "wallet|6a208987ef02e5d10aa336ee|2026-08-05": {
+      "targetType": "wallet",
+      "targetId": "6a208987ef02e5d10aa336ee",
+      "referenceDate": "2026-08-05",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "adzo beehus",
+      "updatedAt": "2026-08-10T10:39:05"
+    },
+    "wallet|6800008856efc7ce2275dc6d|2026-08-05": {
+      "targetType": "wallet",
+      "targetId": "6800008856efc7ce2275dc6d",
+      "referenceDate": "2026-08-05",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-10T17:15:09"
+    },
+    "wallet|680aa45d72f927b92d97be6c|2026-08-05": {
+      "targetType": "wallet",
+      "targetId": "680aa45d72f927b92d97be6c",
+      "referenceDate": "2026-08-05",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-10T17:15:09"
+    },
+    "wallet|680a9ce03b2296d861270f0d|2026-08-05": {
+      "targetType": "wallet",
+      "targetId": "680a9ce03b2296d861270f0d",
+      "referenceDate": "2026-08-05",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-10T17:15:09"
+    },
+    "wallet|69e0ed339b6f5b0dad1537c6|2026-08-05": {
+      "targetType": "wallet",
+      "targetId": "69e0ed339b6f5b0dad1537c6",
+      "referenceDate": "2026-08-05",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-10T17:15:09"
+    },
+    "wallet|680a9ce03b2296d861270eb6|2026-08-05": {
+      "targetType": "wallet",
+      "targetId": "680a9ce03b2296d861270eb6",
+      "referenceDate": "2026-08-05",
+      "responsavel": "Guerreiro",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-11T09:54:01"
+    },
+    "wallet|680aa45c72f927b92d97bdaf|2026-08-05": {
+      "targetType": "wallet",
+      "targetId": "680aa45c72f927b92d97bdaf",
+      "referenceDate": "2026-08-05",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-11T09:54:01"
+    },
+    "wallet|6a208987ef02e5d10aa336ee|2026-08-06": {
+      "targetType": "wallet",
+      "targetId": "6a208987ef02e5d10aa336ee",
+      "referenceDate": "2026-08-06",
+      "responsavel": "Victor",
+      "comentarioAtuacao": "Issues",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T09:15:15"
+    },
+    "wallet|680a9ce93b2296d861271617|2026-08-06": {
+      "targetType": "wallet",
+      "targetId": "680a9ce93b2296d861271617",
+      "referenceDate": "2026-08-06",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "efigueira",
+      "updatedAt": "2026-08-11T10:04:12"
+    },
+    "wallet|680a9ce93b2296d86127161e|2026-08-06": {
+      "targetType": "wallet",
+      "targetId": "680a9ce93b2296d86127161e",
+      "referenceDate": "2026-08-06",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-11T18:41:14"
+    },
+    "wallet|682783bfbff73f3c321e6029|2026-08-06": {
+      "targetType": "wallet",
+      "targetId": "682783bfbff73f3c321e6029",
+      "referenceDate": "2026-08-06",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "efigueira",
+      "updatedAt": "2026-08-11T10:04:12"
+    },
+    "wallet|693c778d6c55498714e7cf16|2026-08-06": {
+      "targetType": "wallet",
+      "targetId": "693c778d6c55498714e7cf16",
+      "referenceDate": "2026-08-06",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "efigueira",
+      "updatedAt": "2026-08-11T10:04:12"
+    },
+    "wallet|680a9ce73b2296d861271446|2026-08-06": {
+      "targetType": "wallet",
+      "targetId": "680a9ce73b2296d861271446",
+      "referenceDate": "2026-08-06",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "efigueira",
+      "updatedAt": "2026-08-11T10:04:12"
+    },
+    "wallet|68fff6c847170dafb2f8ff99|2026-08-06": {
+      "targetType": "wallet",
+      "targetId": "68fff6c847170dafb2f8ff99",
+      "referenceDate": "2026-08-06",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "efigueira",
+      "updatedAt": "2026-08-11T10:04:12"
+    },
+    "wallet|680a9cea3b2296d861271659|2026-08-06": {
+      "targetType": "wallet",
+      "targetId": "680a9cea3b2296d861271659",
+      "referenceDate": "2026-08-06",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "efigueira",
+      "updatedAt": "2026-08-11T10:04:12"
+    },
+    "wallet|680aa45e72f927b92d97bf5a|2026-08-06": {
+      "targetType": "wallet",
+      "targetId": "680aa45e72f927b92d97bf5a",
+      "referenceDate": "2026-08-06",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "efigueira",
+      "updatedAt": "2026-08-11T10:04:12"
+    },
+    "wallet|6a22e6c0666abaefd3c7c63f|2026-08-06": {
+      "targetType": "wallet",
+      "targetId": "6a22e6c0666abaefd3c7c63f",
+      "referenceDate": "2026-08-06",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "efigueira",
+      "updatedAt": "2026-08-11T10:04:12"
+    },
+    "wallet|6827825bbff73f3c321e5fb5|2026-08-06": {
+      "targetType": "wallet",
+      "targetId": "6827825bbff73f3c321e5fb5",
+      "referenceDate": "2026-08-06",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "efigueira",
+      "updatedAt": "2026-08-11T10:04:12"
+    },
+    "wallet|680a9cea3b2296d86127162c|2026-08-06": {
+      "targetType": "wallet",
+      "targetId": "680a9cea3b2296d86127162c",
+      "referenceDate": "2026-08-06",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-11T18:39:21"
+    },
+    "wallet|693c763a6c55498714e7caf1|2026-08-06": {
+      "targetType": "wallet",
+      "targetId": "693c763a6c55498714e7caf1",
+      "referenceDate": "2026-08-06",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga",
+      "author": "efigueira",
+      "updatedAt": "2026-08-11T10:04:12"
+    },
+    "wallet|6800008856efc7ce2275dc6d|2026-08-06": {
+      "targetType": "wallet",
+      "targetId": "6800008856efc7ce2275dc6d",
+      "referenceDate": "2026-08-06",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Não encontrado Mov ou mud quantidade Ativos",
+      "author": "efigueira",
+      "updatedAt": "2026-08-11T16:56:23"
+    },
+    "wallet|680a9ce53b2296d86127127a|2026-08-06": {
+      "targetType": "wallet",
+      "targetId": "680a9ce53b2296d86127127a",
+      "referenceDate": "2026-08-06",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Não encontrado Mov ou mud quantidade Ativos",
+      "author": "efigueira",
+      "updatedAt": "2026-08-11T16:57:50"
+    },
+    "wallet|680a9ce73b2296d861271488|2026-08-06": {
+      "targetType": "wallet",
+      "targetId": "680a9ce73b2296d861271488",
+      "referenceDate": "2026-08-06",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-11T16:39:09"
+    },
+    "wallet|680a9ce83b2296d86127149d|2026-08-06": {
+      "targetType": "wallet",
+      "targetId": "680a9ce83b2296d86127149d",
+      "referenceDate": "2026-08-06",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "correção de provisão de muito tempo atrás",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-12T08:50:56"
+    },
+    "wallet|680aa45d72f927b92d97be6c|2026-08-06": {
+      "targetType": "wallet",
+      "targetId": "680aa45d72f927b92d97be6c",
+      "referenceDate": "2026-08-06",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Resolvido",
+      "author": "efigueira",
+      "updatedAt": "2026-08-11T18:39:21"
+    },
+    "wallet|680aa45c72f927b92d97bd9a|2026-08-06": {
+      "targetType": "wallet",
+      "targetId": "680aa45c72f927b92d97bd9a",
+      "referenceDate": "2026-08-06",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Ajuste no preço de execução",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-12T08:50:56"
+    },
+    "wallet|680aa45c72f927b92d97bdb6|2026-08-06": {
+      "targetType": "wallet",
+      "targetId": "680aa45c72f927b92d97bdb6",
+      "referenceDate": "2026-08-06",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Ajuste de caixa",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-12T08:50:56"
+    },
+    "wallet|680a9ce23b2296d86127106a|2026-08-06": {
+      "targetType": "wallet",
+      "targetId": "680a9ce23b2296d86127106a",
+      "referenceDate": "2026-08-06",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Ajustei o Delfos e resolveu o CSHG Oikos",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-12T09:24:27"
+    },
+    "wallet|680a9cdf3b2296d861270e90|2026-08-06": {
+      "targetType": "wallet",
+      "targetId": "680a9cdf3b2296d861270e90",
+      "referenceDate": "2026-08-06",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Ajuste no preço de execução",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-12T08:50:56"
+    },
+    "wallet|680a9ce23b2296d86127106a|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "680a9ce23b2296d86127106a",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T17:58:10"
+    },
+    "wallet|680a9ce43b2296d8612711ee|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "680a9ce43b2296d8612711ee",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "Atraso custodiante",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T14:14:55"
+    },
+    "wallet|680a9cea3b2296d86127163a|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "680a9cea3b2296d86127163a",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Verificando Apontamento nova API",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T14:42:57"
+    },
+    "wallet|680a9ce33b2296d86127117c|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "680a9ce33b2296d86127117c",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Verificando Apontamento nova API",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T14:42:57"
+    },
+    "wallet|6a2c6267aee4c2ef28edca43|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "6a2c6267aee4c2ef28edca43",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Verificando Apontamento nova API",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T14:42:57"
+    },
+    "wallet|686438353111a24e3f7ef7a8|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "686438353111a24e3f7ef7a8",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Verificando Apontamento nova API",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T14:42:57"
+    },
+    "wallet|68fc02d847170dafb2f75f28|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "68fc02d847170dafb2f75f28",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Verificando Apontamento nova API",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T14:42:57"
+    },
+    "wallet|680a9cdf3b2296d861270e6b|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "680a9cdf3b2296d861270e6b",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T16:08:43"
+    },
+    "wallet|680aa45d72f927b92d97be6c|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "680aa45d72f927b92d97be6c",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajkustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T16:08:43"
+    },
+    "wallet|68fff6c847170dafb2f8ff99|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "68fff6c847170dafb2f8ff99",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T16:08:43"
+    },
+    "wallet|6a60d89147e5b1f0ceee7980|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "6a60d89147e5b1f0ceee7980",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T15:03:09"
+    },
+    "wallet|696e9746182474a02a2d8fd0|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "696e9746182474a02a2d8fd0",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T16:16:23"
+    },
+    "wallet|680a9cea3b2296d86127162c|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "680a9cea3b2296d86127162c",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T18:11:49"
+    },
+    "wallet|680aa45c72f927b92d97bdaf|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "680aa45c72f927b92d97bdaf",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T18:09:07"
+    },
+    "wallet|680a9cdd3b2296d861270ce1|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "680a9cdd3b2296d861270ce1",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T18:12:41"
+    },
+    "wallet|680aa45d72f927b92d97be81|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "680aa45d72f927b92d97be81",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T15:03:09"
+    },
+    "wallet|680a9ce93b2296d86127161e|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "680a9ce93b2296d86127161e",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Ajuste por conciliação",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-12T17:37:55"
+    },
+    "wallet|682783bfbff73f3c321e6029|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "682783bfbff73f3c321e6029",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "provisão de aplicação PRECADVANC INT",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-12T18:14:54"
+    },
+    "wallet|680a9ce73b2296d861271446|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "680a9ce73b2296d861271446",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "provisão de aplicação PRECADVANC INT",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-12T17:37:55"
+    },
+    "wallet|6827825bbff73f3c321e5fb5|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "6827825bbff73f3c321e5fb5",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Preços de execução cdbs + provisão de aplicação PRECADVANC INT",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-12T17:37:55"
+    },
+    "wallet|680a9ce33b2296d8612710bf|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "680a9ce33b2296d8612710bf",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Provisão Argos II",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-12T17:37:55"
+    },
+    "wallet|6800008856efc7ce2275dc6d|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "6800008856efc7ce2275dc6d",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T17:25:56"
+    },
+    "wallet|680a9ce43b2296d8612711f5|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "680a9ce43b2296d8612711f5",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T18:04:24"
+    },
+    "wallet|693c778d6c55498714e7cf16|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "693c778d6c55498714e7cf16",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T16:08:43"
+    },
+    "wallet|68643c303111a24e3f7ef856|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "68643c303111a24e3f7ef856",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Reprocessamento desde dez/25 + Ajuste de caixa no dia 07/08 (houve um resgate no fundo DI mas não havia destino para esse recurso)",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-13T10:53:11"
+    },
+    "wallet|680a9ce53b2296d86127127a|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "680a9ce53b2296d86127127a",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T16:16:23"
+    },
+    "wallet|693c763a6c55498714e7caf1|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "693c763a6c55498714e7caf1",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Preços de execução cdbs + provisão de aplicação PRECADVANC INT",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-12T17:37:55"
+    },
+    "wallet|680a9ce73b2296d861271488|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "680a9ce73b2296d861271488",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T16:21:17"
+    },
+    "wallet|6800008856efc7ce2275dc66|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "6800008856efc7ce2275dc66",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Ajuste por conciliação",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-12T17:51:01"
+    },
+    "wallet|680a9ce83b2296d86127149d|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "680a9ce83b2296d86127149d",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T16:26:01"
+    },
+    "wallet|680a9ce43b2296d8612711fc|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "680a9ce43b2296d8612711fc",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Ajuste por conciliação",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-12T17:51:01"
+    },
+    "wallet|68c963dc93b1ff687e71a294|2026-08-07": {
+      "targetType": "wallet",
+      "targetId": "68c963dc93b1ff687e71a294",
+      "referenceDate": "2026-08-07",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-12T17:19:21"
+    },
+    "wallet|680a9ce93b2296d861271617|2026-08-10": {
+      "targetType": "wallet",
+      "targetId": "680a9ce93b2296d861271617",
+      "referenceDate": "2026-08-10",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga 06/08",
+      "author": "efigueira",
+      "updatedAt": "2026-08-13T10:55:41"
+    },
+    "wallet|6800008856efc7ce2275dc6d|2026-08-10": {
+      "targetType": "wallet",
+      "targetId": "6800008856efc7ce2275dc6d",
+      "referenceDate": "2026-08-10",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-13T18:22:08"
+    },
+    "wallet|680a9ce23b2296d86127106a|2026-08-10": {
+      "targetType": "wallet",
+      "targetId": "680a9ce23b2296d86127106a",
+      "referenceDate": "2026-08-10",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-13T18:22:08"
+    },
+    "wallet|680aa45d72f927b92d97be6c|2026-08-10": {
+      "targetType": "wallet",
+      "targetId": "680aa45d72f927b92d97be6c",
+      "referenceDate": "2026-08-10",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Preço de execução = 0",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-13T19:24:53"
+    },
+    "wallet|680a9cdf3b2296d861270e90|2026-08-10": {
+      "targetType": "wallet",
+      "targetId": "680a9cdf3b2296d861270e90",
+      "referenceDate": "2026-08-10",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Preço de execução = 0",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-13T19:25:37"
+    },
+    "wallet|6a60d89147e5b1f0ceee7980|2026-08-10": {
+      "targetType": "wallet",
+      "targetId": "6a60d89147e5b1f0ceee7980",
+      "referenceDate": "2026-08-10",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-13T16:29:45"
+    },
+    "wallet|696e9746182474a02a2d8fd0|2026-08-10": {
+      "targetType": "wallet",
+      "targetId": "696e9746182474a02a2d8fd0",
+      "referenceDate": "2026-08-10",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-13T16:29:45"
+    },
+    "wallet|680a9cea3b2296d86127162c|2026-08-10": {
+      "targetType": "wallet",
+      "targetId": "680a9cea3b2296d86127162c",
+      "referenceDate": "2026-08-10",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Ajuste de caixa pequeno (611,07)",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-13T17:12:18"
+    },
+    "wallet|680a9ce53b2296d86127127a|2026-08-10": {
+      "targetType": "wallet",
+      "targetId": "680a9ce53b2296d86127127a",
+      "referenceDate": "2026-08-10",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Provisão D+5 Argos II e Ajuste por conciliação (1.429,84)",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-13T19:23:15"
+    },
+    "wallet|680aa45c72f927b92d97bdaf|2026-08-10": {
+      "targetType": "wallet",
+      "targetId": "680aa45c72f927b92d97bdaf",
+      "referenceDate": "2026-08-10",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Ajuste de caixa pequeno (1897,80)",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-13T18:21:01"
+    },
+    "wallet|680aa45c72f927b92d97bd9a|2026-08-10": {
+      "targetType": "wallet",
+      "targetId": "680aa45c72f927b92d97bd9a",
+      "referenceDate": "2026-08-10",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Preço de execução = 0",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-13T18:24:02"
+    },
+    "wallet|680a9ce93b2296d86127161e|2026-08-10": {
+      "targetType": "wallet",
+      "targetId": "680a9ce93b2296d86127161e",
+      "referenceDate": "2026-08-10",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Preço de execução dos CDBs",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-14T09:06:34"
+    },
+    "wallet|680a9ce73b2296d861271488|2026-08-10": {
+      "targetType": "wallet",
+      "targetId": "680a9ce73b2296d861271488",
+      "referenceDate": "2026-08-10",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Ajuste por conciliação (8606,15)",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-13T19:21:37"
+    },
+    "wallet|6800008856efc7ce2275dc66|2026-08-10": {
+      "targetType": "wallet",
+      "targetId": "6800008856efc7ce2275dc66",
+      "referenceDate": "2026-08-10",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-14T09:14:14"
+    },
+    "wallet|680a9ce33b2296d8612710bf|2026-08-10": {
+      "targetType": "wallet",
+      "targetId": "680a9ce33b2296d8612710bf",
+      "referenceDate": "2026-08-10",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-13T16:29:45"
+    },
+    "wallet|680a9ce83b2296d86127149d|2026-08-10": {
+      "targetType": "wallet",
+      "targetId": "680a9ce83b2296d86127149d",
+      "referenceDate": "2026-08-10",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-13T16:29:45"
+    },
+    "wallet|680a9ce43b2296d8612711fc|2026-08-10": {
+      "targetType": "wallet",
+      "targetId": "680a9ce43b2296d8612711fc",
+      "referenceDate": "2026-08-10",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-13T16:29:45"
+    },
+    "wallet|68c963dc93b1ff687e71a294|2026-08-10": {
+      "targetType": "wallet",
+      "targetId": "68c963dc93b1ff687e71a294",
+      "referenceDate": "2026-08-10",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-13T16:29:45"
+    },
+    "wallet|693c778d6c55498714e7cf16|2026-08-10": {
+      "targetType": "wallet",
+      "targetId": "693c778d6c55498714e7cf16",
+      "referenceDate": "2026-08-10",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-13T16:44:57"
+    },
+    "wallet|68fff6c847170dafb2f8ff99|2026-08-10": {
+      "targetType": "wallet",
+      "targetId": "68fff6c847170dafb2f8ff99",
+      "referenceDate": "2026-08-10",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-13T16:44:57"
+    },
+    "wallet|69e0ecda9b6f5b0dad15059f|2026-08-10": {
+      "targetType": "wallet",
+      "targetId": "69e0ecda9b6f5b0dad15059f",
+      "referenceDate": "2026-08-10",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-13T19:14:57"
+    },
+    "wallet|693c778d6c55498714e7cf16|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "693c778d6c55498714e7cf16",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Provisão baixa de Cotas",
+      "author": "efigueira",
+      "updatedAt": "2026-08-14T15:14:10"
+    },
+    "wallet|68fff6c847170dafb2f8ff99|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "68fff6c847170dafb2f8ff99",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "provisão errada na data anterior",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-14T15:41:04"
+    },
+    "wallet|680a9ce03b2296d861270eae|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "680a9ce03b2296d861270eae",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Preço de execução = 0",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-14T15:41:04"
+    },
+    "wallet|680aa45c72f927b92d97bdaf|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "680aa45c72f927b92d97bdaf",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Houve aumento de caixa, mas sem transação nem mudança de quantidade de ativos. Lançado ajuste de caixa de 2.790,44",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-14T15:35:36"
+    },
+    "wallet|680a9ce93b2296d8612715b4|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "680a9ce93b2296d8612715b4",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga 10 e 11/08",
+      "author": "efigueira",
+      "updatedAt": "2026-08-17T09:38:12"
+    },
+    "wallet|680a9ce93b2296d861271583|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "680a9ce93b2296d861271583",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga 10 e 11/08",
+      "author": "efigueira",
+      "updatedAt": "2026-08-17T09:38:12"
+    },
+    "wallet|680a9ce63b2296d86127138f|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "680a9ce63b2296d86127138f",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga 10 e 11/08",
+      "author": "efigueira",
+      "updatedAt": "2026-08-17T09:38:12"
+    },
+    "wallet|68dabe808f8d3240ea265c29|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "68dabe808f8d3240ea265c29",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga 10 e 11/08",
+      "author": "efigueira",
+      "updatedAt": "2026-08-17T09:38:12"
+    },
+    "wallet|680a9ce73b2296d861271496|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "680a9ce73b2296d861271496",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga 06 e 10/08",
+      "author": "efigueira",
+      "updatedAt": "2026-08-17T09:59:16"
+    },
+    "wallet|680a9ce93b2296d8612715ad|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "680a9ce93b2296d8612715ad",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga 06 e 10/08",
+      "author": "efigueira",
+      "updatedAt": "2026-08-17T09:59:16"
+    },
+    "wallet|680a9ce53b2296d861271290|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "680a9ce53b2296d861271290",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Carga 05,06 e 10/08",
+      "author": "efigueira",
+      "updatedAt": "2026-08-17T09:59:16"
+    },
+    "wallet|680a9cdf3b2296d861270e13|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "680a9cdf3b2296d861270e13",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "preço de execução = 0",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-17T11:59:26"
+    },
+    "wallet|680a9ce13b2296d861270f74|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "680a9ce13b2296d861270f74",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-17T09:59:16"
+    },
+    "wallet|680a9cde3b2296d861270df4|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "680a9cde3b2296d861270df4",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "preço de execução = 0",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-17T11:59:26"
+    },
+    "wallet|68dc2acec13c42138fd77406|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "68dc2acec13c42138fd77406",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "tive que ajustar varios dias de julho",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-17T14:40:30"
+    },
+    "wallet|69e0ecda9b6f5b0dad15059f|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "69e0ecda9b6f5b0dad15059f",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Desconsiderar, excluir da base",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-17T10:00:12"
+    },
+    "wallet|6800008856efc7ce2275dc6d|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "6800008856efc7ce2275dc6d",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-17T09:59:16"
+    },
+    "wallet|680a9ce33b2296d8612710d5|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "680a9ce33b2296d8612710d5",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Adzo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-17T09:59:16"
+    },
+    "wallet|680a9ce83b2296d86127153f|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "680a9ce83b2296d86127153f",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado Provisão",
+      "author": "efigueira",
+      "updatedAt": "2026-08-17T16:01:58"
+    },
+    "wallet|680a9ce23b2296d86127106a|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "680a9ce23b2296d86127106a",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-17T14:53:06"
+    },
+    "wallet|68c963dc93b1ff687e71a294|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "68c963dc93b1ff687e71a294",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-17T14:53:06"
+    },
+    "wallet|680a9ce33b2296d8612710fb|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "680a9ce33b2296d8612710fb",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-17T16:11:09"
+    },
+    "wallet|680a9ce53b2296d86127127a|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "680a9ce53b2296d86127127a",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-17T16:11:22"
+    },
+    "wallet|680a9ce83b2296d86127150d|2026-08-11": {
+      "targetType": "wallet",
+      "targetId": "680a9ce83b2296d86127150d",
+      "referenceDate": "2026-08-11",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-17T16:11:22"
+    },
+    "wallet|680aa45d72f927b92d97beb9|2026-08-12": {
+      "targetType": "wallet",
+      "targetId": "680aa45d72f927b92d97beb9",
+      "referenceDate": "2026-08-12",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado Dividend",
+      "author": "efigueira",
+      "updatedAt": "2026-08-17T18:07:57"
+    },
+    "wallet|680a9cde3b2296d861270df4|2026-08-12": {
+      "targetType": "wallet",
+      "targetId": "680a9cde3b2296d861270df4",
+      "referenceDate": "2026-08-12",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajuste de Passivo",
+      "author": "efigueira",
+      "updatedAt": "2026-08-17T18:11:40"
+    },
+    "wallet|680a9cdf3b2296d861270e13|2026-08-12": {
+      "targetType": "wallet",
+      "targetId": "680a9cdf3b2296d861270e13",
+      "referenceDate": "2026-08-12",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajuste de Passivo",
+      "author": "efigueira",
+      "updatedAt": "2026-08-17T18:13:38"
+    },
+    "wallet|680a9ce23b2296d86127106a|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680a9ce23b2296d86127106a",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "só precisei reprocessar",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-18T17:59:00"
+    },
+    "wallet|680a9ce73b2296d861271488|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680a9ce73b2296d861271488",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-18T17:59:48"
+    },
+    "wallet|680a9ce83b2296d86127149d|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680a9ce83b2296d86127149d",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-18T17:59:48"
+    },
+    "wallet|680a9ce93b2296d86127161e|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680a9ce93b2296d86127161e",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Ajuste de caixa",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-20T13:27:42"
+    },
+    "wallet|680a9ce63b2296d861271396|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680a9ce63b2296d861271396",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "ativo novo mas sem transação (vou perguntar pro operacional)",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-20T13:13:57"
+    },
+    "wallet|6a20891eef02e5d10aa301ff|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "6a20891eef02e5d10aa301ff",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "posições estranhas, verificar",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-20T13:24:38"
+    },
+    "wallet|6800008856efc7ce2275dc66|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "6800008856efc7ce2275dc66",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-18T18:38:28"
+    },
+    "wallet|6866e76b3111a24e3f7f0272|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "6866e76b3111a24e3f7f0272",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "quantidade do ativo veio zerada. Verificar se está certo",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-20T13:27:42"
+    },
+    "wallet|680a9ce93b2296d86127161e|2026-08-12": {
+      "targetType": "wallet",
+      "targetId": "680a9ce93b2296d86127161e",
+      "referenceDate": "2026-08-12",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado Passivo",
+      "author": "efigueira",
+      "updatedAt": "2026-08-19T15:55:35"
+    },
+    "wallet|680a9cdc3b2296d861270c3c|2026-08-12": {
+      "targetType": "wallet",
+      "targetId": "680a9cdc3b2296d861270c3c",
+      "referenceDate": "2026-08-12",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado transação",
+      "author": "efigueira",
+      "updatedAt": "2026-08-19T15:46:58"
+    },
+    "wallet|680a9ce23b2296d86127106a|2026-08-12": {
+      "targetType": "wallet",
+      "targetId": "680a9ce23b2296d86127106a",
+      "referenceDate": "2026-08-12",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Reprocessei e resolveu",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-19T15:18:29"
+    },
+    "wallet|680a9ce43b2296d8612711ee|2026-08-12": {
+      "targetType": "wallet",
+      "targetId": "680a9ce43b2296d8612711ee",
+      "referenceDate": "2026-08-12",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-19T14:43:56"
+    },
+    "wallet|680a9ce23b2296d86127109c|2026-08-12": {
+      "targetType": "wallet",
+      "targetId": "680a9ce23b2296d86127109c",
+      "referenceDate": "2026-08-12",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-19T14:43:56"
+    },
+    "wallet|680a9ce43b2296d8612711f5|2026-08-12": {
+      "targetType": "wallet",
+      "targetId": "680a9ce43b2296d8612711f5",
+      "referenceDate": "2026-08-12",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado Passivo",
+      "author": "efigueira",
+      "updatedAt": "2026-08-19T15:47:10"
+    },
+    "wallet|67d9e6e5e7499ed40b7b3c4a|2026-08-12": {
+      "targetType": "wallet",
+      "targetId": "67d9e6e5e7499ed40b7b3c4a",
+      "referenceDate": "2026-08-12",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Não Resolvido - Problema do securityContributionAdjustment",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-19T16:23:30"
+    },
+    "wallet|680aa45d72f927b92d97be73|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680aa45d72f927b92d97be73",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-20T09:05:04"
+    },
+    "wallet|693c778d6c55498714e7cf16|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "693c778d6c55498714e7cf16",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-19T16:36:10"
+    },
+    "wallet|68b83b22447fab2ccbd519b8|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "68b83b22447fab2ccbd519b8",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-19T16:36:10"
+    },
+    "wallet|680a9cdc3b2296d861270c27|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680a9cdc3b2296d861270c27",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-19T16:36:10"
+    },
+    "wallet|680a9cdb3b2296d861270be5|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680a9cdb3b2296d861270be5",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-19T16:36:10"
+    },
+    "wallet|6800008856efc7ce2275dc6d|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "6800008856efc7ce2275dc6d",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Colocar aviso(Argos II)",
+      "author": "efigueira",
+      "updatedAt": "2026-08-19T17:02:42"
+    },
+    "wallet|680a9ce63b2296d86127131f|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680a9ce63b2296d86127131f",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado vi passivo",
+      "author": "efigueira",
+      "updatedAt": "2026-08-19T17:15:12"
+    },
+    "wallet|680a9ce33b2296d8612710d5|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680a9ce33b2296d8612710d5",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Colocar aviso(Argos II)",
+      "author": "efigueira",
+      "updatedAt": "2026-08-19T17:24:39"
+    },
+    "wallet|680a9ce73b2296d8612713ea|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680a9ce73b2296d8612713ea",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-19T16:36:10"
+    },
+    "wallet|680a9ce63b2296d861271342|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680a9ce63b2296d861271342",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-19T16:36:10"
+    },
+    "wallet|680a9ce53b2296d86127127a|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680a9ce53b2296d86127127a",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Colocar aviso(Argos II)",
+      "author": "efigueira",
+      "updatedAt": "2026-08-20T09:48:45"
+    },
+    "wallet|693c763a6c55498714e7caf1|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "693c763a6c55498714e7caf1",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-20T09:57:13"
+    },
+    "wallet|680a9ce63b2296d861271317|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680a9ce63b2296d861271317",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-20T11:04:57"
+    },
+    "wallet|680a9ce43b2296d8612711a1|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680a9ce43b2296d8612711a1",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-20T11:04:57"
+    },
+    "wallet|680a9ce43b2296d8612711fc|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680a9ce43b2296d8612711fc",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajsutado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-20T11:09:08"
+    },
+    "wallet|680a9ce43b2296d8612711b9|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680a9ce43b2296d8612711b9",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-20T11:09:08"
+    },
+    "wallet|67d9e6e5e7499ed40b7b3c4a|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "67d9e6e5e7499ed40b7b3c4a",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "securityContributionAdjustment do Esparta não está afetando contrib da carteira",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-20T09:52:32"
+    },
+    "wallet|69b1ac7b7ea9acf91f53b732|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "69b1ac7b7ea9acf91f53b732",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "mapeamento ntnb",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-20T12:55:07"
+    },
+    "wallet|680a9ce63b2296d861271326|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680a9ce63b2296d861271326",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "problema na explosão",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-20T13:13:57"
+    },
+    "wallet|6a2c62abaee4c2ef28edcac5|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "6a2c62abaee4c2ef28edcac5",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-19T16:36:10"
+    },
+    "wallet|680a9ce83b2296d86127150d|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680a9ce83b2296d86127150d",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "securityContributionAdjustment do Esparta não está afetando contrib da carteira",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-20T09:54:13"
+    },
+    "wallet|680a9ce73b2296d86127144d|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680a9ce73b2296d86127144d",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-19T16:36:10"
+    },
+    "wallet|680a9ce43b2296d8612711a9|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680a9ce43b2296d8612711a9",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-19T16:36:10"
+    },
+    "wallet|68643e0f3111a24e3f7ef917|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "68643e0f3111a24e3f7ef917",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-19T16:36:10"
+    },
+    "wallet|680a9ce33b2296d8612710fb|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680a9ce33b2296d8612710fb",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-19T16:36:10"
+    },
+    "wallet|680aa45e72f927b92d97bf29|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680aa45e72f927b92d97bf29",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-19T16:36:10"
+    },
+    "wallet|680a9cea3b2296d8612716b1|2026-08-13": {
+      "targetType": "wallet",
+      "targetId": "680a9cea3b2296d8612716b1",
+      "referenceDate": "2026-08-13",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "provisão Delfos",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-20T13:30:03"
+    },
+    "wallet|68c963dc93b1ff687e71a294|2026-08-14": {
+      "targetType": "wallet",
+      "targetId": "68c963dc93b1ff687e71a294",
+      "referenceDate": "2026-08-14",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-20T16:13:11"
+    },
+    "wallet|680a9ce63b2296d86127131f|2026-08-14": {
+      "targetType": "wallet",
+      "targetId": "680a9ce63b2296d86127131f",
+      "referenceDate": "2026-08-14",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Dia 13/08 e 14/08 ajustar com ferramenta Theo",
+      "author": "efigueira",
+      "updatedAt": "2026-08-20T17:52:41"
+    },
+    "wallet|680aa45d72f927b92d97bec7|2026-08-14": {
+      "targetType": "wallet",
+      "targetId": "680aa45d72f927b92d97bec7",
+      "referenceDate": "2026-08-14",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-20T15:18:58"
+    },
+    "wallet|680a9ce63b2296d861271326|2026-08-14": {
+      "targetType": "wallet",
+      "targetId": "680a9ce63b2296d861271326",
+      "referenceDate": "2026-08-14",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-20T15:18:58"
+    },
+    "wallet|680aa45d72f927b92d97be73|2026-08-14": {
+      "targetType": "wallet",
+      "targetId": "680aa45d72f927b92d97be73",
+      "referenceDate": "2026-08-14",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "Ajustado",
+      "author": "efigueira",
+      "updatedAt": "2026-08-20T17:41:34"
+    },
+    "wallet|680a9ce73b2296d8612713ea|2026-08-14": {
+      "targetType": "wallet",
+      "targetId": "680a9ce73b2296d8612713ea",
+      "referenceDate": "2026-08-14",
+      "responsavel": "Evair",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-20T15:18:58"
+    },
+    "wallet|680a9ce83b2296d86127150d|2026-08-14": {
+      "targetType": "wallet",
+      "targetId": "680a9ce83b2296d86127150d",
+      "referenceDate": "2026-08-14",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-20T15:18:58"
+    },
+    "wallet|680a9ce63b2296d861271342|2026-08-14": {
+      "targetType": "wallet",
+      "targetId": "680a9ce63b2296d861271342",
+      "referenceDate": "2026-08-14",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-20T15:18:58"
+    },
+    "wallet|680a9ce33b2296d8612710bf|2026-08-14": {
+      "targetType": "wallet",
+      "targetId": "680a9ce33b2296d8612710bf",
+      "referenceDate": "2026-08-14",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-20T15:18:58"
+    },
+    "wallet|6866e76b3111a24e3f7f0272|2026-08-14": {
+      "targetType": "wallet",
+      "targetId": "6866e76b3111a24e3f7f0272",
+      "referenceDate": "2026-08-14",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "Houve securityTransfer",
+      "author": "paulo martins",
+      "updatedAt": "2026-08-20T16:29:37"
+    },
+    "wallet|6920c6240f3b3ea7af62c8d2|2026-08-14": {
+      "targetType": "wallet",
+      "targetId": "6920c6240f3b3ea7af62c8d2",
+      "referenceDate": "2026-08-14",
+      "responsavel": "Paulo",
+      "comentarioAtuacao": "",
+      "author": "efigueira",
+      "updatedAt": "2026-08-20T15:18:58"
+    }
+  }
+}

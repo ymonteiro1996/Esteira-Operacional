@@ -1,0 +1,16 @@
+{
+  "aging_thresholds_dias": {
+    "Crítico": {"verde": 2, "ambar": 5},
+    "Atenção": {"verde": 7, "ambar": 14},
+    "Observação": {"verde": 21, "ambar": 45}
+  },
+  "tags_sugeridas": [
+    "preço faltando",
+    "ativo não mapeado",
+    "custódia atrasada",
+    "explosão de fundo",
+    "classificação",
+    "NAV divergente",
+    "cadastro"
+  ]
+}

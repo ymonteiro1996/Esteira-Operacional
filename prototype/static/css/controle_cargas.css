@@ -1,0 +1,746 @@
+/* controle_cargas.css — extraído de index_template.html (CLAUDE.md §4). */
+:root{
+  --surface:#f6f7f5;
+  --surface-raised:#ffffff;
+  --surface-sunk:#eef0ec;
+  --ink:#1c211d;
+  --ink-muted:#5b635a;
+  --ink-faint:#8a9187;
+  --border:#dadedb;
+  --accent:#3d5c4e;
+  --accent-ink:#eef4f0;
+  --focus:#6b7280;
+
+  --state-p-bg:#dcfce7;   --state-p-fg:#15803d;
+  /* [2026-07-18, rodada 7 da simbologia] FUNDO = SÓ ESTÁGIO. A rodada 5
+     (tom de estágio dentro do matiz de severidade) foi superada: o usuário
+     pediu para SEPARAR os dois canais — o fundo agora diz só onde a carteira
+     está na esteira (Unp amarelo-pálido → Pro verde-menta claro → Pub verde),
+     e o atraso saiu do fundo para o novo badge "Atraso" (canto inf. esq.,
+     amarelo 1-2du / vermelho ≥3du — mesmas cores do badge Rent). O fundo
+     Unp é de propósito BEM mais pálido/dessaturado que o amarelo vivo dos
+     badges: fundo = estágio (área grande, calma), badge = alerta (forma
+     pequena e saturada no canto). Pares validados com validate_palette.py
+     da skill dataviz: Unp×Pro ΔE cvd 10.5 / normal 15.2; Pro×Pub 8.1/11.5;
+     Unp×Pub 10.5/10.8; Unp×badge amarelo 13.4; Pro×badge amarelo 17.5.
+
+     [TENTATIVA 2026-07-28 REVERTIDA NO MESMO DIA, pedido do usuário: "no
+     excel o verde de fundo da Pro está mais escuro que o verde da Pub" —
+     cheguei a trocar --state-p-*/--state-pro-* entre si aqui (achando que
+     Excel devia bater com a TELA), mas o usuário corrigiu: "a tela deveria
+     ser mantida o que já estava, estava certo. somente no excel estava
+     errado" — ou seja, a TELA já estava certa desde sempre (Pub = verde-
+     pastel mais claro, Pro-aguardando-publicação = verde-menta mais
+     saturado, de propósito, pra puxar o olho pro que ainda está em
+     andamento) e não deveria ter sido tocada. Revertido para os valores
+     originais. A troca ficou só no Excel — ver XML_BG/XML_FG em
+     exportar.js e _PREENCHIMENTO_XLSX em excel_report.py — que agora
+     DIVERGE de propósito da tela (não são mais "3 lugares em sincronia",
+     são 2 esquemas de cor distintos por design). */
+  --state-unp-bg:#fde68a;  --state-unp-fg:#78350f;   /* Unp — amber-200 / amber-900 (7.28:1) */
+  --state-pro-bg:#8ae6d2;  --state-pro-fg:#134e4a;   /* Pro — verde-menta claro / teal-900 (6.47:1) */
+  --state-r1-bg:#fee2e2;  --state-r1-fg:#b91c1c;
+  --state-r2-bg:#fecaca;  --state-r2-fg:#7f1d1d;
+  --state-g1-bg:#f3f4f6;  --state-g1-fg:#9ca3af;
+  --state-g2-bg:#f9fafb;  --state-g2-fg:#d1d5db;
+  /* Tier "Atenção" (chips/stats) — desacoplado dos fundos de célula desde a
+     rodada 7 (os antigos --state-a1-* morreram junto com os fundos de atraso). */
+  --tier-att-bg:#fef3c7;  --tier-att-fg:#92400e;
+
+  /* [2026-07-18, rodada 6 da simbologia] Overlays de divergência e sequência
+     saíram da família violeta para amarelo/vermelho por gravidade (pedido do
+     usuário). Badge "Rent": amarelo = leve (>2bp/0,02%), vermelho = elevado
+     (>5bp) — [REVISADO 2026-07-31] os 2 tiers agora só disparam se o
+     impacto em R$ também passar de R$800 (ver LIMIAR_DIVERGENCIA_REAIS,
+     snapshot_builder.py).
+     Anel de sequência: vermelho escuro com offset de 1px de superfície (ver
+     .ov-seq) p/ não sumir sobre células vermelhas. Pares validados com
+     validate_palette.py da skill dataviz: CVD ΔE 21.7 (deutan) / normal 29.0
+     entre leve×elevado; contraste do texto no badge 7.8:1 (leve) e 4.8:1
+     (elevado). */
+  --overlay-div:#eab308;             /* badge "Rent" leve — yellow-500 */
+  --overlay-div-strong:#dc2626;      /* badge "Rent" elevado — red-600 */
+  --overlay-div-ink:#451a03;         /* texto do badge leve — marrom-escuro sobre amarelo (7.8:1) */
+  --overlay-div-strong-ink:#ffffff;  /* texto do badge elevado — branco sobre vermelho (4.8:1) */
+  --overlay-seq:#991b1b;             /* anel fora-de-sequência — red-800 (5.7:1 sobre red-200) */
+  --overlay-issue:#475569;
+
+  /* [NOVO 2026-08-13, pedido do usuário: "se a carteira da lista for
+     comprada por alguma carteira da lista... um contorno nele e na
+     matriz"] "Comprada" — carteira do Template que É o ativo de explosão
+     de outra carteira do Template, ainda com pendência (ver
+     snapshot_builder.mapear_carteiras_compradas). Roxo/violeta de propósito
+     — canal ORTOGONAL aos demais (que codificam GRAVIDADE em âmbar/
+     vermelho, ver nota "rodada 6" acima); este marcador não é sobre
+     gravidade, é sobre ORDEM DE DEPENDÊNCIA (resolver esta carteira antes
+     das que a compram). Cor escolhida por inspeção (Tailwind violet-600 /
+     violet-400), NÃO passou pelo validate_palette.py da skill dataviz como
+     os outros pares acima — revisitar se o time achar baixo contraste. */
+  --overlay-comprada:#7c3aed;        /* violet-600 */
+  --overlay-comprada-ink:#ffffff;
+  --overlay-comprada-wash:rgba(124,58,237,.14);
+
+  --tooltip-bg:#111827;
+  --tooltip-ink:#ffffff;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --surface:#14171b; --surface-raised:#1b1f24; --surface-sunk:#0f1215;
+    --ink:#e7e9e4; --ink-muted:#a1a89d; --ink-faint:#6b7268; --border:#2c322d;
+    --accent:#7fae95; --accent-ink:#0f1a14; --focus:#9ca3af;
+    --state-p-bg:#0f2e1c;   --state-p-fg:#5fd894;
+    /* rodada 7: fundo = só estágio também no dark — Unp âmbar-oliva escuro,
+       Pro verde-petróleo. Validado com validate_palette.py (surface #14171b):
+       Unp×Pro ΔE cvd 8.0 / normal 12.2; Pro×Pub 11.9; Unp×Pub 15.5.
+       [2026-07-28 — tentativa de troca Pub↔Pro revertida no mesmo dia, ver
+       nota completa no :root claro acima.] */
+    --state-unp-bg:#6b4f0d;  --state-unp-fg:#fbd77e;   /* 5.50:1 */
+    --state-pro-bg:#175045;  --state-pro-fg:#99f6e4;   /* 7.34:1 */
+    --state-r1-bg:#3a1414;  --state-r1-fg:#f38a8a;
+    --state-r2-bg:#4a1818;  --state-r2-fg:#fca5a5;
+    --state-g1-bg:#22262a;  --state-g1-fg:#7d8790;
+    --state-g2-bg:#191c1f;  --state-g2-fg:#4b5158;
+    --tier-att-bg:#3a2a06;  --tier-att-fg:#f0b642;
+    /* rodada 6: badge Rent amarelo (leve) / vermelho (elevado); anel de
+       sequência vermelho-claro (#f87171 = 5.3-5.9:1 sobre as células
+       vermelhas escuras; o offset de 1px em --surface-raised faz o contorno
+       sobre a célula âmbar ≥3du). validate_palette.py --mode dark: CVD ΔE
+       17.8 (deutan) / normal 24.5; texto no badge 9.8:1 (leve) e 5.8:1
+       (elevado). */
+    --overlay-div:#facc15; --overlay-div-strong:#f87171; --overlay-div-ink:#451a03; --overlay-div-strong-ink:#450a0a; --overlay-seq:#f87171; --overlay-issue:#94a3b8;
+    --overlay-comprada:#a78bfa; --overlay-comprada-ink:#2e1065; --overlay-comprada-wash:rgba(167,139,250,.16);
+  }
+}
+:root[data-theme="dark"]{
+  --surface:#14171b; --surface-raised:#1b1f24; --surface-sunk:#0f1215;
+  --ink:#e7e9e4; --ink-muted:#a1a89d; --ink-faint:#6b7268; --border:#2c322d;
+  --accent:#7fae95; --accent-ink:#0f1a14; --focus:#9ca3af;
+  --state-p-bg:#0f2e1c;   --state-p-fg:#5fd894;
+  /* rodada 7: espelho exato do bloco @media dark acima — manter em sincronia. */
+  --state-unp-bg:#6b4f0d;  --state-unp-fg:#fbd77e;
+  --state-pro-bg:#175045;  --state-pro-fg:#99f6e4;
+  --state-r1-bg:#3a1414;  --state-r1-fg:#f38a8a;
+  --state-r2-bg:#4a1818;  --state-r2-fg:#fca5a5;
+  --state-g1-bg:#22262a;  --state-g1-fg:#7d8790;
+  --state-g2-bg:#191c1f;  --state-g2-fg:#4b5158;
+  --tier-att-bg:#3a2a06;  --tier-att-fg:#f0b642;
+  /* rodada 6: espelho exato do bloco @media dark acima — manter em sincronia. */
+  --overlay-div:#facc15; --overlay-div-strong:#f87171; --overlay-div-ink:#451a03; --overlay-div-strong-ink:#450a0a; --overlay-seq:#f87171; --overlay-issue:#94a3b8;
+  --overlay-comprada:#a78bfa; --overlay-comprada-ink:#2e1065; --overlay-comprada-wash:rgba(167,139,250,.16);
+}
+:root[data-theme="light"]{
+  --surface:#f6f7f5; --surface-raised:#ffffff; --surface-sunk:#eef0ec;
+  --ink:#1c211d; --ink-muted:#5b635a; --ink-faint:#8a9187; --border:#dadedb;
+  --accent:#3d5c4e; --accent-ink:#eef4f0; --focus:#6b7280;
+  --state-p-bg:#dcfce7;   --state-p-fg:#15803d;
+  /* rodada 7: espelho exato do :root claro acima — manter em sincronia. */
+  --state-unp-bg:#fde68a;  --state-unp-fg:#78350f;
+  --state-pro-bg:#8ae6d2;  --state-pro-fg:#134e4a;
+  --state-r1-bg:#fee2e2;  --state-r1-fg:#b91c1c;
+  --state-r2-bg:#fecaca;  --state-r2-fg:#7f1d1d;
+  --state-g1-bg:#f3f4f6;  --state-g1-fg:#9ca3af;
+  --state-g2-bg:#f9fafb;  --state-g2-fg:#d1d5db;
+  --tier-att-bg:#fef3c7;  --tier-att-fg:#92400e;
+  /* rodada 6: espelho exato do :root claro acima — manter em sincronia. */
+  --overlay-div:#eab308; --overlay-div-strong:#dc2626; --overlay-div-ink:#451a03; --overlay-div-strong-ink:#ffffff; --overlay-seq:#991b1b; --overlay-issue:#475569;
+  --overlay-comprada:#7c3aed; --overlay-comprada-ink:#ffffff; --overlay-comprada-wash:rgba(124,58,237,.14);
+}
+
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--surface); color:var(--ink);
+  font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:14px; line-height:1.5;
+}
+.page{max-width:1400px;margin:0 auto;padding:32px 28px 64px;}
+
+.masthead{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:6px;flex-wrap:wrap;}
+.masthead h1{font-size:20px;font-weight:650;letter-spacing:-0.01em;margin:0;}
+.masthead .tag{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-faint);font-weight:600;}
+.subhead{color:var(--ink-muted);font-size:13px;margin:2px 0 20px;max-width:80ch;}
+.subhead b{color:var(--ink);}
+
+/* tabs */
+.tabs{display:flex;gap:4px;margin-bottom:18px;border-bottom:1px solid var(--border);}
+.tab{
+  font-size:13px; font-weight:600; color:var(--ink-faint); padding:9px 4px; margin-right:22px;
+  border-bottom:2px solid transparent; cursor:pointer; background:none; border-top:none; border-left:none; border-right:none;
+}
+.tab.active{color:var(--ink); border-bottom-color:var(--accent);}
+
+.panel{
+  background:var(--surface-raised); border:1px solid var(--border); border-radius:10px;
+  padding:20px 22px; margin-bottom:22px;
+}
+.panel h2{font-size:13px;font-weight:650;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-muted);margin:0 0 16px;}
+
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.chip{
+  font-size:12px; padding:5px 11px; border-radius:999px; border:1px solid var(--border);
+  color:var(--ink-muted); background:var(--surface-sunk); font-weight:550; cursor:pointer;
+  user-select:none;
+}
+.chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);}
+.chip:hover{filter:brightness(0.97);}
+
+.selectbox, .searchbox{
+  font-size:12.5px; padding:6px 10px; border-radius:8px; border:1px solid var(--border);
+  background:var(--surface-sunk); color:var(--ink); font-family:inherit;
+}
+.searchbox{min-width:200px;}
+.searchbox::placeholder{color:var(--ink-faint);}
+
+.toolbar2{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+.sortbar{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-muted);flex-wrap:wrap;}
+.sortbtn{
+  font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:6px;border:1px solid var(--border);
+  background:var(--surface-sunk);color:var(--ink-muted);cursor:pointer;
+}
+.sortbtn.on{background:var(--ink);color:var(--surface-raised);border-color:var(--ink);}
+.freezebadge{font-size:11px;color:var(--accent);font-weight:600;}
+.resultcount{font-size:12px;color:var(--ink-faint);}
+
+.btn{
+  font-size:12.5px;font-weight:650;padding:7px 14px;border-radius:8px;border:1px solid var(--accent);
+  background:var(--accent);color:var(--accent-ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+}
+.btn:hover{filter:brightness(1.08);}
+.btn.secondary{background:var(--surface-sunk);color:var(--ink-muted);border-color:var(--border);}
+/* [2026-08-05] destaque do botão "🔑 Beehus API" (masthead) enquanto este
+   processo ainda não tem um token válido colado — mesmas variáveis do
+   estado vermelho já usado no alert-banner. */
+.btn.conexao-pendente{background:var(--state-r1-bg);color:var(--state-r1-fg);border-color:var(--state-r1-fg);}
+/* Mensagem de status genérica dentro de um modal (ok/erro) — usada hoje só
+   pelo modal "🔑 Beehus API" (beehus_token.js). */
+.modal-status-msg{font-size:12px;margin-top:8px;min-height:1.2em;}
+.modal-status-msg.err{color:var(--state-r1-fg);}
+.modal-status-msg.ok{color:var(--state-p-fg);}
+
+/* grid */
+.grid-scroll{overflow-x:auto; border-radius:8px; max-height:70vh; overflow-y:auto; cursor:grab; user-select:none;}
+.grid-scroll.dragging{cursor:grabbing;}
+table.matrix{border-collapse:separate;border-spacing:2px;width:100%;}
+table.matrix thead th{
+  font-size:10.5px; font-weight:650; color:var(--ink-faint); text-align:center;
+  padding:4px 2px 6px; white-space:nowrap; font-variant-numeric:tabular-nums;
+  cursor:pointer; position:sticky; top:0; background:var(--surface-raised); z-index:3;
+}
+table.matrix thead th.ref{color:var(--accent);}
+table.matrix thead th.ref .refline{font-size:9px;text-transform:uppercase;letter-spacing:.06em;display:block;}
+/* coluna de data escolhida no cabeçalho pra alimentar o painel "Carteiras
+   Publicadas" (buildPublishStat) — distinta da coluna .ref (que é sempre a
+   data de referência do grid); pedido do usuário 2026-07-23. */
+table.matrix thead th.focuscol{color:var(--accent);background:var(--surface-sunk);box-shadow:inset 0 -2px 0 var(--accent);}
+table.matrix thead th.focuscol .focusline{font-size:9px;text-transform:uppercase;letter-spacing:.06em;display:block;}
+table.matrix thead th.hdr-company, table.matrix thead th.hdr-name, table.matrix thead th.hdr-summary{text-align:left;}
+table.matrix thead th .sortarrow{font-size:9px;opacity:.6;margin-left:2px;}
+
+/* Filtro "estilo Excel" no cabeçalho (Responsável/Comentário sobre atuação,
+   Instituição, Modelo de Carga, coluna Ref) — [2026-07-29, pedido do
+   usuário]. Botão ▾ dentro do <th> + popover flutuante (position:fixed,
+   fora do <table>, ver filtro_cabecalho.js). [AJUSTADO 2026-07-29, mesmo
+   dia, pedido do usuário: "aqui desejo filtro também" — o botão na coluna
+   Ref estava quase invisível (10px, sem fundo, cor apagada sobre o texto
+   já pequeno "▾ ref"); ganhou fundo/borda sempre visíveis (não só no
+   active) pra ler como um controle clicável em qualquer cabeçalho. */
+.th-filter-btn{
+  cursor:pointer;border:1px solid var(--border);background:var(--surface-sunk);color:var(--ink-muted);
+  font-size:10px;padding:0px 3px;margin-left:4px;border-radius:3px;line-height:1.5;vertical-align:middle;
+}
+.th-filter-btn:hover{color:var(--ink);background:var(--surface-raised);}
+.th-filter-btn.active{color:var(--accent-ink);background:var(--accent);border-color:var(--accent);font-weight:900;}
+/* [REVISADO 2026-07-29, pedido do usuário: "revise todo design... e
+   redimensionamentos"] a coluna Ref é uma coluna de DIA (bem mais estreita
+   que Instituição/Modelo de Carga) — o botão padrão, com borda+fundo,
+   deixava essa coluna sozinha mais larga que as vizinhas (só data + dia da
+   semana). Versão compacta só pra dentro de .ref: metade do padding
+   lateral, sem borda própria (usa só a cor, como um link), e tom acompanha
+   o --accent do resto do cabeçalho de referência em vez do cinza neutro. */
+th.ref .th-filter-btn{
+  padding:0 1px; margin-left:2px; border:none; background:transparent;
+  color:var(--accent); opacity:.75;
+}
+th.ref .th-filter-btn:hover{opacity:1; background:transparent;}
+th.ref .th-filter-btn.active{background:var(--accent); color:var(--accent-ink); opacity:1; border-radius:3px;}
+.th-filter-popover{
+  position:fixed;z-index:50;width:250px;max-height:320px;display:flex;flex-direction:column;
+  background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;
+  box-shadow:0 8px 24px rgba(0,0,0,.18);padding:8px;gap:6px;
+  font-size:12px;font-weight:400;text-transform:none;letter-spacing:normal;color:var(--ink);cursor:default;
+}
+.th-filter-search{
+  font-size:12px;padding:5px 7px;border-radius:6px;border:1px solid var(--border);
+  background:var(--surface-sunk);color:var(--ink);font-family:inherit;
+}
+.th-filter-selectall{display:flex;align-items:center;gap:6px;padding:2px 2px 4px;border-bottom:1px solid var(--border);font-size:12px;}
+.th-filter-list{overflow-y:auto;flex:1;min-height:40px;display:flex;flex-direction:column;gap:1px;}
+.th-filter-item{display:flex;align-items:center;gap:6px;padding:3px 2px;border-radius:4px;cursor:pointer;}
+.th-filter-item:hover{background:var(--surface-sunk);}
+.th-filter-item span:not(.th-filter-count){overflow-wrap:anywhere;}
+.th-filter-count{color:var(--ink-faint);font-size:10.5px;margin-left:auto;flex-shrink:0;}
+.th-filter-empty{color:var(--ink-faint);font-size:11.5px;padding:6px 2px;}
+/* [REVISADO 2026-07-29] "Limpar filtro"+"Cancelar"+"OK" numa popover de
+   250px eram justos demais (3 botões de texto espremidos numa linha só,
+   risco de quebrar/cortar) — flex-wrap como rede de segurança, e o rótulo
+   "Limpar filtro" encurtado pra "Limpar" (o contexto já deixa claro o quê). */
+.th-filter-footer{display:flex;align-items:center;justify-content:space-between;gap:6px;padding-top:6px;border-top:1px solid var(--border);flex-wrap:wrap;}
+.th-filter-footer .btn{padding:5px 12px;font-size:12px;}
+.linklike{background:none;border:none;color:var(--ink-muted);font-size:11.5px;cursor:pointer;padding:2px;text-decoration:underline;white-space:nowrap;}
+.linklike:hover{color:var(--ink);}
+
+td.col-company, th.hdr-company{
+  position:sticky; left:0; background:var(--surface-raised);
+  font-size:11.5px; color:var(--ink-muted); font-weight:600; padding-right:12px; white-space:nowrap; z-index:2;
+}
+td.col-name, th.hdr-name{
+  position:sticky; left:96px; background:var(--surface-raised);
+  padding-right:14px; font-size:12.5px; white-space:nowrap; z-index:2;
+}
+/* aba Company — só 1 coluna sticky (nome da company; não há coluna de nome
+   separada como em Carteiras/Agrupamentos). */
+td.col-companyname, th.hdr-companyname{
+  position:sticky; left:0; background:var(--surface-raised);
+  font-size:12.5px; font-weight:600; padding-right:14px; white-space:nowrap; z-index:2; text-align:left;
+}
+/* user-select:text sobrescreve o :none herdado de .grid-scroll (que existe só
+   pra não selecionar texto sem querer durante o arrastar-pra-rolar) — pedido
+   do usuário: poder selecionar/copiar o nome da carteira direto da matriz.
+   O mousedown em cima do próprio .wname já é ignorado pelo drag-scroll (ver
+   enableDragScroll() em matriz.js), então arrastar aqui seleciona texto em
+   vez de rolar a tabela. */
+.wname{font-weight:600;color:var(--ink); cursor:pointer; user-select:text;}
+.wname:hover{text-decoration:underline;}
+.went{display:block;font-size:10.5px;color:var(--ink-faint);font-weight:500;margin-top:1px;}
+.inst-chip{
+  /* [REVISADO 2026-07-29, pedido do usuário] antes vivia dentro da célula
+     Carteira/Agrupamento (por isso o margin-left, pra afastar do nome) —
+     agora tem <td> própria (col-summary), sem precisar do respiro lateral. */
+  font-size:10px; padding:1px 6px; border-radius:4px;
+  background:var(--surface-sunk); color:var(--ink-faint); font-weight:600; vertical-align:1px; cursor:pointer;
+}
+.inst-chip:hover{background:var(--accent);color:var(--accent-ink);}
+
+.cell{
+  position:relative; min-width:52px; height:31px; border-radius:4px;
+  font-size:11.5px; font-weight:650; letter-spacing:0.02em; white-space:nowrap;
+  display:flex; align-items:center; justify-content:center;
+  font-variant-numeric:tabular-nums; cursor:pointer; outline:none;
+}
+.cell:hover, .cell:focus-visible{outline:2px solid var(--focus); outline-offset:1px; z-index:2;}
+
+.s-p   { background:var(--state-p-bg);   color:var(--state-p-fg);   }
+/* rodada 7: fundo = SÓ estágio. s-unp (amarelo-pálido) = tem Unprocessed,
+   falta Processada; s-pro (verde-menta claro) = tem Processada, falta
+   Publicada. O atraso não muda mais o fundo — vive no badge .atraso-badge. */
+.s-unp { background:var(--state-unp-bg); color:var(--state-unp-fg); }
+.s-pro { background:var(--state-pro-bg); color:var(--state-pro-fg); }
+.s-r1  { background:var(--state-r1-bg);  color:var(--state-r1-fg);  }
+.s-r2  { background:var(--state-r2-bg);  color:var(--state-r2-fg);  }
+.s-g1  { background:var(--state-g1-bg);  color:var(--state-g1-fg);  }
+.s-g2  { background:var(--state-g2-bg);  color:var(--state-g2-fg);  }
+
+/* aba Company — célula = % publicadas, MESMAS 3 faixas de status (e mesmos
+   tokens de cor) do painel "Carteiras/Agrupamentos Publicados" (100% ok /
+   ≥80% atenção / abaixo crítico), + neutro quando nada era esperado da
+   company naquele dia. */
+.company-ok      { background:var(--state-p-bg);   color:var(--state-p-fg);   }
+.company-att     { background:var(--tier-att-bg);  color:var(--tier-att-fg);  }
+.company-crit    { background:var(--state-r1-bg);  color:var(--state-r1-fg);  }
+.company-neutral { background:var(--state-g2-bg);  color:var(--state-g2-fg);  }
+
+/* summary columns (Última Unp/Pro/Pub) */
+td.col-summary{font-size:10.5px; color:var(--ink-muted); white-space:nowrap; padding:0 8px; text-align:left;}
+td.col-summary .lbl{color:var(--ink-faint); font-size:9px; display:block; text-transform:uppercase; letter-spacing:.04em;}
+
+/* Colunas editáveis Responsável/Comentário sobre atuação (só na data de
+   referência) [2026-07-24, pedido do usuário: "deixar no estilo o mais
+   excel possível"] — input sem borda visível, só aparece ao focar (mesmo
+   princípio de uma célula de planilha). */
+td.col-anotacao{padding:0 4px; min-width:110px;}
+td.col-anotacao-comentario{min-width:220px;}
+.anot-input{
+  width:100%; box-sizing:border-box; border:1px solid transparent; background:transparent;
+  color:var(--ink); font-size:11px; padding:4px 6px; border-radius:4px; font-family:inherit;
+}
+.anot-input:hover{background:var(--surface-sunk);}
+.anot-input:focus{outline:none; border-color:var(--accent); background:var(--surface-raised);}
+/* [2026-08-07, pedido do usuário: "o comentário vigente verde/amarelo/
+   vermelho aparecer como sinalização... nas células Responsável e
+   Comentário, para avaliar antes de lançar responsável"; escolhida a opção
+   "fundo tingido" entre 3 mockups] tingimento leve do <td> das 2 colunas
+   com a severidade do comentário vigente NA DATA DE REFERÊNCIA
+   (colunasAnotacaoHtml(), anotacoes.js) — mesma tríade de cor fixa do balão
+   .cmt-dot (não varia por tema claro/escuro), só bem mais diluída ("leve")
+   pra não competir com o texto do input por cima. Nunca se mistura com o
+   fundo de estágio das colunas de dia (são <td> diferentes). */
+td.col-anotacao.sev-green{background:rgba(22,163,74,.14);}
+td.col-anotacao.sev-yellow{background:rgba(217,119,6,.14);}
+td.col-anotacao.sev-red{background:rgba(220,38,38,.14);}
+
+/* overlays */
+/* Divergência Rent Contrib × NAV — [REVISADO 2026-07-17] o ponto de 7-8px
+   virou um badge oval com o texto "Rent" (pedido do usuário: marcador
+   auto-explicativo sem depender do tooltip). Geometria pensada p/ a célula
+   de 44×26px: badge de 9px de altura × ~19px de largura no canto SUPERIOR
+   DIREITO, fonte 6.5px bold — não colide com o triângulo de issues ([rodada
+   7] sup. esq.), com o badge Atraso (inf. esq.), com o balão de comentário
+   (inf. dir.) nem com o anel de sequência (borda inteira); pode sobrepor
+   ~2px do topo do trigrama central em células estreitas, aceitável porque o
+   badge tem fundo sólido + aro de superfície.
+   [REVISADO 2026-07-18, rodada 6] paleta do badge trocada de violeta
+   claro/escuro para AMARELO (leve, >2bp/0,02%) / VERMELHO (elevado, >5bp) —
+   pedido do usuário: gravidade em 2 cores de alarme; [REVISADO 2026-07-31]
+   os 2 tiers só disparam com impacto em R$ também ≥ R$800. O badge segue
+   sendo uma pílula
+   discreta com aro de 1px de superfície + texto "Rent", então reaproveitar a
+   família amarelo/vermelho do fundo de severidade não confunde: a forma e o
+   aro separam o badge do preenchimento da célula (nenhum fundo de célula usa
+   yellow-500/red-600 exatos). Ink por gravidade: marrom-escuro no amarelo,
+   branco no vermelho (--overlay-div-ink / --overlay-div-strong-ink).
+   Continua pseudo-elemento (::after com content:"Rent") — zero mudança de
+   HTML, e o texto some naturalmente do clipboard/seleção (é decoração). */
+.ov-dot::after, .ov-div_strong::after{
+  content:"Rent"; position:absolute; top:1px; right:1px;
+  height:9px; line-height:9px; padding:0 3px; border-radius:5px;
+  font-size:6.5px; font-weight:700; letter-spacing:.03em;
+  box-shadow:0 0 0 1px var(--surface-raised);
+}
+.ov-dot::after{background:var(--overlay-div); color:var(--overlay-div-ink);}
+.ov-div_strong::after{background:var(--overlay-div-strong); color:var(--overlay-div-strong-ink);}   /* vermelho = divergência forte (>5bp) */
+/* versão compacta nas mini-matrizes dos painéis (células de 22px) */
+.mini-row .cell.ov-dot::after, .mini-row .cell.ov-div_strong::after{
+  top:0; right:0; height:8px; line-height:8px; padding:0 2px; font-size:5.5px;
+}
+/* Anel fora-de-sequência — [REVISADO 2026-07-18, rodada 6] roxo → vermelho.
+   Pior caso: célula já vermelha por severidade (∅ miss/miss2) COM anel.
+   Solução em 2 camadas de inset: 1px de --surface-raised (o "ring-offset")
+   entre a borda da célula e o anel, e só então o anel de 2px — o traço nunca
+   encosta no preenchimento, então continua legível como CONTORNO mesmo
+   quando fundo e anel são da mesma família (light: #991b1b sobre #fecaca =
+   5.7:1 + gap branco 8.3:1; dark: #f87171 sobre #4a1818 = 5.3:1 + gap 6:1). */
+.ov-seq{box-shadow:inset 0 0 0 1px var(--surface-raised), inset 0 0 0 3px var(--overlay-seq);}
+/* Triângulo de issues — [rodada 7] MUDOU do canto inferior esquerdo para o
+   SUPERIOR ESQUERDO: o inferior esquerdo foi cedido ao novo badge "Atraso"
+   (pílula de ~26px que não coexistiria com o triângulo no mesmo canto).
+   Arranjo final dos 4 cantos: Rent = sup. dir. · Issues = sup. esq. ·
+   Atraso = inf. esq. · Comentário = inf. dir. (+ anel de sequência na borda). */
+.ov-issue::before{
+  content:""; position:absolute; left:0; top:0; width:0; height:0;
+  border-left:7px solid var(--overlay-issue); border-bottom:7px solid transparent;
+}
+/* Badge "Atraso" — [rodada 7] espelho do badge "Rent" (mesma geometria de
+   pílula, mesmo aro de 1px de superfície, mesmas cores por gravidade:
+   amarelo --overlay-div = atraso leve 1-2du, vermelho --overlay-div-strong =
+   atraso ≥3du), no canto INFERIOR ESQUERDO. Diferente do Rent (::after), é
+   um <span> real dentro da célula: os dois badges podem coexistir na mesma
+   célula e os pseudo-elementos ::before/::after já estão ocupados
+   (triângulo de issues / badge Rent). aria-hidden + user-select:none o
+   mantêm fora de leitores de tela e da seleção (é reforço visual; o dado
+   canônico do atraso está no tooltip/SLA e no painel de detalhe). */
+.atraso-badge{
+  position:absolute; bottom:1px; left:1px;
+  height:9px; line-height:9px; padding:0 3px; border-radius:5px;
+  font-size:6.5px; font-weight:700; letter-spacing:.03em;
+  box-shadow:0 0 0 1px var(--surface-raised);
+  background:var(--overlay-div); color:var(--overlay-div-ink);
+  user-select:none; pointer-events:none;
+}
+.atraso-badge.strong{background:var(--overlay-div-strong); color:var(--overlay-div-strong-ink);}
+/* versão compacta nas mini-matrizes dos painéis (células de 22px) */
+.mini-row .cell .atraso-badge{
+  bottom:0; left:0; height:8px; line-height:8px; padding:0 2px; font-size:5.5px;
+}
+
+/* legend */
+.legend{display:flex;flex-wrap:wrap;gap:18px 28px;font-size:12px;color:var(--ink-muted);}
+.legend-group{display:flex;flex-direction:column;gap:8px;}
+.legend-group .lg-title{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:650;}
+.legend-item{display:flex;align-items:center;gap:8px;}
+.legend-swatch{width:32px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:650;letter-spacing:0.02em;flex:none;position:relative;}
+
+/* tooltip */
+#tt{
+  position:fixed; z-index:50; background:var(--tooltip-bg); color:var(--tooltip-ink);
+  font-size:11px; border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.35);
+  padding:10px 12px; max-width:320px; pointer-events:none; opacity:0; transform:translateY(4px);
+  transition:opacity .1s ease, transform .1s ease; line-height:1.55;
+}
+#tt.show{opacity:1;transform:translateY(0);}
+#tt .tt-h{font-weight:650;font-size:12px;margin-bottom:1px;}
+#tt .tt-sub{color:#9ca3af;font-size:10.5px;margin-bottom:7px;}
+#tt .tt-rule{border-top:1px solid #2a3140;margin:7px 0;}
+#tt .tt-row{display:flex;justify-content:space-between;gap:14px;}
+#tt .tt-label{color:#9ca3af;flex:none;}
+#tt .tt-val{font-weight:600;font-variant-numeric:tabular-nums;text-align:right;}
+#tt .tt-warn{color:#fca5a5;font-weight:600;}
+
+.note{font-size:12px;color:var(--ink-faint);margin-top:10px;}
+.helplink{font-size:11px;color:var(--accent);font-weight:600;cursor:pointer;background:none;border:none;padding:0;}
+
+/* modal drill-down — PLANNING §Painéis de Detalhe: "max-width 760px, max-height
+   85vh com scroll interno — substitui o modal de 420px do protótipo" */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:none;align-items:center;justify-content:center;}
+.modal-backdrop.show{display:flex;}
+.modal{background:var(--surface-raised);border-radius:12px;padding:22px 24px;max-width:760px;width:94%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.4);}
+.modal h3{margin:0 0 4px;font-size:16px;}
+.modal .modal-sub{color:var(--ink-muted);font-size:12px;margin-bottom:14px;}
+.modal .mrow{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12.5px;}
+.modal .mrow:last-child{border-bottom:none;}
+.modal .mrow .l{color:var(--ink-muted);}
+.modal .mrow .v{font-weight:600;text-align:right;}
+.modal-close{margin-top:16px;text-align:right;position:sticky;bottom:0;background:var(--surface-raised);padding-top:8px;}
+
+/* seções do painel de detalhe (Carteira: 9 seções / Agrupamento: 6 seções, sempre
+   nesta ordem — PLANNING §Painéis de Detalhe) */
+.modal .psec{margin-top:18px;padding-top:14px;border-top:1px solid var(--border);}
+.modal .psec:first-of-type{margin-top:10px;border-top:none;padding-top:0;}
+.modal .psec h4{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-muted);margin:0 0 10px;font-weight:700;}
+.modal .psub{font-size:11.5px;color:var(--ink-faint);margin:-6px 0 10px;}
+.modal .chiprow{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 12px;align-items:center;}
+.modal .pchip{font-size:10.5px;padding:2px 8px;border-radius:999px;background:var(--surface-sunk);color:var(--ink-muted);font-weight:600;}
+.modal .ptable{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:6px;}
+.modal .ptable th{text-align:left;color:var(--ink-faint);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;padding:4px 10px 4px 0;border-bottom:1px solid var(--border);white-space:nowrap;}
+.modal .ptable td{padding:6px 10px 6px 0;border-bottom:1px solid var(--border);vertical-align:top;}
+.modal .ptable tr:last-child td{border-bottom:none;}
+.modal .mini-row{display:flex;gap:2px;flex-wrap:wrap;margin:8px 0;}
+.modal .mini-row .cell{min-width:32px;height:22px;font-size:9.5px;cursor:pointer;}
+.modal .mini-row .cell.focused{outline:2px solid var(--ink);outline-offset:1px;}
+.modal .empty-note{font-size:12px;color:var(--ink-faint);font-style:italic;}
+.modal .offender{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border);cursor:pointer;border-radius:6px;}
+.modal .offender:hover{background:var(--surface-sunk);}
+.modal .offender:last-child{border-bottom:none;}
+.modal .offender .oname{font-weight:600;font-size:12.5px;flex:1;}
+.modal .offender .ometa{font-size:11px;color:var(--ink-muted);white-space:nowrap;}
+.modal .drillthrough{color:var(--accent);font-weight:600;cursor:pointer;}
+.modal .drillthrough:hover{text-decoration:underline;}
+
+/* overlay/balão de comentário — 4º marcador independente da cor calculada
+   (PLANNING §Sistema de Comentários — "Aparência na célula"): canto inferior
+   direito, silhueta de balão (border-radius 50% 50% 50% 0), NUNCA repinta o
+   fundo da célula. Implementado como elemento real (<span class="cmt-dot">),
+   NÃO como ::before/::after: o overlay de issues (.ov-issue) já usa ::before
+   para o triângulo ([rodada 7] agora no canto SUPERIOR esquerdo) — uma célula
+   com issue E comentário ao mesmo tempo só poderia ter 1 dos 2
+   pseudo-elementos, então o balão de comentário precisa ser um nó DOM
+   próprio para conviver com ele (mesmo motivo do .atraso-badge). */
+.cmt-dot{position:absolute; right:1px; bottom:1px; width:11px; height:11px;
+  border-radius:50% 50% 50% 0; box-shadow:0 0 0 1px var(--surface-raised); z-index:1;}
+.cmt-dot.green{background:#16a34a;}
+.cmt-dot.yellow{background:#d97706;}
+.cmt-dot.red{background:#dc2626;}
+/* Comentário sobre atuação (anotacoes.js) — [2026-07-30, pedido do usuário,
+   revisado no mesmo dia após feedback visual: "ta invertido, quero o azul
+   sempre como menor, dentro do verde/amarelo/vermelho"] marcador PRÓPRIO,
+   irmão do .cmt-dot (não é modificador dele, não muda a cor/tamanho do
+   balão de severidade) — compartilha o mesmo canto em vez de abrir um 6º
+   (os 4 cantos + a borda já estão todos ocupados pelos outros marcadores,
+   ver nota em rowHtml()/matriz.js). Sempre este MESMO tamanho pequeno e
+   nesta MESMA posição, sozinho ou por cima do balão verde/amarelo/vermelho
+   (z-index maior) — nunca o contrário (nada de anel azul ENVOLVENDO um
+   balão de severidade maior, que foi a 1ª tentativa e ficou "invertida"). */
+.atuacao-dot{position:absolute; right:2px; bottom:2px; width:6px; height:6px;
+  border-radius:50% 50% 50% 0; background:#2563eb; box-shadow:0 0 0 1px var(--surface-raised); z-index:2;}
+.row-comment-badge{display:inline-block;width:9px;height:9px;border-radius:50% 50% 50% 0;margin-left:6px;vertical-align:1px;box-shadow:0 0 0 1px var(--surface-raised);}
+.row-comment-badge.green{background:#16a34a;} .row-comment-badge.yellow{background:#d97706;} .row-comment-badge.red{background:#dc2626;}
+
+/* [NOVO 2026-08-13] pílula "Comprada" ao lado do nome — só quando
+   aguardandoExplosao (ver matriz.js rowHtml()); o title (tooltip nativo)
+   lista quem compra. Complementa o anel .linha-comprada-pendente (acima)
+   com o CONTEXTO de quem é o comprador, sem precisar abrir o painel de
+   detalhe. */
+.comprada-badge{
+  display:inline-block; margin-left:6px; padding:1px 7px; border-radius:10px;
+  font-size:9.5px; font-weight:700; letter-spacing:.02em; white-space:nowrap;
+  background:var(--overlay-comprada); color:var(--overlay-comprada-ink);
+  vertical-align:1px; cursor:help;
+}
+
+/* botões ℹ️/📋 ao lado de nome/walletId/groupingId (identificadores.js) —
+   [2026-07-30, pedido do usuário] discretos, só aparecem "de propósito"
+   (opacity baixa) e ganham destaque no hover do próprio grupo pai, pra não
+   competir visualmente com o nome/texto ao lado. */
+.id-action-btn{
+  border:none; background:transparent; cursor:pointer; font-size:10.5px; line-height:1;
+  padding:1px 3px; border-radius:4px; opacity:.55; vertical-align:1px;
+}
+.id-action-btn:hover{opacity:1; background:var(--surface-sunk);}
+/* último 📋 clicado numa lista — [2026-08-03, pedido do usuário: "até eu
+   clicar em outro copiar, ele deve ficar com o simbolo de copiar amarelo"]
+   só 1 fica marcado por vez (marcarUltimoCopiado(), identificadores.js). */
+.id-action-copy.copiado{opacity:1; background:#eab308; box-shadow:0 0 0 1px #a16207;}
+
+/* aviso "Copiado!" — feedback efêmero de copiarTexto() (identificadores.js),
+   canto inferior direito, acima até do modal (z-index 100). */
+#copy-toast{
+  position:fixed; right:18px; bottom:18px; z-index:200;
+  background:var(--tooltip-bg); color:var(--tooltip-ink); font-size:12px; font-weight:600;
+  padding:8px 14px; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,.35);
+  opacity:0; transform:translateY(6px); transition:opacity .15s, transform .15s; pointer-events:none;
+}
+#copy-toast.show{opacity:1; transform:translateY(0);}
+
+/* [2026-08-07, pedido do usuário: "ao copiar o nome na matriz pelo botão de
+   copiar, a linha precisa ficar mais clara para sinalizar ela inteira";
+   REVISADO no mesmo dia: "pode deixar a linha com leve sinalização ao
+   selecionar o copiar até selecionar outra"] fundo levemente amarelo na
+   <tr> inteira da ÚLTIMA cópia via 📋 (destacarLinhaCopiada(),
+   identificadores.js) — sinaliza qual linha foi copiada em tabelas com
+   muitas linhas parecidas, e PERSISTE até a próxima cópia (não mais um
+   flash que apaga sozinho). Transição sempre presente em qualquer <td> da
+   matriz (não só quando marcado), pra animar suavemente a entrada/saída da
+   marca conforme ela pula de uma linha pra outra. A especificidade de
+   "tr.row-copiada > td" (2 classes) já é maior que a de td.col-company/
+   td.col-name (1 classe cada, controle_cargas.css acima), então sobrepõe o
+   var(--surface-raised) fixo das colunas sticky sem precisar repetir esses
+   seletores. Mesmo tom (bem mais diluído, "leve") do botão "copiado"
+   (.id-action-copy.copiado, #eab308) pra reforçar a linguagem visual já
+   existente do recurso de copiar. */
+table.matrix tbody td{transition:background-color .9s ease;}
+tr.row-copiada > td{background-color:rgba(234,179,8,.16);}
+
+/* [NOVO 2026-08-13, pedido do usuário: "se a carteira da lista for comprada
+   por alguma carteira da lista... um contorno nele e na matriz, algo que
+   sinalize bem"] carteira do Template que é comprada (explodida) por outra
+   carteira do Template e AINDA tem pendência na data de referência (ver
+   snapshot_builder.aguardando_explosao, matriz.js rowHtml()). `box-shadow`
+   (não `background-color`, ao contrário de tr.row-copiada acima) DE
+   PROPÓSITO: fica num canal visual separado do destaque de "copiado" — as
+   duas marcações convivem sem se apagar quando coincidem na mesma linha. Um
+   anel VIOLETA por célula (mesma técnica de .ov-seq, só que na linha
+   INTEIRA, não numa célula só) — as folgas de 2px entre células
+   (border-spacing) fazem o anel de cada <td> aparecer separado, mas a
+   sequência inteira ainda lê como "esta linha está marcada" ao rolar a
+   grade. */
+tr.linha-comprada-pendente > td{box-shadow:inset 0 0 0 2px var(--overlay-comprada);}
+
+/* lista + formulário de comentários (seção final dos 2 painéis) */
+.comment-item{padding:9px 4px;border-bottom:1px solid var(--border);font-size:12px;}
+.comment-item:last-child{border-bottom:none;}
+.comment-item .chead{display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap;}
+.comment-dot{width:9px;height:9px;border-radius:50%;flex:none;}
+.comment-dot.green{background:#16a34a;} .comment-dot.yellow{background:#d97706;} .comment-dot.red{background:#dc2626;}
+.comment-item .cauthor{font-weight:600;color:var(--ink);}
+.comment-item .cvalid{color:var(--ink-faint);font-size:10.5px;}
+.comment-item .cexpired-tag{background:var(--surface-sunk);color:var(--ink-faint);font-size:10px;padding:1px 6px;border-radius:4px;}
+.comment-item .ctext{color:var(--ink);margin-top:2px;white-space:pre-wrap;}
+.comment-form{margin-top:10px;padding:12px;border-radius:8px;background:var(--surface-sunk);}
+.comment-form .sevbtns{display:flex;gap:6px;margin-bottom:9px;}
+.sevbtn{font-size:11.5px;font-weight:600;padding:6px 13px;border-radius:6px;border:1px solid var(--border);background:var(--surface-raised);color:var(--ink-muted);cursor:pointer;}
+.sevbtn.on[data-sev="green"]{background:#16a34a;color:#fff;border-color:#16a34a;}
+.sevbtn.on[data-sev="yellow"]{background:#d97706;color:#fff;border-color:#d97706;}
+.sevbtn.on[data-sev="red"]{background:#dc2626;color:#fff;border-color:#dc2626;}
+.comment-form textarea{width:100%;min-height:56px;font-family:inherit;font-size:12.5px;padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--surface-raised);color:var(--ink);resize:vertical;box-sizing:border-box;}
+.comment-form .fieldlabel{font-size:10.5px;color:var(--ink-faint);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:10px 0 4px;}
+.comment-form .datesrow{display:flex;gap:14px;margin:0 0 9px;flex-wrap:wrap;align-items:flex-end;}
+.comment-form label{font-size:11px;color:var(--ink-muted);display:flex;flex-direction:column;gap:3px;}
+.comment-form input[type=date]{font-size:12px;padding:5px 7px;border-radius:6px;border:1px solid var(--border);background:var(--surface-raised);color:var(--ink);font-family:inherit;}
+.comment-form .formmsg{font-size:11.5px;margin-top:7px;}
+.comment-form .formmsg.err{color:var(--state-r1-fg);}
+.comment-form .formmsg.ok{color:var(--state-p-fg);}
+
+/* 3 blocos de prioridade da aba Agrupamentos (PLANNING §Visão por Agrupamento
+   — Ordenação da aba) */
+.bloco-head td{font-size:11.5px;font-weight:700;color:var(--ink-muted);padding:12px 4px 6px;background:var(--surface);}
+.bloco3-row td{padding:10px 4px;}
+.bloco3-toggle{font-size:12px;color:var(--accent);font-weight:600;cursor:pointer;background:none;border:none;padding:0;}
+
+/* "∅" (conjunto vazio) — 1 glifo só, pode subir a fonte sem alargar a célula
+   (PLANNING §Simbologia: "permite subir para font-size 13px sem alargar") */
+.cell .emptyset{font-size:13px;}
+
+/* ── Aba "Controle de Cargas" (custodiantes) — ControleUpload.xlsx ──────
+   Grid deliberadamente mais simples que Carteiras/Agrupamentos: só 3 cores
+   (verde OK / amarelo alerta / cinza neutro), sem sigla central, sem badges
+   — o texto bruto original vive no tooltip. Cores reaproveitam as CSS vars
+   já theme-aware do resto da página (nada novo p/ dark mode manter). */
+.cu-ok{background:var(--state-p-bg);color:var(--state-p-fg);}
+.cu-alert{background:var(--tier-att-bg);color:var(--tier-att-fg);}
+.cu-neutral{background:var(--state-g1-bg);color:var(--state-g1-fg);}
+td.col-cust, th.hdr-cust{
+  position:sticky; left:0; background:var(--surface-raised); text-align:left;
+  font-size:12px; font-weight:600; color:var(--ink); white-space:nowrap;
+  padding-right:14px; z-index:2;
+}
+.cu-nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--ink-muted);}
+.cu-legend{display:flex;gap:16px 24px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--ink-muted);}
+/* marcador "Day Off" no cabeçalho da data (nota da linha 1 da planilha) */
+.dayoff-mark{color:var(--overlay-div);font-size:9px;vertical-align:2px;}
+
+.kpi-row{display:flex;gap:14px;flex-wrap:wrap;align-items:stretch;margin-bottom:18px;}
+.stat-row{display:flex;gap:14px;flex-wrap:wrap;}
+.stat{background:var(--surface-raised);border:1px solid var(--border);border-radius:10px;padding:12px 16px;min-width:120px;}
+.stat .n{font-size:22px;font-weight:700;line-height:1.1;}
+.stat .lbl{font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
+
+/* Painel "Carteiras Publicadas" (KPI principal, sempre respeita os filtros
+   correntes — company/instituição/busca/só-pendência) — pedido do usuário
+   2026-07-23, ver static/js/controle_cargas/matriz.js buildPublishStat(). */
+.publish-card{
+  background:var(--surface-raised);border:1px solid var(--border);border-radius:10px;
+  padding:12px 16px;min-width:230px;flex:1 1 230px;max-width:320px;
+}
+.publish-card .lbl{font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em;}
+.publish-card-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+.publish-pct{font-size:20px;font-weight:700;}
+.publish-pct.crit{color:var(--state-r1-fg);}
+.publish-pct.att{color:var(--tier-att-fg);}
+.publish-pct.ok{color:var(--state-p-fg);}
+.publish-nums{font-size:22px;font-weight:700;line-height:1.1;margin-top:4px;}
+.publish-nums .of{font-size:13px;font-weight:600;color:var(--ink-faint);}
+.publish-caption{font-size:11px;color:var(--ink-muted);font-weight:500;margin-left:6px;}
+.publish-meter{height:6px;border-radius:3px;background:var(--surface-sunk);margin-top:10px;overflow:hidden;}
+.publish-meter-fill{height:100%;border-radius:3px;transition:width .2s ease;}
+.publish-meter-fill.crit{background:var(--state-r1-fg);}
+.publish-meter-fill.att{background:var(--tier-att-fg);}
+.publish-meter-fill.ok{background:var(--state-p-fg);}
+.publish-scope{font-size:10.5px;color:var(--ink-faint);margin-top:6px;}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Tarefas 2/3 do refactor 2026-07-20 — campos de data (janela) + botão
+   "Atualizar" (ver static/js/controle_cargas/atualizar.js).
+   ───────────────────────────────────────────────────────────────────────── */
+.toolbar3{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px;padding:10px 12px;
+  background:var(--surface-sunk);border:1px solid var(--border);border-radius:10px;}
+.datefield{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-muted);font-weight:600;}
+.datefield input[type=date]{
+  font-size:12.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);
+  background:var(--surface-raised);color:var(--ink);
+}
+/* Campo "de" (data-inicial) ficou readonly [2026-08-06, pedido do usuário:
+   "coloque a data inicial como fixa" — ver sincronizarDataInicial() em
+   atualizar.js] — visual apagado sinaliza que não é mais digitável, só
+   recalculado a partir do campo "até". */
+.datefield input[type=date]:read-only{
+  background:var(--surface-sunk);color:var(--ink-muted);cursor:not-allowed;
+}
+/* Sinaliza que o campo "até" vira a Data de Referência do grid — mesma
+   linguagem visual (cor + "▾ ref" maiúsculo) da coluna .ref destacada no
+   cabeçalho da matriz (table.matrix thead th.ref .refline), pra ligar
+   visualmente os dois [2026-07-25, pedido do usuário: "verifique uma
+   maneira visual e textual de sinalizar como Data Referência"]. */
+.reftag{color:var(--accent);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;cursor:help;}
+.atualizar-msg{font-size:12px;color:var(--ink-faint);}
+.atualizar-timestamp{font-size:11px;color:var(--ink-faint);margin-left:auto;}
+
+/* Alerta de falha ao atualizar (atualizar.js) — [2026-07-30, pedido do
+   usuário: "pode gerar um alerta na próxima?", depois de descobrir "na
+   mão" que TemplateCarteiras.xlsx aberto no Excel travava TODO refresh
+   silenciosamente, inclusive o automático do carregamento da página, e o
+   único aviso era um texto pequeno cinza (.atualizar-msg) fácil de não
+   notar]. Faixa vermelha, largura cheia, mesmas cores de severidade
+   vermelha já usadas na matriz (--state-r1-*) — NÃO some sozinha (fica até
+   o usuário fechar ou até o próximo Atualizar dar certo), porque a falha
+   pode ter vindo do refresh automático, sem ninguém olhando a tela. */
+.alert-banner{
+  display:flex; align-items:center; gap:10px; margin:0 0 12px;
+  background:var(--state-r1-bg); color:var(--state-r1-fg); border:1px solid var(--state-r1-fg);
+  border-radius:8px; padding:10px 14px; font-size:13px; font-weight:600;
+}
+.alert-banner-icon{font-size:15px; flex:none;}
+.alert-banner-text{flex:1;}
+.alert-banner-close{
+  background:none; border:none; color:inherit; font-size:18px; line-height:1; cursor:pointer;
+  padding:0 4px; flex:none; opacity:.7;
+}
+.alert-banner-close:hover{opacity:1;}

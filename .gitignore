@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Ambiente virtual Python
+.venv/
+venv/
+env/
+
+# Configurações locais do Claude Code
+.claude/
+
+# Variáveis de ambiente (contém segredos)
+.env
+
+# Token da API Beehus salvo localmente (nunca subir)
+.swat/
+*.token
+
+# Planilhas de cadastro — dado real de carteira, gerenciado localmente por
+# quem cuida do cadastro, não pelo git (mesmo padrão dos apps-irmãos)
+*.xlsx
+*.xls
+
+# Snapshot gerado no boot (~4MB, recalculado a cada `python app.py` com
+# token válido — não é código-fonte, não precisa de histórico de versão)
+prototype/snapshot.json
+prototype/data/_conflitos_resolvidos/
+
+# Relatórios exportados (gerados sob demanda pela tela)
+ControleCargas_relatorio_*.xlsx
+
+# Logs de processo do servidor local (nome varia por máquina)
+.controlecargas-server*.err
+.controlecargas-server*.out
+_app_stdout.log
+_app_stderr.log
+
+# Arquivos temporários e binários
+*.exe
+*.tmp
+
+# Logs de sessão do Claude
+*.jsonl
+
+# OS files
+.DS_Store
+Thumbs.db

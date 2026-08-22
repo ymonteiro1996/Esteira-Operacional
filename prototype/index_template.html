@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Controle de Cargas — Protótipo (dados reais)</title>
+<link rel="stylesheet" href="/static/css/controle_cargas.css">
+<!-- [2026-08-21] CSS autocontido da aba "Controle de Demandas" — não usa
+     nenhum token/classe de controle_cargas.css (visual preservado fiel à
+     origem beehus-rotinas, escopado sob #panel-demandas/.kd-modal-*). -->
+<link rel="stylesheet" href="/static/css/controle_demandas.css">
+<!-- [2026-08-21] CSS autocontido da aba "Anomalias" — mesma família
+     visual de controle_demandas.css (cards/badges/modais), classes "an-"
+     próprias, escopado sob #panel-anomalias/.an-modal-*. -->
+<link rel="stylesheet" href="/static/css/anomalias.css">
+<!-- [2026-08-21] Tema escuro do app inteiro (6 abas) — carregado por ÚLTIMO
+     (depois dos 3 CSS acima), único arquivo novo de cor desta tarefa. Ver
+     cabeçalho de tema_escuro.css pro detalhe das 3 seções. -->
+<link rel="stylesheet" href="/static/css/tema_escuro.css">
+<!-- [2026-08-21] Aplica o tema (claro/escuro/automático) ANTES do <body> ser
+     desenhado — script bloqueante de propósito (sem defer/async), pra não
+     haver 1 frame de flash com o tema errado. Ver static/js/utils/tema.js. -->
+<script src="/static/js/utils/tema.js"></script>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="masthead">
+    <h1>Controle de Cargas — Matriz de Status</h1>
+    <span class="tag">Protótipo · dados reais via API Beehus</span>
+    <!-- [2026-08-05, pedido do usuário: "consegue efetuar todas consultas por
+         Endpoints" + "pode efetuar o processo de transição" + "pode remover
+         toda consulta do mongo"] Token da API Beehus — único requisito de
+         conexão do app (válido só por 1 dia; abre automaticamente sem token
+         configurado/expirado). Ver static/js/controle_cargas/beehus_token.js. -->
+    <button class="btn" id="btn-beehus-token" title="Colar o token de hoje da API Beehus (necessário para o app funcionar)">🔑 Beehus API</button>
+    <!-- [2026-08-21] Toggle de tema claro/escuro — texto sincronizado por
+         static/js/utils/tema.js (2 estados: 🌙 Escuro / ☀️ Claro). -->
+    <button class="btn secondary" id="btn-tema" title="Alternar entre tema claro e escuro">🌙 Escuro</button>
+  </div>
+  <p class="subhead" id="subhead-meta">carregando...</p>
+
+  <div class="alert-banner" id="alerta-atualizacao" style="display:none;">
+    <span class="alert-banner-icon">⚠</span>
+    <span class="alert-banner-text" id="alerta-atualizacao-texto"></span>
+    <button type="button" class="alert-banner-close" id="alerta-atualizacao-fechar" title="Fechar">×</button>
+  </div>
+
+  <div class="kpi-row" id="kpi-row">
+    <div class="publish-card" id="publish-card"></div>
+    <div class="publish-card" id="grouping-publish-card" style="display:none;"></div>
+    <div class="stat-row" id="stat-row"></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-wallets">Carteiras</button>
+    <button class="tab" id="tab-groupings">Agrupamentos</button>
+    <button class="tab" id="tab-company">Company</button>
+    <button class="tab" id="tab-custodian">Controle de Cargas</button>
+    <!-- [2026-08-21] Aba nova, adição pura de marcação — o clique é ligado
+         por static/js/controle_demandas/index.js (aditivo, ver comentário
+         lá); switchTab()/wireAbas() de controle_cargas/index.js não foram
+         tocados. -->
+    <button class="tab" id="tab-demandas">Controle de Demandas</button>
+    <!-- [2026-08-21] Aba nova "Anomalias" — mesmo padrão aditivo (marcação
+         pura; o clique é ligado por static/js/anomalias/index.js, sem
+         tocar switchTab()/wireAbas() nem os listeners de
+         controle_demandas/index.js). -->
+    <button class="tab" id="tab-anomalias">Anomalias</button>
+  </div>
+
+  <!-- Tarefas 2/3 do refactor 2026-07-20: janela inicial de 5 dias úteis
+       (D-3 pra trás) + campos de data pro usuário pedir uma janela maior/
+       diferente + botão "Atualizar" que consulta só o intervalo pedido (ver
+       static/js/controle_cargas/atualizar.js e GET /api/atualizar).
+       [MOVIDO 2026-07-23, pedido do usuário] Fica FORA de #panel-main (não
+       mais dentro dela) pra ser compartilhada por Carteiras/Agrupamentos/
+       Company — as 3 abas leem o MESMO ControleCargas.SNAPSHOT.meta.window,
+       então usam os mesmos campos De/Até em vez de 3 cópias. Escondida só na
+       aba Controle de Cargas (custodiantes), que tem navegação própria
+       (◀/▶/mais recente) sobre uma fonte de dado totalmente diferente
+       (ControleUpload.xlsx) — ver switchTab() em index.js. -->
+  <div class="toolbar3" id="toolbar3">
+    <label class="datefield">De <input type="date" id="data-inicial" readonly title="Calculado automaticamente: até − 5 dias úteis (teto da janela de Atualizar)"></label>
+    <label class="datefield">até <input type="date" id="data-final"><span class="reftag" title="Esta data vira a Data de Referência do grid (mesma data da coluna destacada &quot;▾ ref&quot; na matriz) — é contra ela que os painéis &quot;Publicadas&quot; e a prioridade de exibição são calculados por padrão.">▾ Data Referência</span></label>
+    <!-- Filtro de divergência Rent Contrib × Rent NAV (badge "Rent" da matriz,
+         §Alerta 5) — [2026-07-31, pedido do usuário: "campos para mudar o
+         valor"] os 2 campos que antes eram só constantes fixas no backend
+         (LIMIAR_DIVERGENCIA/_REAIS, snapshot_builder.py) — os DOIS precisam
+         passar pra o badge aparecer. Pré-preenchidos com o valor que gerou o
+         ÚLTIMO snapshot (SNAPSHOT.meta.limiarDivergenciaPct/Reais, nunca o
+         padrão fixo), ver preencherCamposLimiarDivergencia() (atualizar.js). -->
+    <label class="datefield" title="Divergência Rent Contrib × Rent NAV mínima pra sinalizar o badge &quot;Rent&quot; — os 2 campos (% e R$) precisam passar juntos.">Rent ≥ <input type="number" id="limiar-divergencia-pct" step="0.01" min="0" style="width:64px"> %</label>
+    <label class="datefield">e ≥ R$ <input type="number" id="limiar-divergencia-reais" step="1" min="0" style="width:80px"></label>
+    <button class="btn" id="btn-atualizar">↻ Atualizar</button>
+    <span class="atualizar-msg" id="atualizar-msg"></span>
+    <span class="atualizar-timestamp" id="atualizar-timestamp"></span>
+  </div>
+
+  <div class="panel" id="panel-main">
+    <div class="toolbar">
+      <div class="filters" id="filters"></div>
+      <input class="searchbox" id="search" type="text" placeholder="Buscar carteira / agrupamento por nome...">
+    </div>
+    <div class="toolbar2">
+      <div class="sortbar" id="sortbar">
+        <span>Ordenar:</span>
+        <span class="sortbtn on" data-sort="priority">Prioridade</span>
+        <span class="sortbtn" data-sort="name">Nome</span>
+        <span class="sortbtn" data-sort="company">Company</span>
+        <span class="sortbtn" data-sort="institution" id="sort-inst-btn">Instituição</span>
+        <span class="sortbtn" id="sort-freeze">❄ Congelar ordem</span>
+        <span class="freezebadge" id="freeze-badge" style="display:none;"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="resultcount" id="resultcount"></span>
+        <button class="btn" id="btn-salvar-anotacoes" disabled>💾 Salvar</button>
+        <button class="btn" id="btn-export">⬇ Baixar Excel</button>
+      </div>
+    </div>
+
+    <div class="grid-scroll">
+      <table class="matrix" id="matrix"></table>
+    </div>
+
+    <p class="note" id="grid-note"></p>
+  </div>
+
+  <!-- ── Aba "Controle de Cargas" (custodiantes) — ControleUpload.xlsx ──
+       Painel próprio (escondido por padrão): a fonte de dado é outra (Excel
+       manual da operação, não o Mongo), então filtros/ordenação/export das
+       outras abas não se aplicam — aqui é só janela deslizante + grid. -->
+  <div class="panel" id="panel-custodian" style="display:none;">
+    <div class="toolbar2">
+      <div class="cu-nav">
+        <button class="sortbtn" id="cu-prev">◀ anteriores</button>
+        <button class="sortbtn" id="cu-next">próximas ▶</button>
+        <button class="sortbtn" id="cu-latest">↦ mais recente</button>
+        <span id="cu-range"></span>
+      </div>
+      <span class="resultcount" id="cu-count"></span>
+    </div>
+    <div class="grid-scroll">
+      <table class="matrix" id="cu-matrix"></table>
+    </div>
+    <div class="cu-legend" id="cu-legend">
+      <span class="legend-item"><span class="legend-swatch cu-ok"></span><span>OK — status começa com "P" (posição carregada; variantes tipo "P (Conferir T)" no tooltip)</span></span>
+      <span class="legend-item"><span class="legend-swatch cu-alert"></span><span>Alerta — qualquer outro texto (ex.: "Sem posição", "Repetido", "T")</span></span>
+      <span class="legend-item"><span class="legend-swatch cu-neutral"></span><span>Neutro — célula vazia ou "Feriado"</span></span>
+      <span class="legend-item"><span class="dayoff-mark">●</span><span>data com nota "Day Off" de quem mantém a planilha</span></span>
+    </div>
+    <p class="note" id="cu-note"></p>
+  </div>
+
+  <!-- ── Aba "Company" — % de Carteiras Publicadas por empresa, dia a dia ──
+       Painel próprio (escondido por padrão): mesmo estilo visual da grade
+       principal (célula .cell, cabeçalho sticky, coluna de referência), mas
+       linha = company (não carteira/agrupamento) — ver
+       static/js/controle_cargas/matriz_company.js. -->
+  <div class="panel" id="panel-company" style="display:none;">
+    <div class="toolbar2">
+      <span class="resultcount" id="company-count"></span>
+    </div>
+    <div class="grid-scroll">
+      <table class="matrix" id="company-matrix"></table>
+    </div>
+    <div class="cu-legend" id="company-legend">
+      <span class="legend-item"><span class="legend-swatch company-ok">100%</span><span>Todas as carteiras (Deve Publicar = Sim) da company já publicadas nesse dia</span></span>
+      <span class="legend-item"><span class="legend-swatch company-att">83%</span><span>Entre 80% e 99,9% publicadas</span></span>
+      <span class="legend-item"><span class="legend-swatch company-crit">40%</span><span>Abaixo de 80% publicadas</span></span>
+      <span class="legend-item"><span class="legend-swatch company-neutral">—</span><span>Nenhuma carteira da company deveria publicar nesse dia (todas não cobertas)</span></span>
+    </div>
+    <p class="note" id="company-note"></p>
+  </div>
+
+  <!-- ── Aba "Controle de Demandas" — Kanban de demandas operacionais ──
+       [2026-08-21] Porte de beehus-rotinas/templates/controle_demandas.html
+       — visual preservado fiel à origem (ver static/css/
+       controle_demandas.css, autocontido, não usa o design system das
+       outras abas). Painel próprio, escondido por padrão: dado 100% local
+       (data/controle_demandas.json, sem Mongo/API Beehus). A troca de aba
+       é feita por listeners próprios em static/js/controle_demandas/
+       index.js — aditivos, não tocam switchTab()/wireAbas(). -->
+  <div id="panel-demandas" style="display:none;">
+    <div class="kd-topo">
+      <div>
+        <h2 style="margin:0;font-size:15px;font-weight:600;color:var(--sb-text-strong,#111827);">Controle de Demandas</h2>
+        <p id="kd-count-label" style="margin:2px 0 0;font-size:11.5px;color:var(--sb-text-faint,#9ca3af);">carregando…</p>
+      </div>
+      <button class="kd-btn-nova" id="kd-btn-nova">+ Nova Demanda</button>
+    </div>
+
+    <div class="kd-filtros">
+      <input class="kd-input" id="kd-f-search" type="text" placeholder="Buscar…">
+      <select class="kd-select" id="kd-f-cliente"></select>
+      <select class="kd-select" id="kd-f-prioridade"></select>
+      <select class="kd-select" id="kd-f-status"></select>
+      <select class="kd-select" id="kd-f-tipo"></select>
+      <label class="kd-checkbox"><input type="checkbox" id="kd-f-show-done"> Mostrar concluídos</label>
+      <button class="kd-limpar" id="kd-btn-limpar-filtros">Limpar filtros</button>
+    </div>
+
+    <div class="kd-met-bar" id="kd-metrics"></div>
+
+    <div class="kd-board" id="kd-board"></div>
+  </div>
+
+  <!-- ── Aba "Anomalias" — board manual de incidentes operacionais ──
+       [2026-08-21] MESMO mecanismo da aba "Controle de Demandas" (CRUD
+       simples sobre JSON próprio, data/anomalias.json — SEM relação com
+       snapshot/carteiras, ver pages/anomalias.py). Painel próprio,
+       escondido por padrão. Visual da MESMA família de
+       controle_demandas.css (ver static/css/anomalias.css, autocontido,
+       classes "an-"). Board agrupado por CRITICIDADE (Crítico/Atenção/
+       Observação — 3 colunas fixas, decisão registrada no topo de
+       pages/anomalias.py). A troca de aba é feita por listeners próprios
+       em static/js/anomalias/index.js — aditivos, não tocam
+       switchTab()/wireAbas() nem os listeners de controle_demandas/
+       index.js. -->
+  <div id="panel-anomalias" style="display:none;">
+    <div class="an-topo">
+      <div>
+        <h2 class="an-titulo">Anomalias</h2>
+        <p id="an-count-label" class="an-subtitulo">carregando…</p>
+      </div>
+      <button class="an-btn-nova" id="an-btn-nova">+ Nova Anomalia</button>
+    </div>
+
+    <div class="an-filtros">
+      <input class="an-input" id="an-f-search" type="text" placeholder="Buscar…">
+      <select class="an-select" id="an-f-cliente"></select>
+      <select class="an-select" id="an-f-criticidade"></select>
+      <select class="an-select" id="an-f-status"></select>
+      <label class="an-checkbox"><input type="checkbox" id="an-f-show-done"> Mostrar concluídas/canceladas</label>
+      <button class="an-limpar" id="an-btn-limpar-filtros">Limpar filtros</button>
+    </div>
+
+    <div class="an-met-bar" id="an-metrics"></div>
+
+    <div class="an-board" id="an-board"></div>
+  </div>
+
+  <div class="panel" id="panel-legend">
+    <h2>Legenda</h2>
+    <div class="legend" id="legend"></div>
+    <p class="note" style="margin-top:14px;">
+      <button class="helplink" id="help-toggle">? Explicação estendida</button>
+      <span id="help-ext" style="display:none;">— SLA diário = data da coluna + Defasagem (du) contra hoje real. SLA mensal = último dia útil do mês + (du Recebimento PDF + du Upload Beehus) du, contra hoje real. A cor de fundo diz só o ESTÁGIO (amarelo-pálido = Unprocessed, verde-menta = Processada, verde = Publicada); o ATRASO é sempre o badge "Atraso" no canto inferior esquerdo (amarelo = 1–2 du, vermelho = ≥3 du). No estado vermelho ∅ (nada carregado, prazo vencido) a intensificação 100→200 do fundo = ≥3 du de atraso. A janela do grid termina em D-3 (hoje − 3 du) para não confundir replicações antecipadas de carteiras mensais com buracos reais; os prazos, porém, são sempre calculados contra o hoje real.</span>
+    </p>
+    <p class="note" id="calendar-note"></p>
+  </div>
+
+</div>
+
+<div id="tt"></div>
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal" id="modal-body"></div>
+</div>
+
+<!-- ── Modais da aba "Controle de Demandas" — overlays PRÓPRIOS
+     (.kd-modal-backdrop/.kd-modal-box), não reaproveitam #modal-backdrop
+     acima (aquele é do drill-down da grade principal). Ver
+     static/js/controle_demandas/modais.js e
+     static/css/controle_demandas.css. -->
+<div class="kd-modal-backdrop" id="kd-modal-form-backdrop">
+  <div class="kd-modal-box">
+    <div class="kd-modal-header">
+      <h2 id="kd-form-titulo">Nova Demanda</h2>
+      <button class="kd-modal-fechar" id="kd-form-fechar" title="Fechar">×</button>
+    </div>
+    <input type="hidden" id="kd-form-id">
+    <div class="kd-campo">
+      <label>Cliente *</label>
+      <select id="kd-form-cliente"></select>
+    </div>
+    <div class="kd-campo">
+      <label>Demanda *</label>
+      <textarea id="kd-form-demanda" rows="3" placeholder="Descreva a demanda…"></textarea>
+    </div>
+    <div class="kd-grid2">
+      <div class="kd-campo">
+        <label>Tipo</label>
+        <select id="kd-form-tipo"></select>
+      </div>
+      <div class="kd-campo">
+        <label>Prioridade</label>
+        <select id="kd-form-prioridade"></select>
+      </div>
+    </div>
+    <div class="kd-campo">
+      <label>Status</label>
+      <select id="kd-form-status"></select>
+    </div>
+    <div class="kd-grid2">
+      <div class="kd-campo">
+        <label>Responsável</label>
+        <input type="text" id="kd-form-responsavel" list="kd-resp-list" placeholder="Ex: Yuri">
+        <datalist id="kd-resp-list"></datalist>
+      </div>
+      <div class="kd-campo">
+        <label>Deadline</label>
+        <input type="text" id="kd-form-deadline" placeholder="Ex: 30/05/2026 ou Diário">
+      </div>
+    </div>
+    <div class="kd-modal-rodape">
+      <button class="kd-btn-secundario" id="kd-form-cancelar">Cancelar</button>
+      <button class="kd-btn-primario" id="kd-form-salvar">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="kd-modal-backdrop" id="kd-modal-comments-backdrop">
+  <div class="kd-modal-box kd-modal-md">
+    <div class="kd-modal-header">
+      <h2>Atualizações</h2>
+      <button class="kd-modal-fechar" id="kd-comentarios-fechar" title="Fechar">×</button>
+    </div>
+    <p class="kd-modal-aviso" id="kd-comentarios-titulo"></p>
+    <div id="kd-comentarios-lista" class="kd-comments-lista"></div>
+    <textarea id="kd-comentario-texto" rows="3" placeholder="Descreva a atualização…"></textarea>
+    <div class="kd-modal-rodape">
+      <button class="kd-btn-secundario" id="kd-comentarios-fechar-rodape">Fechar</button>
+      <button class="kd-btn-primario" id="kd-comentario-enviar">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<div class="kd-modal-backdrop" id="kd-modal-delete-backdrop">
+  <div class="kd-modal-box kd-modal-sm">
+    <h2 class="kd-modal-titulo-simples">Remover demanda?</h2>
+    <p class="kd-modal-aviso">Essa ação não pode ser desfeita.</p>
+    <div class="kd-modal-rodape">
+      <button class="kd-btn-secundario" id="kd-delete-cancelar">Cancelar</button>
+      <button class="kd-btn-perigo" id="kd-delete-confirmar">Remover</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modais da aba "Anomalias" — overlays PRÓPRIOS (.an-modal-*), mesma
+     técnica de Demandas (não reaproveitam #modal-backdrop nem
+     .kd-modal-*). Ver static/js/anomalias/modais.js e vinculos.js,
+     static/css/anomalias.css. -->
+<div class="an-modal-backdrop" id="an-modal-form-backdrop">
+  <div class="an-modal-box">
+    <div class="an-modal-header">
+      <h2 id="an-form-titulo">Nova Anomalia</h2>
+      <button class="an-modal-fechar" id="an-form-fechar" title="Fechar">×</button>
+    </div>
+    <input type="hidden" id="an-form-id">
+    <div class="an-campo">
+      <label>Cliente *</label>
+      <select id="an-form-cliente"></select>
+    </div>
+    <div class="an-campo">
+      <label>Título *</label>
+      <input type="text" id="an-form-titulo-campo" placeholder="Resumo curto da anomalia">
+    </div>
+    <div class="an-campo">
+      <label>Descrição</label>
+      <textarea id="an-form-descricao" rows="3" placeholder="O que é a anomalia…"></textarea>
+    </div>
+    <div class="an-grid2">
+      <div class="an-campo">
+        <label>Criticidade *</label>
+        <select id="an-form-criticidade"></select>
+      </div>
+      <div class="an-campo">
+        <label>Status</label>
+        <select id="an-form-status"></select>
+      </div>
+    </div>
+    <div class="an-campo">
+      <label>Responsável</label>
+      <input type="text" id="an-form-responsavel" list="an-resp-list" placeholder="Ex: Yuri">
+      <datalist id="an-resp-list"></datalist>
+    </div>
+    <div class="an-campo">
+      <label>Ação de curto prazo (contenção)</label>
+      <textarea id="an-form-acao-curto" rows="2" placeholder="O que foi feito para conter o problema agora…"></textarea>
+    </div>
+    <div class="an-campo">
+      <label>Ação de longo prazo (estrutural)</label>
+      <textarea id="an-form-acao-longo" rows="2" placeholder="O que evita a anomalia se repetir…"></textarea>
+    </div>
+
+    <div class="an-vinc-secao" id="an-vinc-secao" style="display:none;">
+      <label>Demandas vinculadas</label>
+      <div class="an-vinc-lista" id="an-vinc-lista"></div>
+      <div class="an-vinc-botoes">
+        <button class="an-btn-secundario" id="an-btn-vincular-curto" type="button">🔗 Vincular demanda de curto prazo</button>
+        <button class="an-btn-secundario" id="an-btn-vincular-longo" type="button">🔗 Vincular demanda de longo prazo</button>
+      </div>
+    </div>
+
+    <div class="an-modal-rodape">
+      <button class="an-btn-secundario" id="an-form-cancelar">Cancelar</button>
+      <button class="an-btn-primario" id="an-form-salvar">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="an-modal-backdrop" id="an-modal-comments-backdrop">
+  <div class="an-modal-box an-modal-md">
+    <div class="an-modal-header">
+      <h2>Atualizações</h2>
+      <button class="an-modal-fechar" id="an-comentarios-fechar" title="Fechar">×</button>
+    </div>
+    <p class="an-modal-aviso" id="an-comentarios-titulo"></p>
+    <div id="an-comentarios-lista" class="an-comments-lista"></div>
+    <textarea id="an-comentario-texto" rows="3" placeholder="Descreva a atualização…"></textarea>
+    <div class="an-modal-rodape">
+      <button class="an-btn-secundario" id="an-comentarios-fechar-rodape">Fechar</button>
+      <button class="an-btn-primario" id="an-comentario-enviar">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<div class="an-modal-backdrop" id="an-modal-delete-backdrop">
+  <div class="an-modal-box an-modal-sm">
+    <h2 class="an-modal-titulo-simples">Remover anomalia?</h2>
+    <p class="an-modal-aviso">Essa ação não pode ser desfeita.</p>
+    <div class="an-modal-rodape">
+      <button class="an-btn-secundario" id="an-delete-cancelar">Cancelar</button>
+      <button class="an-btn-perigo" id="an-delete-confirmar">Remover</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de vinculação de demanda (buscar existente OU criar nova) —
+     reaproveitado pelos 2 botões (curto/longo prazo) do modal de edição
+     de anomalia; o horizonte fica em Anomalias.horizonteEmVinculacao
+     (state.js). Ver static/js/anomalias/vinculos.js. -->
+<div class="an-modal-backdrop" id="an-modal-vincular-backdrop">
+  <div class="an-modal-box an-modal-md">
+    <div class="an-modal-header">
+      <h2 id="an-vincular-titulo">Vincular demanda</h2>
+      <button class="an-modal-fechar" id="an-vincular-fechar" title="Fechar">×</button>
+    </div>
+
+    <div class="an-vinc-tabs">
+      <button class="an-vinc-tab an-vinc-tab-ativa" id="an-vinc-tab-buscar" type="button">Demanda existente</button>
+      <button class="an-vinc-tab" id="an-vinc-tab-criar" type="button">Criar nova demanda</button>
+    </div>
+
+    <div id="an-vinc-painel-buscar">
+      <input class="an-input" id="an-vinc-busca" type="text" placeholder="Buscar demanda por texto/responsável…" style="width:100%;box-sizing:border-box;">
+      <div class="an-vinc-resultados" id="an-vinc-resultados"></div>
+    </div>
+
+    <div id="an-vinc-painel-criar" style="display:none;">
+      <div class="an-campo">
+        <label>Cliente</label>
+        <select id="an-vinc-form-cliente"></select>
+      </div>
+      <div class="an-campo">
+        <label>Demanda</label>
+        <textarea id="an-vinc-form-demanda" rows="2"></textarea>
+      </div>
+      <div class="an-grid2">
+        <div class="an-campo">
+          <label>Prioridade</label>
+          <select id="an-vinc-form-prioridade"></select>
+        </div>
+        <div class="an-campo">
+          <label>Tipo</label>
+          <select id="an-vinc-form-tipo"></select>
+        </div>
+      </div>
+      <div class="an-grid2">
+        <div class="an-campo">
+          <label>Responsável</label>
+          <input type="text" id="an-vinc-form-responsavel" list="an-resp-list">
+        </div>
+        <div class="an-campo">
+          <label>Deadline</label>
+          <input type="text" id="an-vinc-form-deadline" placeholder="Ex: 30/05/2026">
+        </div>
+      </div>
+      <div class="an-campo">
+        <label>Resumo do vínculo (opcional)</label>
+        <input type="text" id="an-vinc-form-resumo" placeholder="Por que essa demanda resolve a anomalia…">
+      </div>
+      <div class="an-modal-rodape">
+        <button class="an-btn-secundario" id="an-vinc-cancelar-criar" type="button">Cancelar</button>
+        <button class="an-btn-primario" id="an-vinc-criar-e-vincular" type="button">Criar e vincular</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/controle_cargas/state.js"></script>
+<script src="/static/js/controle_cargas/filtros.js"></script>
+<script src="/static/js/controle_cargas/filtro_cabecalho.js"></script>
+<script src="/static/js/controle_cargas/identificadores.js"></script>
+<script src="/static/js/controle_cargas/matriz.js"></script>
+<script src="/static/js/controle_cargas/matriz_custodiantes.js"></script>
+<script src="/static/js/controle_cargas/matriz_company.js"></script>
+<script src="/static/js/controle_cargas/paineis.js"></script>
+<script src="/static/js/controle_cargas/comentarios.js"></script>
+<script src="/static/js/controle_cargas/anotacoes.js"></script>
+<script src="/static/js/controle_cargas/exportar.js"></script>
+<script src="/static/js/controle_cargas/atualizar.js"></script>
+<script src="/static/js/controle_cargas/beehus_token.js"></script>
+<script src="/static/js/controle_cargas/index.js"></script>
+
+<!-- [2026-08-21] Aba "Controle de Demandas" — JS quebrado por
+     funcionalidade (CLAUDE.md §4), objeto próprio ControleDemandas (não
+     depende de nenhum script acima). Carregados por último, sem alterar
+     nada dos scripts de controle_cargas/. -->
+<script src="/static/js/controle_demandas/state.js"></script>
+<script src="/static/js/controle_demandas/filtros.js"></script>
+<script src="/static/js/controle_demandas/quadro.js"></script>
+<script src="/static/js/controle_demandas/colunas.js"></script>
+<script src="/static/js/controle_demandas/cartoes.js"></script>
+<script src="/static/js/controle_demandas/arrastar.js"></script>
+<script src="/static/js/controle_demandas/metricas.js"></script>
+<script src="/static/js/controle_demandas/modais.js"></script>
+<script src="/static/js/controle_demandas/index.js"></script>
+
+<!-- [2026-08-21] Aba "Anomalias" — board manual de anomalias
+     operacionais, MESMO mecanismo de Controle de Demandas (JSON próprio,
+     sem leitura de snapshot/carteiras). JS quebrado por funcionalidade
+     (CLAUDE.md §4), objeto próprio Anomalias (não depende de
+     ControleCargas/ControleDemandas). Carregado por último. -->
+<script src="/static/js/anomalias/state.js"></script>
+<script src="/static/js/anomalias/filtros.js"></script>
+<script src="/static/js/anomalias/quadro.js"></script>
+<script src="/static/js/anomalias/cartoes.js"></script>
+<script src="/static/js/anomalias/vinculos.js"></script>
+<script src="/static/js/anomalias/modais.js"></script>
+<script src="/static/js/anomalias/index.js"></script>
+</body>
+</html>

@@ -1,0 +1,329 @@
+/* anomalias.css — aba "Anomalias" (board manual de incidentes operacionais).
+   ====================================================================
+   [2026-08-21] MESMA família visual de static/css/controle_demandas.css
+   (cores, espaçamentos, tipografia, cards/badges/modais) — pedido do
+   usuário: "essa nova aba deve ser similar a de demandas". Este arquivo é
+   autocontido e escopado: todo seletor vive sob #panel-anomalias (ou é um
+   dos overlays de modal próprios, .an-modal-backdrop/.an-modal-box, com
+   classes "an-" inéditas) — NÃO reaproveita nem edita nenhuma classe
+   "kd-" de controle_demandas.css (blast radius restrito a arquivos
+   novos, mesma decisão da tarefa de Demandas). Cores hardcoded (não
+   var(--...)) de propósito, mesma lógica de controle_demandas.css — UI
+   visualmente independente do resto do app, luz apenas. */
+
+/* Wrapper próprio — mesmas cores de fundo/borda de #panel-demandas. */
+#panel-anomalias{
+  background:#ffffff; border:1px solid #e5e7eb; border-radius:10px;
+  overflow:hidden; margin-bottom:22px;
+}
+
+/* ── Cabeçalho + botão "Nova Anomalia" ───────────────────────────────────── */
+#panel-anomalias .an-topo{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  flex-wrap:wrap; padding:14px 18px; border-bottom:1px solid #e5e7eb;
+}
+#panel-anomalias .an-titulo{font-size:15px;font-weight:600;color:#111827;margin:0;}
+#panel-anomalias .an-subtitulo{font-size:11.5px;color:#9ca3af;margin:2px 0 0;}
+#panel-anomalias .an-btn-nova{
+  display:inline-flex; align-items:center; gap:6px; background:#111827; color:#fff;
+  font-size:12px; font-weight:600; padding:8px 14px; border:none; border-radius:8px; cursor:pointer;
+}
+#panel-anomalias .an-btn-nova:hover{background:#374151;}
+
+/* ── Barra de filtros ─────────────────────────────────────────────────────── */
+#panel-anomalias .an-filtros{
+  display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:12px 18px;
+}
+#panel-anomalias .an-input,
+#panel-anomalias .an-select{
+  font-size:12px; padding:7px 11px; border-radius:8px; border:1px solid #d1d5db;
+  background:#fff; color:#111827; font-family:inherit;
+}
+#panel-anomalias .an-input{min-width:200px;}
+#panel-anomalias .an-input:focus,
+#panel-anomalias .an-select:focus{outline:2px solid rgba(0,0,0,.15);}
+#panel-anomalias .an-checkbox{
+  display:flex; align-items:center; gap:6px; font-size:12px; color:#6b7280; cursor:pointer; user-select:none;
+}
+#panel-anomalias .an-limpar{
+  margin-left:auto; background:none; border:none; font-size:11.5px; color:#9ca3af;
+  text-decoration:underline; cursor:pointer;
+}
+#panel-anomalias .an-limpar:hover{color:#374151;}
+
+/* ── Barra de métricas ───────────────────────────────────────────────────── */
+#panel-anomalias .an-met-bar{
+  padding:8px 18px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+  border-top:1px solid #e5e7eb; border-bottom:1px solid #e5e7eb;
+}
+#panel-anomalias .an-met-chip{
+  display:inline-flex; align-items:center; gap:4px; font-size:11px; padding:3px 9px;
+  border-radius:20px; font-weight:500; border:1px solid #e5e7eb; background:#f9fafb;
+  color:#374151; white-space:nowrap;
+}
+#panel-anomalias .an-met-chip b{font-weight:700;}
+#panel-anomalias .an-met-chip.done    {background:#f0fdf4;color:#15803d;border-color:#bbf7d0;}
+#panel-anomalias .an-met-chip.critico {background:#fef2f2;color:#b91c1c;border-color:#fecaca;}
+#panel-anomalias .an-met-chip.atencao {background:#fffbeb;color:#b45309;border-color:#fde68a;}
+#panel-anomalias .an-met-chip.semvinculo{background:#f3f4f6;color:#6b7280;border-color:#e5e7eb;}
+#panel-anomalias .an-met-chip.ok      {color:#15803d;border-color:#bbf7d0;}
+
+/* ── Board (3 colunas fixas de criticidade) ──────────────────────────────── */
+#panel-anomalias .an-board{
+  display:flex; gap:10px; padding:14px 18px 20px; overflow-x:auto; align-items:flex-start;
+  min-height:280px;
+}
+#panel-anomalias .an-col{
+  flex-shrink:0; width:260px; background:#f9fafb; border-radius:8px;
+  display:flex; flex-direction:column; border:1px solid #e5e7eb; max-height:680px;
+}
+#panel-anomalias .an-col-header{
+  display:flex; align-items:center; gap:8px; padding:10px 12px 8px; flex-shrink:0;
+  border-bottom:1px solid #e5e7eb; border-top:3px solid transparent;
+}
+#panel-anomalias .an-col[data-criticidade="Crítico"]     .an-col-header{border-top-color:#ef4444;}
+#panel-anomalias .an-col[data-criticidade="Atenção"]     .an-col-header{border-top-color:#f59e0b;}
+#panel-anomalias .an-col[data-criticidade="Observação"]  .an-col-header{border-top-color:#3b82f6;}
+#panel-anomalias .an-col-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+#panel-anomalias .an-col-dot.an-crit-critico{background:#ef4444;}
+#panel-anomalias .an-col-dot.an-crit-atencao{background:#f59e0b;}
+#panel-anomalias .an-col-dot.an-crit-observacao{background:#3b82f6;}
+#panel-anomalias .an-col-nome{font-size:13px;font-weight:600;color:#1f2937;flex:1;}
+#panel-anomalias .an-col-contagem{font-size:10px;font-weight:500;color:#9ca3af;background:#e5e7eb;border-radius:999px;padding:2px 6px;flex-shrink:0;}
+
+#panel-anomalias .an-cartoes{padding:8px 8px 4px; flex:1; overflow-y:auto; min-height:50px;}
+#panel-anomalias .an-cartoes.an-drag-over{background:rgba(59,130,246,.07); border-radius:6px;}
+
+#panel-anomalias .an-add-btn{
+  margin:4px 8px 8px; padding:6px; font-size:11px; color:#9ca3af;
+  border:1.5px dashed #d1d5db; border-radius:7px; cursor:pointer; background:none;
+  width:calc(100% - 16px); text-align:center;
+}
+#panel-anomalias .an-add-btn:hover{color:#374151; border-color:#9ca3af; background:#fff;}
+
+/* ── Cartão de anomalia ───────────────────────────────────────────────────── */
+#panel-anomalias .an-card{
+  background:#fff; border-radius:8px; margin-bottom:6px; border:1px solid #e5e7eb;
+  border-left-width:3px; padding:9px 10px 8px; cursor:grab; transition:box-shadow .15s; position:relative;
+}
+#panel-anomalias .an-card:active{cursor:grabbing;}
+#panel-anomalias .an-card:hover{box-shadow:0 3px 12px rgba(0,0,0,.1);}
+#panel-anomalias .an-card.an-dragging{opacity:.45; box-shadow:none;}
+#panel-anomalias .an-card.an-dim{opacity:.55;}
+#panel-anomalias .an-crit-critico   {border-left-color:#ef4444;}
+#panel-anomalias .an-crit-atencao   {border-left-color:#f59e0b;}
+#panel-anomalias .an-crit-observacao{border-left-color:#3b82f6;}
+
+#panel-anomalias .an-actions{display:none; gap:2px;}
+#panel-anomalias .an-card:hover .an-actions{display:flex;}
+#panel-anomalias .an-action-btn{
+  padding:2px 4px; border-radius:4px; border:none; background:none;
+  color:#9ca3af; cursor:pointer; font-size:11px; line-height:1;
+}
+#panel-anomalias .an-action-btn:hover{background:#f3f4f6; color:#374151;}
+
+#panel-anomalias .an-card-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; gap:4px;}
+#panel-anomalias .an-card-top-left{display:flex; align-items:center; gap:6px; min-width:0;}
+
+#panel-anomalias .an-badge{
+  display:inline-flex; align-items:center; padding:2px 6px; border-radius:999px;
+  font-size:10px; font-weight:500; flex-shrink:0; white-space:nowrap;
+}
+
+#panel-anomalias .an-card-titulo{
+  font-size:12.5px; font-weight:600; color:#1f2937; line-height:1.3; margin:0 0 3px;
+}
+#panel-anomalias .an-card-titulo.an-concluida{text-decoration:line-through; color:#9ca3af;}
+#panel-anomalias .an-card-descricao{
+  font-size:11.5px; color:#6b7280; line-height:1.35; margin:0 0 8px;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+#panel-anomalias .an-card-bottom{display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:6px;}
+#panel-anomalias .an-resp{font-size:10px; color:#9ca3af;}
+
+/* ── [2026-08-22] Melhorias funcionais (Onda 1 + 2) ───────────────────────
+   Todas as cores abaixo referenciam var(--sb-*) já existentes em
+   static/css/tema_escuro.css (com fallback = valor claro original), em
+   vez de introduzir tokens novos — cascata resolve o valor no tema atual
+   mesmo com anomalias.css carregando ANTES de tema_escuro.css (custom
+   property não depende de ordem de <link>, só do valor vigente em
+   :root). Nenhuma linha de tema_escuro.css precisou ser tocada. */
+
+/* Badge de aging (melhoria 1) — "há Nd"/"há Nsem", cor por faixa. */
+#panel-anomalias .an-aging{
+  display:inline-flex; align-items:center; font-size:9.5px; font-weight:600;
+  padding:2px 6px; border-radius:999px; border:1px solid transparent; white-space:nowrap;
+}
+#panel-anomalias .an-aging.an-aging-verde{
+  background:var(--sb-chip-done-bg,#f0fdf4); color:var(--sb-chip-done-fg,#15803d); border-color:var(--sb-chip-done-border,#bbf7d0);
+}
+#panel-anomalias .an-aging.an-aging-ambar{
+  background:var(--sb-chip-atencao-bg,#fffbeb); color:var(--sb-chip-atencao-fg,#b45309); border-color:var(--sb-chip-atencao-border,#fde68a);
+}
+#panel-anomalias .an-aging.an-aging-vermelho{
+  background:var(--sb-chip-critico-bg,#fef2f2); color:var(--sb-chip-critico-fg,#b91c1c); border-color:var(--sb-chip-critico-border,#fecaca);
+}
+
+/* Cartão órfão (melhoria 2) — anel tracejado + pílula de aviso. Crítico/
+   Atenção sem NENHUMA demanda vinculada — maior relação valor/esforço
+   da lista de melhorias, capricho deliberado no destaque visual. */
+#panel-anomalias .an-card.an-orfa{
+  outline:2px dashed var(--sb-chip-critico-border,#fca5a5); outline-offset:1px;
+}
+#panel-anomalias .an-orfa-pilula{
+  display:inline-flex; align-items:center; gap:3px; font-size:9.5px; font-weight:700;
+  padding:2px 7px; border-radius:999px; margin-bottom:6px;
+  background:var(--sb-chip-critico-bg,#fef2f2); color:var(--sb-chip-critico-fg,#b91c1c); border:1px solid var(--sb-chip-critico-border,#fecaca);
+}
+
+/* Recorrência (melhoria 6) — pílula no cartão + aviso discreto no modal. */
+#panel-anomalias .an-recorrencia-pilula{
+  display:inline-flex; align-items:center; gap:3px; font-size:9.5px; font-weight:600;
+  padding:2px 7px; border-radius:999px; margin-bottom:6px;
+  background:var(--sb-chip-active-bg,#eff6ff); color:var(--sb-chip-active-fg,#1d4ed8); border:1px solid var(--sb-chip-active-border,#bfdbfe);
+}
+.an-recorrencia-aviso{
+  font-size:11.5px; padding:8px 10px; border-radius:.5rem; margin:0 0 14px;
+  background:var(--sb-chip-atencao-bg,#fffbeb); color:var(--sb-chip-atencao-fg,#b45309); border:1px solid var(--sb-chip-atencao-border,#fde68a);
+}
+
+/* Impacto (melhoria 8) — linha curta itálica entre título e descrição. */
+#panel-anomalias .an-card-impacto{
+  font-size:10.5px; color:var(--sb-text-muted2,#6b7280); margin:0 0 6px; font-style:italic;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+/* Tags no cartão (melhoria 5) — chips reaproveitando a cor do vínculo. */
+#panel-anomalias .an-card-tags{display:flex; flex-wrap:wrap; gap:4px; margin-bottom:6px;}
+#panel-anomalias .an-tag-chip{
+  display:inline-flex; align-items:center; font-size:9.5px; padding:2px 7px; border-radius:999px;
+  background:var(--sb-vinc-bg,#eef2ff); color:var(--sb-vinc-fg,#3730a3); border:1px solid var(--sb-vinc-border,#e0e7ff);
+  white-space:nowrap;
+}
+
+/* Tags no formulário (melhoria 5) — input + chips removíveis. */
+.an-tag-input-chips{display:flex; flex-wrap:wrap; gap:4px; margin:6px 0 0;}
+.an-tag-input-chip{
+  display:inline-flex; align-items:center; gap:4px; font-size:11px; padding:3px 9px; border-radius:999px;
+  background:var(--sb-vinc-bg,#eef2ff); color:var(--sb-vinc-fg,#3730a3); border:1px solid var(--sb-vinc-border,#e0e7ff);
+}
+.an-tag-input-chip button{background:none; border:none; color:inherit; cursor:pointer; font-size:12px; line-height:1; padding:0;}
+.an-tag-input-chip button:hover{color:#dc2626;}
+
+/* Timeline de mudança de criticidade/status (melhoria 4) — dentro do
+   modal de Atualizações, acima da lista de comentários. */
+.an-timeline{display:flex; flex-direction:column; gap:5px; margin-bottom:14px; padding-bottom:12px; border-bottom:1px dashed var(--sb-border,#e5e7eb);}
+.an-timeline-vazio{font-size:11px; color:var(--sb-text-faint,#9ca3af); margin:0;}
+.an-timeline-item{font-size:11px; color:var(--sb-text-muted2,#6b7280); display:flex; gap:6px; align-items:baseline;}
+.an-timeline-item b{color:var(--sb-text-base,#1f2937); font-weight:600;}
+.an-timeline-data{font-size:9.5px; color:var(--sb-text-faint,#9ca3af); flex-shrink:0; white-space:nowrap;}
+
+/* Vínculos de demanda no cartão (badges pequenos, clicáveis) */
+#panel-anomalias .an-card-vinculos{display:flex; flex-wrap:wrap; gap:4px;}
+#panel-anomalias .an-vinc-badge-mini{
+  display:inline-flex; align-items:center; gap:3px; font-size:9.5px; padding:2px 6px;
+  border-radius:999px; background:#eef2ff; color:#3730a3; border:1px solid #e0e7ff;
+  cursor:pointer; white-space:nowrap;
+}
+#panel-anomalias .an-vinc-badge-mini:hover{background:#e0e7ff;}
+#panel-anomalias .an-vinc-badge-mini .an-vinc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+/* Badges de status/cliente — mesma paleta de controle_demandas.css
+   (classes "kd-st-"/"kd-cl-"), só renomeados com prefixo "an-" para não colidir. */
+#panel-anomalias .an-st-pendente     {background:#f3f4f6; color:#6b7280;}
+#panel-anomalias .an-st-em-andamento {background:#dbeafe; color:#1d4ed8;}
+#panel-anomalias .an-st-concluido    {background:#dcfce7; color:#15803d;}
+#panel-anomalias .an-st-cancelado    {background:#f3f4f6; color:#9ca3af;}
+#panel-anomalias .an-st-on-hold      {background:#fef3c7; color:#b45309;}
+
+#panel-anomalias .an-cl-mira        {background:#dbeafe; color:#1e40af;}
+#panel-anomalias .an-cl-smig        {background:#ede9fe; color:#5b21b6;}
+#panel-anomalias .an-cl-fincere     {background:#fce7f3; color:#9d174d;}
+#panel-anomalias .an-cl-blue3       {background:#e0e7ff; color:#3730a3;}
+#panel-anomalias .an-cl-blue3wealth {background:#f3e8ff; color:#6b21a8;}
+#panel-anomalias .an-cl-ete         {background:#fae8ff; color:#86198f;}
+#panel-anomalias .an-cl-oikos       {background:#ccfbf1; color:#065f46;}
+#panel-anomalias .an-cl-nextwealth  {background:#d1fae5; color:#065f46;}
+#panel-anomalias .an-cl-rts         {background:#fee2e2; color:#991b1b;}
+#panel-anomalias .an-cl-beehus      {background:#fef3c7; color:#92400e;}
+
+/* ── Modais (overlays próprios, NÃO reaproveitam .kd-modal- nem .modal-backdrop) ── */
+.an-modal-backdrop{
+  position:fixed; inset:0; background:rgba(0,0,0,.45); display:none;
+  align-items:center; justify-content:center; z-index:200; padding:1rem;
+}
+.an-modal-backdrop.an-show{display:flex;}
+.an-modal-box{
+  background:#fff; border-radius:.75rem; width:100%; max-width:560px;
+  max-height:90vh; overflow-y:auto; padding:1.5rem; box-shadow:0 20px 60px rgba(0,0,0,.3);
+  font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+.an-modal-box.an-modal-sm{max-width:360px;}
+.an-modal-box.an-modal-md{max-width:500px;}
+.an-modal-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;}
+.an-modal-header h2{font-size:14px; font-weight:600; color:#111827; margin:0;}
+.an-modal-fechar{background:none; border:none; color:#9ca3af; cursor:pointer; font-size:18px; line-height:1; padding:0 2px;}
+.an-modal-fechar:hover{color:#4b5563;}
+.an-modal-box p.an-modal-aviso{font-size:12px; color:#6b7280; margin-bottom:20px;}
+.an-modal-box h2.an-modal-titulo-simples{font-size:14px; font-weight:600; color:#111827; margin:0 0 8px;}
+
+.an-campo{margin-bottom:12px;}
+.an-campo label{display:block; font-size:11.5px; font-weight:500; color:#4b5563; margin-bottom:4px;}
+.an-campo input[type=text],
+.an-campo textarea,
+.an-campo select{
+  width:100%; box-sizing:border-box; border:1px solid #d1d5db; border-radius:.5rem;
+  padding:8px 12px; font-size:13px; font-family:inherit; color:#111827; background:#fff;
+}
+.an-campo textarea{resize:none;}
+.an-campo input:focus, .an-campo textarea:focus, .an-campo select:focus{outline:2px solid rgba(0,0,0,.15);}
+.an-grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+
+.an-modal-rodape{display:flex; gap:12px; margin-top:20px;}
+.an-btn-secundario, .an-btn-primario{
+  flex:1; border-radius:.5rem; padding:8px 0; font-size:13px; font-weight:500; cursor:pointer;
+}
+.an-btn-secundario{border:1px solid #d1d5db; background:#fff; color:#4b5563;}
+.an-btn-secundario:hover{background:#f9fafb;}
+.an-btn-primario{border:none; background:#111827; color:#fff;}
+.an-btn-primario:hover{background:#374151;}
+.an-btn-perigo{border:none; background:#dc2626; color:#fff;}
+.an-btn-perigo:hover{background:#b91c1c;}
+
+.an-comments-lista{max-height:220px; overflow-y:auto; margin-bottom:14px; display:flex; flex-direction:column; gap:8px; padding-right:2px;}
+.an-comment-item{background:#f9fafb; border:1px solid #e5e7eb; border-radius:.5rem; padding:8px 12px;}
+.an-comment-texto{font-size:12px; color:#1f2937; margin:0; white-space:pre-wrap; line-height:1.4;}
+.an-comment-data{font-size:10px; color:#9ca3af; margin:4px 0 0;}
+.an-comment-vazio{font-size:12px; color:#9ca3af;}
+
+/* ── Seção "Demandas vinculadas" dentro do modal de edição ────────────────── */
+.an-vinc-secao{margin-bottom:16px; padding-top:4px; border-top:1px dashed #e5e7eb;}
+.an-vinc-secao > label{display:block; font-size:11.5px; font-weight:500; color:#4b5563; margin:10px 0 6px;}
+.an-vinc-lista{display:flex; flex-direction:column; gap:6px; margin-bottom:8px;}
+.an-vinc-item{
+  display:flex; align-items:center; gap:8px; background:#f9fafb; border:1px solid #e5e7eb;
+  border-radius:.5rem; padding:6px 10px; font-size:12px;
+}
+.an-vinc-item .an-vinc-horizonte{font-size:9.5px; font-weight:700; text-transform:uppercase; color:#9ca3af; flex-shrink:0; width:64px;}
+.an-vinc-item .an-vinc-texto{flex:1; color:#1f2937; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.an-vinc-item .an-vinc-remover{background:none; border:none; color:#d1d5db; cursor:pointer; font-size:13px; padding:0 2px; flex-shrink:0;}
+.an-vinc-item .an-vinc-remover:hover{color:#dc2626;}
+.an-vinc-vazio{font-size:11.5px; color:#9ca3af; margin:0 0 8px;}
+.an-vinc-botoes{display:flex; gap:8px; flex-wrap:wrap;}
+.an-vinc-botoes .an-btn-secundario{flex:none; font-size:11.5px; padding:6px 10px;}
+
+/* ── Modal de vincular demanda (busca / criar) ─────────────────────────────── */
+.an-vinc-tabs{display:flex; gap:4px; margin-bottom:14px; border-bottom:1px solid #e5e7eb;}
+.an-vinc-tab{
+  background:none; border:none; padding:8px 4px; font-size:12.5px; color:#9ca3af; cursor:pointer;
+  border-bottom:2px solid transparent; margin-bottom:-1px;
+}
+.an-vinc-tab.an-vinc-tab-ativa{color:#111827; font-weight:600; border-bottom-color:#111827;}
+.an-vinc-resultados{max-height:260px; overflow-y:auto; margin-top:10px; display:flex; flex-direction:column; gap:6px;}
+.an-vinc-resultado-item{
+  display:flex; align-items:center; gap:8px; background:#f9fafb; border:1px solid #e5e7eb;
+  border-radius:.5rem; padding:8px 10px;
+}
+.an-vinc-resultado-texto{flex:1; font-size:12px; color:#1f2937; min-width:0;}
+.an-vinc-resultado-texto .an-vinc-resultado-cliente{font-size:10px; color:#9ca3af; display:block; margin-bottom:2px;}
+.an-vinc-resultado-vazio{font-size:12px; color:#9ca3af; padding:10px 0;}

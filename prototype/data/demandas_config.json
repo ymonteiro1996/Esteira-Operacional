@@ -1,0 +1,30 @@
+{
+  "_comentario": "Config da aba Controle de Demandas (CLAUDE.md §10 — parâmetro configurável, não hardcoded no .py). Portado de beehus-rotinas/pages/controle_demandas.py em 2026-08-21: 'clientes' são os 9 clientes reais encontrados nas 80 demandas migradas (Beehus, Blue3, Blue3 Wealth, Eté, Fincere, Mira, Next Wealth, Oikos, SMig) mais 'RTS', que existia na lista extra da origem (_EXTRA_CLIENTES) mas não aparece em nenhuma demanda ainda. 'responsaveis' são os 11 nomes da origem (RESPONSAVEIS) mais 'Backend' e 'Vitinho', que aparecem no campo 'responsavel' das demandas reais (às vezes em combinações tipo 'Juan/Vitinho') mas faltavam na lista.",
+  "clientes": [
+    "Beehus",
+    "Blue3",
+    "Blue3 Wealth",
+    "Eté",
+    "Fincere",
+    "Mira",
+    "Next Wealth",
+    "Oikos",
+    "RTS",
+    "SMig"
+  ],
+  "responsaveis": [
+    "Adzo",
+    "Backend",
+    "Evair",
+    "Gutcha",
+    "Hulgo",
+    "Juan",
+    "Kim",
+    "Leonardo",
+    "Mauricio",
+    "Renan",
+    "Victor",
+    "Vitinho",
+    "Yuri"
+  ]
+}

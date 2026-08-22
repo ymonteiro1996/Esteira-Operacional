@@ -1,0 +1,438 @@
+/* tema_escuro.css — Modo escuro do app inteiro (6 abas).
+   ====================================================================
+   [2026-08-21] Arquivo NOVO, carregado por ÚLTIMO no <head> (depois de
+   controle_cargas.css/controle_demandas.css/anomalias.css) — NENHUM dos 3
+   CSS existentes foi editado (regra do CLAUDE.md/instrução da tarefa: só
+   adição). O toggle que liga/desliga o tema é static/js/utils/tema.js.
+
+   Padrão inicial do app: "Automático" (segue o SO, prefers-color-scheme).
+   O usuário pode fixar manualmente via botão "🌙 Escuro/☀️ Claro" na
+   masthead — a escolha manual grava [data-theme="dark"|"light"] no <html>
+   (localStorage), que tem especificidade maior que o @media e por isso
+   sempre vence a preferência do SO depois de escolhida.
+
+   3 seções:
+     1. Layout (não é cor — só o espaçamento do botão novo na masthead).
+     2. Grid ControleCargas (Carteiras/Agrupamentos/Company/Controle de
+        Cargas): controle_cargas.css JÁ TEM a paleta escura completa nos
+        3 blocos (@media dark / [data-theme=dark] / [data-theme=light]) —
+        só 3 elementos de cor FIXA (não var()) ficavam sem definição
+        visual em fundo escuro: tooltip (#tt, quase do mesmo tom do
+        --surface escuro, sem borda), sombra de popover/modal (preta a
+        baixa opacidade, some sobre fundo já escuro) e os 3 tons de
+        anotação (sev-green/yellow/red, tintas a 14% que quase desaparecem
+        sobre --surface-raised escuro). Resto do grid não precisa de nada
+        aqui.
+     3. Sistema B (Controle de Demandas + Anomalias): paleta 100% nova,
+        ~46 valores hex hardcoded nos 2 CSS de origem (nenhuma var() lá,
+        de propósito — ver cabeçalho de controle_demandas.css/
+        anomalias.css). Implementada via CUSTOM PROPERTIES locais
+        (--sb-*, "Sistema B") declaradas nos mesmos 2 seletores extras
+        (@media prefers-color-scheme + [data-theme=dark], valores
+        idênticos) + um 3º bloco [data-theme=light] que restaura os
+        valores claros originais (garante que a escolha manual "Claro"
+        vence mesmo com o SO em modo escuro — mesmo mecanismo de
+        especificidade que controle_cargas.css já usa pros seus tokens).
+        As REGRAS que pintam #panel-demandas/#panel-anomalias são
+        escritas uma única vez (não 3x) e só referenciam var(--sb-...) —
+        quem muda de valor conforme o tema são os tokens, não as regras.
+        Cores "acento" já vívidas (dots de prioridade/criticidade, barras
+        coloridas à esquerda dos cards, badge de perigo) foram mantidas
+        sem alteração — já têm contraste alto o bastante contra fundo
+        escuro; só os PARES pastel-claro/texto-escuro (badges de status,
+        cliente, tipo, chips de métrica) e os neutros (fundo/borda/texto)
+        ganharam par escuro. */
+
+/* ── 1. LAYOUT (não é cor) ────────────────────────────────────────────────
+   O botão novo "🌙 Escuro" entra na masthead depois do botão de token
+   Beehus — sem isso, o <span class="tag"> (que antes ficava colado à
+   direita do <h1>) empurraria o botão pra fora da margem. */
+.masthead .tag{margin-right:auto;}
+
+/* ══════════════════════════════════════════════════════════════════════
+   2. GRID CONTROLECARGAS — 3 lacunas reais (tooltip / sombra / anotação)
+   ══════════════════════════════════════════════════════════════════════ */
+@media (prefers-color-scheme: dark){
+  #tt{border:1px solid #30363f; box-shadow:0 8px 28px rgba(0,0,0,.6);}
+  .th-filter-popover{box-shadow:0 8px 28px rgba(0,0,0,.6);}
+  .modal{box-shadow:0 20px 60px rgba(0,0,0,.7);}
+  td.col-anotacao.sev-green{background:rgba(34,197,94,.30);}
+  td.col-anotacao.sev-yellow{background:rgba(245,158,11,.30);}
+  td.col-anotacao.sev-red{background:rgba(248,113,113,.30);}
+}
+:root[data-theme="dark"] #tt{border:1px solid #30363f; box-shadow:0 8px 28px rgba(0,0,0,.6);}
+:root[data-theme="dark"] .th-filter-popover{box-shadow:0 8px 28px rgba(0,0,0,.6);}
+:root[data-theme="dark"] .modal{box-shadow:0 20px 60px rgba(0,0,0,.7);}
+:root[data-theme="dark"] td.col-anotacao.sev-green{background:rgba(34,197,94,.30);}
+:root[data-theme="dark"] td.col-anotacao.sev-yellow{background:rgba(245,158,11,.30);}
+:root[data-theme="dark"] td.col-anotacao.sev-red{background:rgba(248,113,113,.30);}
+/* Restaura os valores claros originais quando o usuário fixa "Claro" com o
+   SO em modo escuro — sem isso o @media acima vazaria pro tema claro manual. */
+:root[data-theme="light"] #tt{border:none; box-shadow:0 8px 24px rgba(0,0,0,.35);}
+:root[data-theme="light"] .th-filter-popover{box-shadow:0 8px 24px rgba(0,0,0,.18);}
+:root[data-theme="light"] .modal{box-shadow:0 20px 60px rgba(0,0,0,.4);}
+:root[data-theme="light"] td.col-anotacao.sev-green{background:rgba(22,163,74,.14);}
+:root[data-theme="light"] td.col-anotacao.sev-yellow{background:rgba(217,119,6,.14);}
+:root[data-theme="light"] td.col-anotacao.sev-red{background:rgba(220,38,38,.14);}
+
+/* ══════════════════════════════════════════════════════════════════════
+   3. SISTEMA B (Controle de Demandas + Anomalias) — tokens --sb-*
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* -- 3.1 Tokens: valor claro (default, igual ao hardcoded original) -- */
+:root{
+  --sb-bg-panel:#ffffff; --sb-bg-sunk:#f9fafb; --sb-bg-sunk2:#f3f4f6;
+  --sb-bg-badge-neutral:#e5e7eb; --sb-border:#e5e7eb; --sb-border-input:#d1d5db;
+  --sb-icon-faint:#d1d5db;
+  --sb-text-strong:#111827; --sb-text-base:#1f2937; --sb-text-med:#374151;
+  --sb-text-subtle:#4b5563; --sb-text-muted2:#6b7280; --sb-text-faint:#9ca3af;
+
+  --sb-btn-primary-bg:#111827; --sb-btn-primary-fg:#ffffff;
+  --sb-btn-primary-hover-bg:#374151; --sb-btn-primary-hover-fg:#ffffff;
+
+  --sb-prio-none-border:#e5e7eb; --sb-dot-none-bg:#d1d5db;
+  --sb-drag-over-bg:rgba(59,130,246,.07);
+  --sb-menu-shadow:rgba(0,0,0,.12); --sb-card-hover-shadow:rgba(0,0,0,.1);
+  --sb-modal-shadow:rgba(0,0,0,.3);
+
+  --sb-st-pendente-bg:#f3f4f6;   --sb-st-pendente-fg:#6b7280;
+  --sb-st-andamento-bg:#dbeafe;  --sb-st-andamento-fg:#1d4ed8;
+  --sb-st-concluido-bg:#dcfce7;  --sb-st-concluido-fg:#15803d;
+  --sb-st-cancelado-bg:#f3f4f6;  --sb-st-cancelado-fg:#9ca3af;
+  --sb-st-onhold-bg:#fef3c7;     --sb-st-onhold-fg:#b45309;
+
+  --sb-cl-mira-bg:#dbeafe;        --sb-cl-mira-fg:#1e40af;
+  --sb-cl-smig-bg:#ede9fe;        --sb-cl-smig-fg:#5b21b6;
+  --sb-cl-fincere-bg:#fce7f3;     --sb-cl-fincere-fg:#9d174d;
+  --sb-cl-blue3-bg:#e0e7ff;       --sb-cl-blue3-fg:#3730a3;
+  --sb-cl-blue3wealth-bg:#f3e8ff; --sb-cl-blue3wealth-fg:#6b21a8;
+  --sb-cl-ete-bg:#fae8ff;         --sb-cl-ete-fg:#86198f;
+  --sb-cl-oikos-bg:#ccfbf1;       --sb-cl-oikos-fg:#065f46;
+  --sb-cl-nextwealth-bg:#d1fae5;  --sb-cl-nextwealth-fg:#065f46;
+  --sb-cl-rts-bg:#fee2e2;         --sb-cl-rts-fg:#991b1b;
+  --sb-cl-beehus-bg:#fef3c7;      --sb-cl-beehus-fg:#92400e;
+
+  --sb-tp-operacional-bg:#e0f2fe;        --sb-tp-operacional-fg:#0369a1;
+  --sb-tp-sistema-bg:#f3e8ff;            --sb-tp-sistema-fg:#6b21a8;
+  --sb-tp-sistemaoperacional-bg:#fef9c3; --sb-tp-sistemaoperacional-fg:#854d0e;
+
+  --sb-chip-bg:#f9fafb; --sb-chip-border:#e5e7eb; --sb-chip-fg:#374151;
+  --sb-chip-done-bg:#f0fdf4;   --sb-chip-done-fg:#15803d;   --sb-chip-done-border:#bbf7d0;
+  --sb-chip-active-bg:#eff6ff; --sb-chip-active-fg:#1d4ed8; --sb-chip-active-border:#bfdbfe;
+  --sb-chip-pend-bg:#f9fafb;   --sb-chip-pend-fg:#6b7280;   --sb-chip-pend-border:#e5e7eb;
+  --sb-chip-hold-bg:#fffbeb;   --sb-chip-hold-fg:#b45309;   --sb-chip-hold-border:#fde68a;
+  --sb-chip-late-bg:#fff1f2;   --sb-chip-late-fg:#be123c;   --sb-chip-late-border:#fecdd3;
+  --sb-chip-ok-fg:#15803d;     --sb-chip-ok-border:#bbf7d0;
+  --sb-chip-critico-bg:#fef2f2;   --sb-chip-critico-fg:#b91c1c;   --sb-chip-critico-border:#fecaca;
+  --sb-chip-atencao-bg:#fffbeb;   --sb-chip-atencao-fg:#b45309;   --sb-chip-atencao-border:#fde68a;
+  --sb-chip-semvinculo-bg:#f3f4f6; --sb-chip-semvinculo-fg:#6b7280; --sb-chip-semvinculo-border:#e5e7eb;
+
+  --sb-vinc-bg:#eef2ff; --sb-vinc-fg:#3730a3; --sb-vinc-border:#e0e7ff; --sb-vinc-hover-bg:#e0e7ff;
+}
+
+/* -- 3.2 Tokens: valor escuro (@media SO + [data-theme=dark], mesmos valores) -- */
+@media (prefers-color-scheme: dark){
+  :root{
+    --sb-bg-panel:#1b1f24; --sb-bg-sunk:#20252c; --sb-bg-sunk2:#262c34;
+    --sb-bg-badge-neutral:#333a44; --sb-border:#333a44; --sb-border-input:#454e59;
+    --sb-icon-faint:#5b6472;
+    --sb-text-strong:#e8eaed; --sb-text-base:#dde1e6; --sb-text-med:#c7ccd3;
+    --sb-text-subtle:#aab1bb; --sb-text-muted2:#97a0ab; --sb-text-faint:#7d8794;
+
+    --sb-btn-primary-bg:#e9ecf0; --sb-btn-primary-fg:#14171b;
+    --sb-btn-primary-hover-bg:#ffffff; --sb-btn-primary-hover-fg:#14171b;
+
+    --sb-prio-none-border:#3a414d; --sb-dot-none-bg:#4b5563;
+    --sb-drag-over-bg:rgba(59,130,246,.18);
+    --sb-menu-shadow:rgba(0,0,0,.5); --sb-card-hover-shadow:rgba(0,0,0,.45);
+    --sb-modal-shadow:rgba(0,0,0,.6);
+
+    --sb-st-pendente-bg:#374151;   --sb-st-pendente-fg:#d1d5db;
+    --sb-st-andamento-bg:#1e3a8a;  --sb-st-andamento-fg:#93c5fd;
+    --sb-st-concluido-bg:#14532d;  --sb-st-concluido-fg:#86efac;
+    --sb-st-cancelado-bg:#1f2937;  --sb-st-cancelado-fg:#9ca3af;
+    --sb-st-onhold-bg:#78350f;     --sb-st-onhold-fg:#fcd34d;
+
+    --sb-cl-mira-bg:#1e3a8a;        --sb-cl-mira-fg:#93c5fd;
+    --sb-cl-smig-bg:#4c1d95;        --sb-cl-smig-fg:#c4b5fd;
+    --sb-cl-fincere-bg:#831843;     --sb-cl-fincere-fg:#f9a8d4;
+    --sb-cl-blue3-bg:#312e81;       --sb-cl-blue3-fg:#a5b4fc;
+    --sb-cl-blue3wealth-bg:#581c87; --sb-cl-blue3wealth-fg:#d8b4fe;
+    --sb-cl-ete-bg:#701a75;         --sb-cl-ete-fg:#f0abfc;
+    --sb-cl-oikos-bg:#134e4a;       --sb-cl-oikos-fg:#5eead4;
+    --sb-cl-nextwealth-bg:#064e3b;  --sb-cl-nextwealth-fg:#6ee7b7;
+    --sb-cl-rts-bg:#7f1d1d;         --sb-cl-rts-fg:#fca5a5;
+    --sb-cl-beehus-bg:#78350f;      --sb-cl-beehus-fg:#fcd34d;
+
+    --sb-tp-operacional-bg:#0c4a6e;        --sb-tp-operacional-fg:#7dd3fc;
+    --sb-tp-sistema-bg:#581c87;            --sb-tp-sistema-fg:#d8b4fe;
+    --sb-tp-sistemaoperacional-bg:#713f12; --sb-tp-sistemaoperacional-fg:#fde047;
+
+    --sb-chip-bg:#262c34; --sb-chip-border:#3a414d; --sb-chip-fg:#c7ccd3;
+    --sb-chip-done-bg:#0f2e1c;   --sb-chip-done-fg:#5fd894;   --sb-chip-done-border:#166534;
+    --sb-chip-active-bg:#1e3a8a; --sb-chip-active-fg:#93c5fd; --sb-chip-active-border:#1d4ed8;
+    --sb-chip-pend-bg:#262c34;   --sb-chip-pend-fg:#9ca3af;   --sb-chip-pend-border:#3a414d;
+    --sb-chip-hold-bg:#78350f;   --sb-chip-hold-fg:#fcd34d;   --sb-chip-hold-border:#b45309;
+    --sb-chip-late-bg:#881337;   --sb-chip-late-fg:#fda4af;   --sb-chip-late-border:#be123c;
+    --sb-chip-ok-fg:#5fd894;     --sb-chip-ok-border:#166534;
+    --sb-chip-critico-bg:#7f1d1d;   --sb-chip-critico-fg:#fca5a5;   --sb-chip-critico-border:#b91c1c;
+    --sb-chip-atencao-bg:#78350f;   --sb-chip-atencao-fg:#fcd34d;   --sb-chip-atencao-border:#b45309;
+    --sb-chip-semvinculo-bg:#262c34; --sb-chip-semvinculo-fg:#9ca3af; --sb-chip-semvinculo-border:#3a414d;
+
+    --sb-vinc-bg:#312e81; --sb-vinc-fg:#a5b4fc; --sb-vinc-border:#3730a3; --sb-vinc-hover-bg:#3730a3;
+  }
+}
+:root[data-theme="dark"]{
+  --sb-bg-panel:#1b1f24; --sb-bg-sunk:#20252c; --sb-bg-sunk2:#262c34;
+  --sb-bg-badge-neutral:#333a44; --sb-border:#333a44; --sb-border-input:#454e59;
+  --sb-icon-faint:#5b6472;
+  --sb-text-strong:#e8eaed; --sb-text-base:#dde1e6; --sb-text-med:#c7ccd3;
+  --sb-text-subtle:#aab1bb; --sb-text-muted2:#97a0ab; --sb-text-faint:#7d8794;
+
+  --sb-btn-primary-bg:#e9ecf0; --sb-btn-primary-fg:#14171b;
+  --sb-btn-primary-hover-bg:#ffffff; --sb-btn-primary-hover-fg:#14171b;
+
+  --sb-prio-none-border:#3a414d; --sb-dot-none-bg:#4b5563;
+  --sb-drag-over-bg:rgba(59,130,246,.18);
+  --sb-menu-shadow:rgba(0,0,0,.5); --sb-card-hover-shadow:rgba(0,0,0,.45);
+  --sb-modal-shadow:rgba(0,0,0,.6);
+
+  --sb-st-pendente-bg:#374151;   --sb-st-pendente-fg:#d1d5db;
+  --sb-st-andamento-bg:#1e3a8a;  --sb-st-andamento-fg:#93c5fd;
+  --sb-st-concluido-bg:#14532d;  --sb-st-concluido-fg:#86efac;
+  --sb-st-cancelado-bg:#1f2937;  --sb-st-cancelado-fg:#9ca3af;
+  --sb-st-onhold-bg:#78350f;     --sb-st-onhold-fg:#fcd34d;
+
+  --sb-cl-mira-bg:#1e3a8a;        --sb-cl-mira-fg:#93c5fd;
+  --sb-cl-smig-bg:#4c1d95;        --sb-cl-smig-fg:#c4b5fd;
+  --sb-cl-fincere-bg:#831843;     --sb-cl-fincere-fg:#f9a8d4;
+  --sb-cl-blue3-bg:#312e81;       --sb-cl-blue3-fg:#a5b4fc;
+  --sb-cl-blue3wealth-bg:#581c87; --sb-cl-blue3wealth-fg:#d8b4fe;
+  --sb-cl-ete-bg:#701a75;         --sb-cl-ete-fg:#f0abfc;
+  --sb-cl-oikos-bg:#134e4a;       --sb-cl-oikos-fg:#5eead4;
+  --sb-cl-nextwealth-bg:#064e3b;  --sb-cl-nextwealth-fg:#6ee7b7;
+  --sb-cl-rts-bg:#7f1d1d;         --sb-cl-rts-fg:#fca5a5;
+  --sb-cl-beehus-bg:#78350f;      --sb-cl-beehus-fg:#fcd34d;
+
+  --sb-tp-operacional-bg:#0c4a6e;        --sb-tp-operacional-fg:#7dd3fc;
+  --sb-tp-sistema-bg:#581c87;            --sb-tp-sistema-fg:#d8b4fe;
+  --sb-tp-sistemaoperacional-bg:#713f12; --sb-tp-sistemaoperacional-fg:#fde047;
+
+  --sb-chip-bg:#262c34; --sb-chip-border:#3a414d; --sb-chip-fg:#c7ccd3;
+  --sb-chip-done-bg:#0f2e1c;   --sb-chip-done-fg:#5fd894;   --sb-chip-done-border:#166534;
+  --sb-chip-active-bg:#1e3a8a; --sb-chip-active-fg:#93c5fd; --sb-chip-active-border:#1d4ed8;
+  --sb-chip-pend-bg:#262c34;   --sb-chip-pend-fg:#9ca3af;   --sb-chip-pend-border:#3a414d;
+  --sb-chip-hold-bg:#78350f;   --sb-chip-hold-fg:#fcd34d;   --sb-chip-hold-border:#b45309;
+  --sb-chip-late-bg:#881337;   --sb-chip-late-fg:#fda4af;   --sb-chip-late-border:#be123c;
+  --sb-chip-ok-fg:#5fd894;     --sb-chip-ok-border:#166534;
+  --sb-chip-critico-bg:#7f1d1d;   --sb-chip-critico-fg:#fca5a5;   --sb-chip-critico-border:#b91c1c;
+  --sb-chip-atencao-bg:#78350f;   --sb-chip-atencao-fg:#fcd34d;   --sb-chip-atencao-border:#b45309;
+  --sb-chip-semvinculo-bg:#262c34; --sb-chip-semvinculo-fg:#9ca3af; --sb-chip-semvinculo-border:#3a414d;
+
+  --sb-vinc-bg:#312e81; --sb-vinc-fg:#a5b4fc; --sb-vinc-border:#3730a3; --sb-vinc-hover-bg:#3730a3;
+}
+/* Restaura os valores claros originais quando o usuário fixa "Claro" com o
+   SO em modo escuro (mesma lógica da seção 2 acima). */
+:root[data-theme="light"]{
+  --sb-bg-panel:#ffffff; --sb-bg-sunk:#f9fafb; --sb-bg-sunk2:#f3f4f6;
+  --sb-bg-badge-neutral:#e5e7eb; --sb-border:#e5e7eb; --sb-border-input:#d1d5db;
+  --sb-icon-faint:#d1d5db;
+  --sb-text-strong:#111827; --sb-text-base:#1f2937; --sb-text-med:#374151;
+  --sb-text-subtle:#4b5563; --sb-text-muted2:#6b7280; --sb-text-faint:#9ca3af;
+
+  --sb-btn-primary-bg:#111827; --sb-btn-primary-fg:#ffffff;
+  --sb-btn-primary-hover-bg:#374151; --sb-btn-primary-hover-fg:#ffffff;
+
+  --sb-prio-none-border:#e5e7eb; --sb-dot-none-bg:#d1d5db;
+  --sb-drag-over-bg:rgba(59,130,246,.07);
+  --sb-menu-shadow:rgba(0,0,0,.12); --sb-card-hover-shadow:rgba(0,0,0,.1);
+  --sb-modal-shadow:rgba(0,0,0,.3);
+
+  --sb-st-pendente-bg:#f3f4f6;   --sb-st-pendente-fg:#6b7280;
+  --sb-st-andamento-bg:#dbeafe;  --sb-st-andamento-fg:#1d4ed8;
+  --sb-st-concluido-bg:#dcfce7;  --sb-st-concluido-fg:#15803d;
+  --sb-st-cancelado-bg:#f3f4f6;  --sb-st-cancelado-fg:#9ca3af;
+  --sb-st-onhold-bg:#fef3c7;     --sb-st-onhold-fg:#b45309;
+
+  --sb-cl-mira-bg:#dbeafe;        --sb-cl-mira-fg:#1e40af;
+  --sb-cl-smig-bg:#ede9fe;        --sb-cl-smig-fg:#5b21b6;
+  --sb-cl-fincere-bg:#fce7f3;     --sb-cl-fincere-fg:#9d174d;
+  --sb-cl-blue3-bg:#e0e7ff;       --sb-cl-blue3-fg:#3730a3;
+  --sb-cl-blue3wealth-bg:#f3e8ff; --sb-cl-blue3wealth-fg:#6b21a8;
+  --sb-cl-ete-bg:#fae8ff;         --sb-cl-ete-fg:#86198f;
+  --sb-cl-oikos-bg:#ccfbf1;       --sb-cl-oikos-fg:#065f46;
+  --sb-cl-nextwealth-bg:#d1fae5;  --sb-cl-nextwealth-fg:#065f46;
+  --sb-cl-rts-bg:#fee2e2;         --sb-cl-rts-fg:#991b1b;
+  --sb-cl-beehus-bg:#fef3c7;      --sb-cl-beehus-fg:#92400e;
+
+  --sb-tp-operacional-bg:#e0f2fe;        --sb-tp-operacional-fg:#0369a1;
+  --sb-tp-sistema-bg:#f3e8ff;            --sb-tp-sistema-fg:#6b21a8;
+  --sb-tp-sistemaoperacional-bg:#fef9c3; --sb-tp-sistemaoperacional-fg:#854d0e;
+
+  --sb-chip-bg:#f9fafb; --sb-chip-border:#e5e7eb; --sb-chip-fg:#374151;
+  --sb-chip-done-bg:#f0fdf4;   --sb-chip-done-fg:#15803d;   --sb-chip-done-border:#bbf7d0;
+  --sb-chip-active-bg:#eff6ff; --sb-chip-active-fg:#1d4ed8; --sb-chip-active-border:#bfdbfe;
+  --sb-chip-pend-bg:#f9fafb;   --sb-chip-pend-fg:#6b7280;   --sb-chip-pend-border:#e5e7eb;
+  --sb-chip-hold-bg:#fffbeb;   --sb-chip-hold-fg:#b45309;   --sb-chip-hold-border:#fde68a;
+  --sb-chip-late-bg:#fff1f2;   --sb-chip-late-fg:#be123c;   --sb-chip-late-border:#fecdd3;
+  --sb-chip-ok-fg:#15803d;     --sb-chip-ok-border:#bbf7d0;
+  --sb-chip-critico-bg:#fef2f2;   --sb-chip-critico-fg:#b91c1c;   --sb-chip-critico-border:#fecaca;
+  --sb-chip-atencao-bg:#fffbeb;   --sb-chip-atencao-fg:#b45309;   --sb-chip-atencao-border:#fde68a;
+  --sb-chip-semvinculo-bg:#f3f4f6; --sb-chip-semvinculo-fg:#6b7280; --sb-chip-semvinculo-border:#e5e7eb;
+
+  --sb-vinc-bg:#eef2ff; --sb-vinc-fg:#3730a3; --sb-vinc-border:#e0e7ff; --sb-vinc-hover-bg:#e0e7ff;
+}
+
+/* -- 3.3 Regras (escritas UMA VEZ, aplicam sempre — só o TOKEN muda com o
+   tema). Cobrem #panel-demandas (kd-) e #panel-anomalias (an-) juntos onde
+   a classe é equivalente entre as 2 telas; separadas onde o nome difere. -- */
+
+/* Painel/cabeçalho/filtros/métricas */
+#panel-demandas, #panel-anomalias{background:var(--sb-bg-panel); border-color:var(--sb-border);}
+#panel-demandas .kd-topo, #panel-anomalias .an-topo{border-bottom-color:var(--sb-border);}
+#panel-demandas .kd-titulo, #panel-anomalias .an-titulo{color:var(--sb-text-strong);}
+#panel-demandas .kd-subtitulo, #panel-anomalias .an-subtitulo{color:var(--sb-text-faint);}
+#panel-demandas .kd-input, #panel-demandas .kd-select,
+#panel-anomalias .an-input, #panel-anomalias .an-select{
+  border-color:var(--sb-border-input); background:var(--sb-bg-panel); color:var(--sb-text-strong);
+}
+#panel-demandas .kd-checkbox, #panel-anomalias .an-checkbox{color:var(--sb-text-muted2);}
+#panel-demandas .kd-limpar, #panel-anomalias .an-limpar{color:var(--sb-text-faint);}
+#panel-demandas .kd-limpar:hover, #panel-anomalias .an-limpar:hover{color:var(--sb-text-med);}
+#panel-demandas .kd-met-bar, #panel-anomalias .an-met-bar{border-color:var(--sb-border);}
+
+/* Botão "+ Nova" (invertido no escuro — claro sobre fundo escuro, decisão
+   do usuário: NÃO reaproveita o verde --accent do grid). */
+#panel-demandas .kd-btn-nova, #panel-anomalias .an-btn-nova{
+  background:var(--sb-btn-primary-bg); color:var(--sb-btn-primary-fg);
+}
+#panel-demandas .kd-btn-nova:hover, #panel-anomalias .an-btn-nova:hover{
+  background:var(--sb-btn-primary-hover-bg); color:var(--sb-btn-primary-hover-fg);
+}
+
+/* Chip base + variantes (métricas) */
+#panel-demandas .kd-met-chip, #panel-anomalias .an-met-chip{
+  border-color:var(--sb-chip-border); background:var(--sb-chip-bg); color:var(--sb-chip-fg);
+}
+#panel-demandas .kd-met-chip.done, #panel-anomalias .an-met-chip.done{
+  background:var(--sb-chip-done-bg); color:var(--sb-chip-done-fg); border-color:var(--sb-chip-done-border);
+}
+#panel-demandas .kd-met-chip.active{background:var(--sb-chip-active-bg); color:var(--sb-chip-active-fg); border-color:var(--sb-chip-active-border);}
+#panel-demandas .kd-met-chip.pend{background:var(--sb-chip-pend-bg); color:var(--sb-chip-pend-fg); border-color:var(--sb-chip-pend-border);}
+#panel-demandas .kd-met-chip.hold{background:var(--sb-chip-hold-bg); color:var(--sb-chip-hold-fg); border-color:var(--sb-chip-hold-border);}
+#panel-demandas .kd-met-chip.late{background:var(--sb-chip-late-bg); color:var(--sb-chip-late-fg); border-color:var(--sb-chip-late-border);}
+#panel-demandas .kd-met-chip.ok, #panel-anomalias .an-met-chip.ok{color:var(--sb-chip-ok-fg); border-color:var(--sb-chip-ok-border);}
+#panel-anomalias .an-met-chip.critico{background:var(--sb-chip-critico-bg); color:var(--sb-chip-critico-fg); border-color:var(--sb-chip-critico-border);}
+#panel-anomalias .an-met-chip.atencao{background:var(--sb-chip-atencao-bg); color:var(--sb-chip-atencao-fg); border-color:var(--sb-chip-atencao-border);}
+#panel-anomalias .an-met-chip.semvinculo{background:var(--sb-chip-semvinculo-bg); color:var(--sb-chip-semvinculo-fg); border-color:var(--sb-chip-semvinculo-border);}
+
+/* Board / colunas */
+#panel-demandas .kd-col, #panel-anomalias .an-col{background:var(--sb-bg-sunk); border-color:var(--sb-border);}
+#panel-demandas .kd-col-header, #panel-anomalias .an-col-header{border-bottom-color:var(--sb-border);}
+#panel-demandas .kd-col-nome, #panel-anomalias .an-col-nome{color:var(--sb-text-base);}
+#panel-demandas .kd-col-contagem, #panel-anomalias .an-col-contagem{color:var(--sb-text-faint); background:var(--sb-bg-badge-neutral);}
+#panel-demandas .kd-col-ocultar{color:var(--sb-icon-faint);}
+#panel-demandas .kd-col-ocultar:hover{color:var(--sb-text-subtle);}
+#panel-demandas .kd-cartoes.kd-drag-over, #panel-anomalias .an-cartoes.an-drag-over{background:var(--sb-drag-over-bg);}
+#panel-demandas .kd-add-btn, #panel-anomalias .an-add-btn{color:var(--sb-text-faint); border-color:var(--sb-border-input);}
+#panel-demandas .kd-add-btn:hover, #panel-anomalias .an-add-btn:hover{color:var(--sb-text-med); border-color:var(--sb-text-faint); background:var(--sb-bg-panel);}
+#panel-demandas .kd-add-col-btn{background:var(--sb-bg-sunk2); border-color:var(--sb-border-input); color:var(--sb-text-faint);}
+#panel-demandas .kd-add-col-btn:hover{background:var(--sb-bg-panel); border-color:var(--sb-text-faint); color:var(--sb-text-med);}
+#panel-demandas .kd-hidden-cols-menu{background:var(--sb-bg-panel); border-color:var(--sb-border); box-shadow:0 8px 30px var(--sb-menu-shadow);}
+#panel-demandas .kd-hidden-cols-menu button{color:var(--sb-text-med);}
+#panel-demandas .kd-hidden-cols-menu button:hover{background:var(--sb-bg-sunk2);}
+#panel-demandas .kd-prio-none{border-left-color:var(--sb-prio-none-border);}
+#panel-demandas .kd-dot-none{background:var(--sb-dot-none-bg);}
+
+/* Cartão */
+#panel-demandas .kd-card, #panel-anomalias .an-card{background:var(--sb-bg-panel); border-color:var(--sb-border);}
+#panel-demandas .kd-card:hover, #panel-anomalias .an-card:hover{box-shadow:0 3px 12px var(--sb-card-hover-shadow);}
+#panel-demandas .kd-action-btn, #panel-anomalias .an-action-btn{color:var(--sb-text-faint);}
+#panel-demandas .kd-action-btn:hover, #panel-anomalias .an-action-btn:hover{background:var(--sb-bg-sunk2); color:var(--sb-text-med);}
+#panel-demandas .kd-prog-btn{border-color:var(--sb-border-input); background:var(--sb-bg-sunk2); color:var(--sb-text-muted2);}
+#panel-demandas .kd-prog-btn:hover{background:var(--sb-bg-badge-neutral); color:var(--sb-text-strong); border-color:var(--sb-text-faint);}
+#panel-demandas .kd-prog-track{background:var(--sb-bg-badge-neutral);}
+#panel-demandas .kd-prog-pct{color:var(--sb-text-muted2);}
+#panel-demandas .kd-card-texto{color:var(--sb-text-base);}
+#panel-demandas .kd-card-texto.kd-concluida{color:var(--sb-text-faint);}
+#panel-demandas .kd-card-texto.kd-hold{color:var(--sb-text-faint);}
+#panel-demandas .kd-deadline{color:var(--sb-text-faint);}
+#panel-anomalias .an-card-titulo{color:var(--sb-text-base);}
+#panel-anomalias .an-card-titulo.an-concluida{color:var(--sb-text-faint);}
+#panel-anomalias .an-card-descricao{color:var(--sb-text-muted2);}
+#panel-anomalias .an-resp{color:var(--sb-text-faint);}
+
+/* Badges de vínculo (Anomalias → Demandas) */
+#panel-anomalias .an-vinc-badge-mini{background:var(--sb-vinc-bg); color:var(--sb-vinc-fg); border-color:var(--sb-vinc-border);}
+#panel-anomalias .an-vinc-badge-mini:hover{background:var(--sb-vinc-hover-bg);}
+
+/* Badges de status (5 — mesmos nomes kd-st-/an-st-) */
+#panel-demandas .kd-st-pendente, #panel-anomalias .an-st-pendente{background:var(--sb-st-pendente-bg); color:var(--sb-st-pendente-fg);}
+#panel-demandas .kd-st-em-andamento, #panel-anomalias .an-st-em-andamento{background:var(--sb-st-andamento-bg); color:var(--sb-st-andamento-fg);}
+#panel-demandas .kd-st-concluido, #panel-anomalias .an-st-concluido{background:var(--sb-st-concluido-bg); color:var(--sb-st-concluido-fg);}
+#panel-demandas .kd-st-cancelado, #panel-anomalias .an-st-cancelado{background:var(--sb-st-cancelado-bg); color:var(--sb-st-cancelado-fg);}
+#panel-demandas .kd-st-on-hold, #panel-anomalias .an-st-on-hold{background:var(--sb-st-onhold-bg); color:var(--sb-st-onhold-fg);}
+
+/* Badges de cliente (10 — 9 em Demandas + "Eté" só em Anomalias) */
+#panel-demandas .kd-cl-mira, #panel-anomalias .an-cl-mira{background:var(--sb-cl-mira-bg); color:var(--sb-cl-mira-fg);}
+#panel-demandas .kd-cl-smig, #panel-anomalias .an-cl-smig{background:var(--sb-cl-smig-bg); color:var(--sb-cl-smig-fg);}
+#panel-demandas .kd-cl-fincere, #panel-anomalias .an-cl-fincere{background:var(--sb-cl-fincere-bg); color:var(--sb-cl-fincere-fg);}
+#panel-demandas .kd-cl-blue3, #panel-anomalias .an-cl-blue3{background:var(--sb-cl-blue3-bg); color:var(--sb-cl-blue3-fg);}
+#panel-demandas .kd-cl-blue3wealth, #panel-anomalias .an-cl-blue3wealth{background:var(--sb-cl-blue3wealth-bg); color:var(--sb-cl-blue3wealth-fg);}
+#panel-anomalias .an-cl-ete{background:var(--sb-cl-ete-bg); color:var(--sb-cl-ete-fg);}
+#panel-demandas .kd-cl-oikos, #panel-anomalias .an-cl-oikos{background:var(--sb-cl-oikos-bg); color:var(--sb-cl-oikos-fg);}
+#panel-demandas .kd-cl-nextwealth, #panel-anomalias .an-cl-nextwealth{background:var(--sb-cl-nextwealth-bg); color:var(--sb-cl-nextwealth-fg);}
+#panel-demandas .kd-cl-rts, #panel-anomalias .an-cl-rts{background:var(--sb-cl-rts-bg); color:var(--sb-cl-rts-fg);}
+#panel-demandas .kd-cl-beehus, #panel-anomalias .an-cl-beehus{background:var(--sb-cl-beehus-bg); color:var(--sb-cl-beehus-fg);}
+
+/* Badges de tipo (3 — só Demandas) */
+#panel-demandas .kd-tp-operacional{background:var(--sb-tp-operacional-bg); color:var(--sb-tp-operacional-fg);}
+#panel-demandas .kd-tp-sistema{background:var(--sb-tp-sistema-bg); color:var(--sb-tp-sistema-fg);}
+#panel-demandas .kd-tp-sistemaoperacional{background:var(--sb-tp-sistemaoperacional-bg); color:var(--sb-tp-sistemaoperacional-fg);}
+
+/* Modais (overlays próprios ".kd-modal-" e ".an-modal-") */
+.kd-modal-box, .an-modal-box{background:var(--sb-bg-panel); box-shadow:0 20px 60px var(--sb-modal-shadow);}
+.kd-modal-header h2, .an-modal-header h2{color:var(--sb-text-strong);}
+.kd-modal-fechar, .an-modal-fechar{color:var(--sb-text-faint);}
+.kd-modal-fechar:hover, .an-modal-fechar:hover{color:var(--sb-text-subtle);}
+.kd-modal-box p.kd-modal-aviso, .an-modal-box p.an-modal-aviso{color:var(--sb-text-muted2);}
+.kd-modal-box h2.kd-modal-titulo-simples, .an-modal-box h2.an-modal-titulo-simples{color:var(--sb-text-strong);}
+.kd-campo label, .an-campo label{color:var(--sb-text-subtle);}
+.kd-campo input[type=text], .kd-campo textarea, .kd-campo select,
+.an-campo input[type=text], .an-campo textarea, .an-campo select{
+  border-color:var(--sb-border-input); color:var(--sb-text-strong); background:var(--sb-bg-panel);
+}
+.kd-btn-secundario, .an-btn-secundario{border-color:var(--sb-border-input); background:var(--sb-bg-panel); color:var(--sb-text-subtle);}
+.kd-btn-secundario:hover, .an-btn-secundario:hover{background:var(--sb-bg-sunk);}
+.kd-btn-primario, .an-btn-primario{background:var(--sb-btn-primary-bg); color:var(--sb-btn-primary-fg);}
+.kd-btn-primario:hover, .an-btn-primario:hover{background:var(--sb-btn-primary-hover-bg); color:var(--sb-btn-primary-hover-fg);}
+
+.kd-comment-item, .an-comment-item{background:var(--sb-bg-sunk); border-color:var(--sb-border);}
+.kd-comment-texto, .an-comment-texto{color:var(--sb-text-base);}
+.kd-comment-data, .an-comment-data{color:var(--sb-text-faint);}
+.kd-comment-vazio, .an-comment-vazio{color:var(--sb-text-faint);}
+
+/* Seção "Demandas vinculadas" + modal de vincular (só Anomalias) */
+.an-vinc-secao{border-top-color:var(--sb-border);}
+.an-vinc-secao > label{color:var(--sb-text-subtle);}
+.an-vinc-item{background:var(--sb-bg-sunk); border-color:var(--sb-border);}
+.an-vinc-item .an-vinc-horizonte{color:var(--sb-text-faint);}
+.an-vinc-item .an-vinc-texto{color:var(--sb-text-base);}
+.an-vinc-item .an-vinc-remover{color:var(--sb-icon-faint);}
+.an-vinc-vazio{color:var(--sb-text-faint);}
+.an-vinc-tabs{border-bottom-color:var(--sb-border);}
+.an-vinc-tab{color:var(--sb-text-faint);}
+.an-vinc-tab.an-vinc-tab-ativa{color:var(--sb-text-strong); border-bottom-color:var(--sb-text-strong);}
+.an-vinc-resultado-item{background:var(--sb-bg-sunk); border-color:var(--sb-border);}
+.an-vinc-resultado-texto{color:var(--sb-text-base);}
+.an-vinc-resultado-texto .an-vinc-resultado-cliente{color:var(--sb-text-faint);}
+.an-vinc-resultado-vazio{color:var(--sb-text-faint);}
+
+/* Limitação conhecida, aceita em v1 (ver plano — resolvida junto com a
+   Parte 2 de melhorias em Anomalias, que já vai tocar neste arquivo):
+   o "corDot" do badge de vínculo mini (.an-vinc-dot) é pintado por um
+   style="background:...' inline no próprio HTML gerado por
+   static/js/anomalias/cartoes.js (JS já existente — não editado aqui).
+   Os 4 tons usados (#9ca3af/#1d4ed8/#15803d/#b45309) continuam
+   perceptíveis sobre o fundo escuro do badge (--sb-vinc-bg dark
+   #312e81), só não foram recalibrados especificamente para esse fundo. */

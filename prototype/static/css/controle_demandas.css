@@ -1,0 +1,263 @@
+/* controle_demandas.css — aba "Controle de Demandas" (Kanban).
+   ====================================================================
+   [2026-08-21, correção do usuário logo após a 1ª tentativa] Porte de
+   beehus-rotinas/templates/controle_demandas.html "do jeito que está":
+   este arquivo replica FIELMENTE a aparência visual da origem (cores,
+   espaçamentos, tipografia — a origem usava Tailwind CSS utilitário +
+   este bloco de CSS próprio do Kanban) em vez de reescrever contra os
+   tokens (--surface/--ink/--accent/...) de controle_cargas.css. É
+   deliberadamente AUTOCONTIDO e ESCOPADO: todo seletor vive sob
+   #panel-demandas (ou é um dos 3 overlays de modal próprios,
+   .kd-modal-backdrop/.kd-modal-box, que também usam só classes "kd-"
+   inéditas) — nenhuma classe daqui reaproveita ou colide com .btn/
+   .searchbox/.selectbox/.modal/.modal-backdrop/.note/.chip/.linklike
+   etc. já definidos em controle_cargas.css, e nada aqui é lido pelas
+   outras abas. Cores hardcoded (não var(--...)) de propósito — é uma UI
+   visualmente independente do resto do app, luz apenas (a origem tinha
+   dark mode via classe manual "html.dark"; o destino não tem esse toggle,
+   então esta aba fica só no modo claro, igual ao visual PADRÃO da
+   origem). */
+
+/* Wrapper próprio (NÃO usa class="panel" de controle_cargas.css — isso
+   traria --surface-raised/--border, ou seja, reskinaria o container pro
+   design system do destino). Cores hardcoded batendo com o fundo branco/
+   bordas cinza-claro da origem. */
+#panel-demandas{
+  background:#ffffff; border:1px solid #e5e7eb; border-radius:10px;
+  overflow:hidden; margin-bottom:22px;
+}
+
+/* ── Cabeçalho + botão "Nova Demanda" ────────────────────────────────────── */
+#panel-demandas .kd-topo{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  flex-wrap:wrap; padding:14px 18px; border-bottom:1px solid #e5e7eb;
+}
+#panel-demandas .kd-titulo{font-size:15px;font-weight:600;color:#111827;margin:0;}
+#panel-demandas .kd-subtitulo{font-size:11.5px;color:#9ca3af;margin:2px 0 0;}
+#panel-demandas .kd-btn-nova{
+  display:inline-flex; align-items:center; gap:6px; background:#111827; color:#fff;
+  font-size:12px; font-weight:600; padding:8px 14px; border:none; border-radius:8px; cursor:pointer;
+}
+#panel-demandas .kd-btn-nova:hover{background:#374151;}
+
+/* ── Barra de filtros ─────────────────────────────────────────────────────── */
+#panel-demandas .kd-filtros{
+  display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:12px 18px;
+}
+#panel-demandas .kd-input,
+#panel-demandas .kd-select{
+  font-size:12px; padding:7px 11px; border-radius:8px; border:1px solid #d1d5db;
+  background:#fff; color:#111827; font-family:inherit;
+}
+#panel-demandas .kd-input{min-width:200px;}
+#panel-demandas .kd-input:focus,
+#panel-demandas .kd-select:focus{outline:2px solid rgba(0,0,0,.15);}
+#panel-demandas .kd-checkbox{
+  display:flex; align-items:center; gap:6px; font-size:12px; color:#6b7280; cursor:pointer; user-select:none;
+}
+#panel-demandas .kd-limpar{
+  margin-left:auto; background:none; border:none; font-size:11.5px; color:#9ca3af;
+  text-decoration:underline; cursor:pointer;
+}
+#panel-demandas .kd-limpar:hover{color:#374151;}
+
+/* ── Barra de métricas ───────────────────────────────────────────────────── */
+#panel-demandas .kd-met-bar{
+  padding:8px 18px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+  border-top:1px solid #e5e7eb; border-bottom:1px solid #e5e7eb;
+}
+#panel-demandas .kd-met-chip{
+  display:inline-flex; align-items:center; gap:4px; font-size:11px; padding:3px 9px;
+  border-radius:20px; font-weight:500; border:1px solid #e5e7eb; background:#f9fafb;
+  color:#374151; white-space:nowrap;
+}
+#panel-demandas .kd-met-chip b{font-weight:700;}
+#panel-demandas .kd-met-chip.done  {background:#f0fdf4;color:#15803d;border-color:#bbf7d0;}
+#panel-demandas .kd-met-chip.active{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe;}
+#panel-demandas .kd-met-chip.pend  {background:#f9fafb;color:#6b7280;border-color:#e5e7eb;}
+#panel-demandas .kd-met-chip.hold  {background:#fffbeb;color:#b45309;border-color:#fde68a;}
+#panel-demandas .kd-met-chip.late  {background:#fff1f2;color:#be123c;border-color:#fecdd3;}
+#panel-demandas .kd-met-chip.ok    {color:#15803d;border-color:#bbf7d0;}
+#panel-demandas .kd-met-chip.progresso{margin-left:auto;}
+
+/* ── Board (colunas Kanban) ──────────────────────────────────────────────── */
+#panel-demandas .kd-board{
+  display:flex; gap:10px; padding:14px 18px 20px; overflow-x:auto; align-items:flex-start;
+  min-height:280px;
+}
+#panel-demandas .kd-col{
+  flex-shrink:0; width:220px; background:#f9fafb; border-radius:8px;
+  display:flex; flex-direction:column; border:1px solid #e5e7eb; max-height:640px;
+}
+#panel-demandas .kd-col-header{
+  display:flex; align-items:center; gap:8px; padding:10px 12px 8px; flex-shrink:0;
+  border-bottom:1px solid #e5e7eb;
+}
+#panel-demandas .kd-avatar{
+  width:26px; height:26px; border-radius:50%; font-size:10px; font-weight:700;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#fff;
+}
+#panel-demandas .kd-avatar-mini{width:18px;height:18px;font-size:9px;}
+#panel-demandas .kd-col-nome{font-size:12px;font-weight:600;color:#1f2937;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#panel-demandas .kd-col-contagem{font-size:10px;font-weight:500;color:#9ca3af;background:#e5e7eb;border-radius:999px;padding:2px 6px;flex-shrink:0;}
+#panel-demandas .kd-col-ocultar{
+  background:none; border:none; color:#d1d5db; cursor:pointer; font-size:14px; line-height:1;
+  margin-left:4px; padding:0 2px; flex-shrink:0;
+}
+#panel-demandas .kd-col-ocultar:hover{color:#4b5563;}
+
+#panel-demandas .kd-cartoes{padding:8px 8px 4px; flex:1; overflow-y:auto; min-height:50px;}
+#panel-demandas .kd-cartoes.kd-drag-over{background:rgba(59,130,246,.07); border-radius:6px;}
+
+#panel-demandas .kd-add-btn{
+  margin:4px 8px 8px; padding:6px; font-size:11px; color:#9ca3af;
+  border:1.5px dashed #d1d5db; border-radius:7px; cursor:pointer; background:none;
+  width:calc(100% - 16px); text-align:center;
+}
+#panel-demandas .kd-add-btn:hover{color:#374151; border-color:#9ca3af; background:#fff;}
+
+/* "+ coluna" (reexibir coluna oculta) */
+#panel-demandas .kd-add-col{flex-shrink:0; width:36px; display:flex; flex-direction:column; align-items:center; padding-top:12px; position:relative;}
+#panel-demandas .kd-add-col-btn{
+  width:32px; height:32px; border-radius:50%; background:#f3f4f6; border:1.5px dashed #d1d5db;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; color:#9ca3af; font-size:18px;
+}
+#panel-demandas .kd-add-col-btn:hover{background:#fff; border-color:#9ca3af; color:#374151;}
+#panel-demandas .kd-add-col-btn:disabled{opacity:.3; cursor:default;}
+#panel-demandas .kd-hidden-cols-menu{
+  position:absolute; left:0; top:100%; background:#fff; border:1px solid #e5e7eb;
+  border-radius:10px; box-shadow:0 8px 30px rgba(0,0,0,.12); padding:6px; z-index:40;
+  min-width:160px; margin-top:4px;
+}
+#panel-demandas .kd-hidden-cols-menu button{
+  display:flex; align-items:center; gap:8px; width:100%; padding:6px 8px; border-radius:6px;
+  border:none; background:none; font-size:12px; color:#374151; cursor:pointer; text-align:left;
+}
+#panel-demandas .kd-hidden-cols-menu button:hover{background:#f3f4f6;}
+
+/* ── Cartão de demanda ───────────────────────────────────────────────────── */
+#panel-demandas .kd-card{
+  background:#fff; border-radius:8px; margin-bottom:6px; border:1px solid #e5e7eb;
+  border-left-width:3px; padding:9px 10px 8px; cursor:grab; transition:box-shadow .15s; position:relative;
+}
+#panel-demandas .kd-card:active{cursor:grabbing;}
+#panel-demandas .kd-card:hover{box-shadow:0 3px 12px rgba(0,0,0,.1);}
+#panel-demandas .kd-card.kd-dragging{opacity:.45; box-shadow:none;}
+#panel-demandas .kd-card.kd-dim{opacity:.55;}
+#panel-demandas .kd-prio-alto {border-left-color:#f87171;}
+#panel-demandas .kd-prio-medio{border-left-color:#fbbf24;}
+#panel-demandas .kd-prio-baixo{border-left-color:#34d399;}
+#panel-demandas .kd-prio-none {border-left-color:#e5e7eb;}
+
+#panel-demandas .kd-actions{display:none; gap:2px;}
+#panel-demandas .kd-card:hover .kd-actions{display:flex;}
+#panel-demandas .kd-action-btn{
+  padding:2px 4px; border-radius:4px; border:none; background:none;
+  color:#9ca3af; cursor:pointer; font-size:11px; line-height:1;
+}
+#panel-demandas .kd-action-btn:hover{background:#f3f4f6; color:#374151;}
+
+#panel-demandas .kd-prog-row{display:flex; align-items:center; gap:4px; margin-bottom:6px;}
+#panel-demandas .kd-prog-btn{
+  width:16px; height:16px; border-radius:3px; border:1px solid #d1d5db;
+  background:#f3f4f6; color:#6b7280; font-size:13px; font-weight:700;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; line-height:1; padding:0;
+}
+#panel-demandas .kd-prog-btn:hover{background:#e5e7eb; color:#111827; border-color:#9ca3af;}
+#panel-demandas .kd-prog-track{flex:1; height:5px; background:#e5e7eb; border-radius:3px; overflow:hidden;}
+#panel-demandas .kd-prog-fill{height:100%; border-radius:3px; transition:width .2s;}
+#panel-demandas .kd-prog-pct{font-size:9px; font-weight:700; color:#6b7280; min-width:22px; text-align:right; flex-shrink:0;}
+
+#panel-demandas .kd-card-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; gap:4px;}
+#panel-demandas .kd-card-top-left{display:flex; align-items:center; gap:6px; min-width:0;}
+#panel-demandas .kd-dot{width:8px; height:8px; border-radius:50%; flex-shrink:0;}
+#panel-demandas .kd-dot-alto{background:#f87171;} #panel-demandas .kd-dot-medio{background:#fbbf24;} #panel-demandas .kd-dot-baixo{background:#34d399;}
+#panel-demandas .kd-dot-none{background:#d1d5db;}
+
+#panel-demandas .kd-badge{
+  display:inline-flex; align-items:center; padding:2px 6px; border-radius:999px;
+  font-size:10px; font-weight:500; flex-shrink:0; white-space:nowrap;
+}
+#panel-demandas .kd-atraso{font-size:10px;}
+
+#panel-demandas .kd-card-texto{
+  font-size:12px; color:#1f2937; line-height:1.35; margin:0 0 8px;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+#panel-demandas .kd-card-texto.kd-concluida{text-decoration:line-through; color:#9ca3af;}
+#panel-demandas .kd-card-texto.kd-hold{color:#9ca3af;}
+#panel-demandas .kd-card-bottom{display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
+#panel-demandas .kd-deadline{font-size:10px; color:#9ca3af;}
+
+/* Badges de status/cliente/tipo — cores IDÊNTICAS às classes cl-*/st-*/
+   tp-* da origem (beehus-rotinas/templates/controle_demandas.html), só
+   renomeadas com prefixo "kd-" pra nunca colidir com nada do destino. */
+#panel-demandas .kd-st-pendente     {background:#f3f4f6; color:#6b7280;}
+#panel-demandas .kd-st-em-andamento {background:#dbeafe; color:#1d4ed8;}
+#panel-demandas .kd-st-concluido    {background:#dcfce7; color:#15803d;}
+#panel-demandas .kd-st-cancelado    {background:#f3f4f6; color:#9ca3af;}
+#panel-demandas .kd-st-on-hold      {background:#fef3c7; color:#b45309;}
+
+#panel-demandas .kd-cl-mira       {background:#dbeafe; color:#1e40af;}
+#panel-demandas .kd-cl-smig       {background:#ede9fe; color:#5b21b6;}
+#panel-demandas .kd-cl-fincere    {background:#fce7f3; color:#9d174d;}
+#panel-demandas .kd-cl-blue3      {background:#e0e7ff; color:#3730a3;}
+#panel-demandas .kd-cl-blue3wealth{background:#f3e8ff; color:#6b21a8;}
+#panel-demandas .kd-cl-oikos      {background:#ccfbf1; color:#065f46;}
+#panel-demandas .kd-cl-nextwealth {background:#d1fae5; color:#065f46;}
+#panel-demandas .kd-cl-rts        {background:#fee2e2; color:#991b1b;}
+#panel-demandas .kd-cl-beehus     {background:#fef3c7; color:#92400e;}
+
+#panel-demandas .kd-tp-operacional       {background:#e0f2fe; color:#0369a1;}
+#panel-demandas .kd-tp-sistema           {background:#f3e8ff; color:#6b21a8;}
+#panel-demandas .kd-tp-sistemaoperacional{background:#fef9c3; color:#854d0e;}
+
+/* ── Modais (overlays próprios, NÃO reaproveitam .modal-backdrop/.modal) ── */
+.kd-modal-backdrop{
+  position:fixed; inset:0; background:rgba(0,0,0,.45); display:none;
+  align-items:center; justify-content:center; z-index:200; padding:1rem;
+}
+.kd-modal-backdrop.kd-show{display:flex;}
+.kd-modal-box{
+  background:#fff; border-radius:.75rem; width:100%; max-width:540px;
+  max-height:90vh; overflow-y:auto; padding:1.5rem; box-shadow:0 20px 60px rgba(0,0,0,.3);
+  font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+.kd-modal-box.kd-modal-sm{max-width:360px;}
+.kd-modal-box.kd-modal-md{max-width:480px;}
+.kd-modal-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;}
+.kd-modal-header h2{font-size:14px; font-weight:600; color:#111827; margin:0;}
+.kd-modal-fechar{background:none; border:none; color:#9ca3af; cursor:pointer; font-size:18px; line-height:1; padding:0 2px;}
+.kd-modal-fechar:hover{color:#4b5563;}
+.kd-modal-box p.kd-modal-aviso{font-size:12px; color:#6b7280; margin-bottom:20px;}
+.kd-modal-box h2.kd-modal-titulo-simples{font-size:14px; font-weight:600; color:#111827; margin:0 0 8px;}
+
+.kd-campo{margin-bottom:12px;}
+.kd-campo label{display:block; font-size:11.5px; font-weight:500; color:#4b5563; margin-bottom:4px;}
+.kd-campo input[type=text],
+.kd-campo textarea,
+.kd-campo select{
+  width:100%; box-sizing:border-box; border:1px solid #d1d5db; border-radius:.5rem;
+  padding:8px 12px; font-size:13px; font-family:inherit; color:#111827; background:#fff;
+}
+.kd-campo textarea{resize:none;}
+.kd-campo input:focus, .kd-campo textarea:focus, .kd-campo select:focus{outline:2px solid rgba(0,0,0,.15);}
+.kd-grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+
+.kd-modal-rodape{display:flex; gap:12px; margin-top:20px;}
+.kd-btn-secundario, .kd-btn-primario{
+  flex:1; border-radius:.5rem; padding:8px 0; font-size:13px; font-weight:500; cursor:pointer;
+}
+.kd-btn-secundario{border:1px solid #d1d5db; background:#fff; color:#4b5563;}
+.kd-btn-secundario:hover{background:#f9fafb;}
+.kd-btn-primario{border:none; background:#111827; color:#fff;}
+.kd-btn-primario:hover{background:#374151;}
+.kd-btn-perigo{border:none; background:#dc2626; color:#fff;}
+.kd-btn-perigo:hover{background:#b91c1c;}
+
+.kd-comments-lista{max-height:220px; overflow-y:auto; margin-bottom:14px; display:flex; flex-direction:column; gap:8px; padding-right:2px;}
+.kd-comment-item{background:#f9fafb; border:1px solid #e5e7eb; border-radius:.5rem; padding:8px 12px;}
+.kd-comment-texto{font-size:12px; color:#1f2937; margin:0; white-space:pre-wrap; line-height:1.4;}
+.kd-comment-data{font-size:10px; color:#9ca3af; margin:4px 0 0;}
+.kd-comment-vazio{font-size:12px; color:#9ca3af;}
