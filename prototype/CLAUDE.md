@@ -811,6 +811,37 @@ Complementa a divisão de código da seção 4 — juntas atacam a causa dos con
     console novo além do 401 esperado (`/api/atualizar`, sem rede real
     neste sandbox).
 
+- **[2026-08-25, colega de time relatou "não consegui visualizar o comentário e
+  responsável que salvei"] AVISO DE EDIÇÃO NÃO SALVA (Responsável/Comentário sobre
+  atuação).** Investigação (sem reprodução direta do relato, causa mais provável
+  identificada por leitura de código): os campos são "estilo Excel" desde
+  2026-07-24 — digitar só grava em memória (`PENDING_ANNOTATIONS`), nada vai pro
+  servidor até o clique em "💾 Salvar"; fechar a aba, recarregar ou navegar pra
+  outra URL antes disso descartava a edição **sem nenhum aviso** (o único sinal era
+  o contador no próprio botão, `💾 Salvar (N)`, fácil de não notar). Confirmado
+  também que `/api/comments`/`/api/annotations` (GET lê exatamente o que POST
+  grava, mesma chave) e o snapshot (`build_snapshot.py` não embute anotações) não
+  têm bug — a hipótese de perda de dado por rota/cache foi descartada.
+  - **Fix 100% aditivo em `static/js/controle_cargas/anotacoes.js`**: 1 listener
+    novo de `window.addEventListener('beforeunload', ...)`, em module scope (mesmo
+    padrão das chamadas soltas no fim de `index.js`) — se há alguma chave pendente
+    em `PENDING_ANNOTATIONS` no momento de sair da página, o navegador mostra o
+    diálogo nativo de confirmação. Nenhuma função existente foi tocada (nem
+    `wire()`/`index.js`, nem `salvarAnotacoes()`/`executarAtualizacao()`).
+  - **Verificado**: contador do botão incrementa corretamente ao digitar
+    (`💾 Salvar (1)`), confirmando que o rastreio de pendência já funcionava. O
+    diálogo nativo de `beforeunload` em si não é confiável de simular via
+    automação headless (Chromium/CDP costuma pular esse diálogo em navegação
+    programática, limitação conhecida da ferramenta de teste, não do código) — a
+    verificação final desse ponto específico foi manual.
+  - **Limitação aceita, não corrigida nesta rodada**: a anotação é salva por
+    `referenceDate` (nunca por outro dia da janela); se a data de referência mudar
+    (ex.: virada de dia, ou "Atualizar" com data nova) ENQUANTO há uma edição
+    pendente da data anterior, o campo na tela passa a mostrar vazio (a pendência
+    antiga fica "invisível", embora ainda exista em memória e ainda seja enviada se
+    o usuário clicar Salvar). Não gera perda de dado por si só, mas é confuso —
+    revisitar se o time achar que ainda causa confusão depois deste fix.
+
 ---
 
 ## Checklist rápido (antes de considerar uma tarefa pronta)

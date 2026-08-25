@@ -297,3 +297,29 @@ resumoAtuacaoHtml(targetType, targetId){
   return `<p class="psub" style="margin-top:8px;">${partes.join(' · ')} <span style="color:var(--ink-faint)">(ref. ${ControleCargas.esc(ControleCargas.SNAPSHOT.meta.referenceDate)} — editável na matriz)</span></p>`;
 },
 });
+
+/* Contexto:
+   Avisa o usuário se ele tentar fechar a aba/janela ou recarregar a página
+   com edições de Responsável/Comentário sobre atuação ainda não salvas —
+   [2026-08-25, colega de time relatou "não consegui visualizar o
+   comentário e responsável que salvei": digitar nos campos só guarda a
+   edição em memória (PENDING_ANNOTATIONS, "estilo Excel"), nada é enviado
+   ao servidor até o clique em "💾 Salvar"; fechar/recarregar a aba antes
+   disso descartava a edição sem nenhum aviso]. Ligado 1x, em module scope,
+   junto com o resto do bootstrap sem-tela do arquivo (mesmo padrão do fim
+   de index.js: wireModalGlobalHandlers()/wireFilterShortcuts()/
+   wireAtualizar() chamadas soltas, fora de wire()) — não precisa mexer em
+   nenhuma função já existente.
+
+   Pseudocódigo:
+     1. No evento beforeunload, se houver alguma chave pendente em
+        PENDING_ANNOTATIONS, cancela o evento e seta e.returnValue — é só
+        essa combinação que faz o navegador mostrar o diálogo nativo de
+        confirmação (o texto customizado não é mais suportado pelos
+        browsers modernos, só a presença do diálogo em si). */
+window.addEventListener('beforeunload', (e)=>{
+  if(Object.keys(ControleCargas.PENDING_ANNOTATIONS).length > 0){
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
