@@ -994,6 +994,15 @@ def montar_celula_grouping_dia(grouping_id, data, ativos, lookup_celulas, nav_gr
     if overlays:
         entrada["ov"] = overlays
     entrada["tt"] = montar_tooltip_celula_grouping(ativos, data, lookup_celulas)
+    # [2026-08-24, decisão do usuário — Rota A da visão "Publicação por Hora" (aba
+    # Company)] grava a hora BRT de publicação do PRÓPRIO agrupamento (não herdada de
+    # membro), lida do publishedAt que db.py agora copia de groupingsDetailed;
+    # reaproveita formatar_horario_brt(), mesmo formatador já usado para hora_pub de
+    # carteira (ver montar_horarios_celula acima). Guarda: só grava a chave quando há
+    # hora (None -> "sem hora" na matriz nova, nunca quebra por campo ausente).
+    hora_pub_grouping = formatar_horario_brt((nav_group_map.get((grouping_id, data)) or {}).get("publishedAt"))
+    if hora_pub_grouping:
+        entrada["horaPub"] = hora_pub_grouping
     return entrada
 
 

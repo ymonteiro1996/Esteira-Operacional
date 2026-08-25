@@ -28,6 +28,24 @@ env/
 prototype/snapshot.json
 prototype/data/_conflitos_resolvidos/
 
+# [2026-08-25, decisão do usuário: "consumirmos de um diretório" separado do código]
+# Dado TRANSACIONAL (escrito pelo app a cada CRUD) nunca entra no Git — mora fora do
+# repositório (local, ou na pasta apontada por CONTROLECARGAS_DATA_DIR). Git guarda só
+# código. Isso evita o que já tinha acontecido: uma anotação salva pela tela virava
+# diff misturado no meio de commit de código, com conflito de merge garantido (o
+# json.dump sem newline final faz 2 pessoas criando registro em paralelo colidirem na
+# MESMA linha sempre). Os *_config.json (parâmetro de negócio, não dado transacional
+# — ex. limiares/listas editadas raramente) continuam versionados de propósito.
+prototype/data/alert_comments.json
+prototype/data/wallet_annotations.json
+prototype/data/controle_demandas.json
+prototype/data/anomalias.json
+
+# Backups locais de segurança (cópias completas de prototype/ antes de cada tarefa) —
+# não é histórico de código, é rede de segurança local; o próprio Git já cumpre esse
+# papel para código a partir daqui.
+_backups/
+
 # Relatórios exportados (gerados sob demanda pela tela)
 ControleCargas_relatorio_*.xlsx
 

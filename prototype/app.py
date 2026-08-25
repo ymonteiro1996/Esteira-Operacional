@@ -104,7 +104,13 @@ from pages.anomalias import bp as anomalias_bp
 from utils.datas import CalendarioDiasUteis, JANELA_INICIAL_DIAS_UTEIS, calcular_janela_grid
 
 HERE = Path(__file__).resolve().parent
-DATA_DIR = HERE / "data"
+# [2026-08-25, decisão do usuário: "consumirmos de um diretório" separado do código
+# rastreado pelo Git] DATA_DIR aceita override via variável de ambiente
+# CONTROLECARGAS_DATA_DIR — se não configurada, cai no comportamento de sempre
+# (pasta "data/" ao lado do código). Isso permite apontar pra uma pasta FORA do
+# clone do Git (ex.: a mesma pasta OneDrive de antes, num caminho irmão do
+# repositório), sem quebrar quem ainda não configurou nada.
+DATA_DIR = Path(os.environ["CONTROLECARGAS_DATA_DIR"]) if os.environ.get("CONTROLECARGAS_DATA_DIR") else HERE / "data"
 COMMENTS_PATH = DATA_DIR / "alert_comments.json"
 ANNOTATIONS_PATH = DATA_DIR / "wallet_annotations.json"
 CONFLITOS_DIR = DATA_DIR / "_conflitos_resolvidos"
@@ -871,6 +877,47 @@ def janela_padrao():
     hoje = _today_str()
     data_referencia, janela = calcular_janela_grid(calendario, hoje)
     return jsonify({"dataInicial": janela[0], "dataFinal": data_referencia})
+
+
+# [2026-08-24, tarefa "Publicação por Hora" (aba Company) — rota NOVA, adição
+# pura: nenhuma rota/função já existente foi tocada por causa dela] Config dos
+# limites de hora da visão nova, externalizada em data/publicacao_hora_config.json
+# (CLAUDE.md §10 — "parâmetros configuráveis vão para data/*.json, não hardcoded"),
+# consumida por static/js/controle_cargas/matriz_publicacao_hora.js.
+PUBLICACAO_HORA_CONFIG_PATH = DATA_DIR / "publicacao_hora_config.json"
+PUBLICACAO_HORA_CONFIG_PADRAO = {
+    "nomeVisao": "Publicação por Hora",
+    "limiteInicioHoraCheia": 8,
+    "limiteFimHoraCheia": 20,
+}
+
+
+@app.route("/api/publicacao-hora-config", methods=["GET"])
+def publicacao_hora_config():
+    """Contexto:
+    [2026-08-24, adição pura desta tarefa] Devolve os limites de hora
+    (baldes "até Xh" / hora cheia / "após Yh") da visão nova "Publicação por
+    Hora" (sub-visão da aba Company), configuráveis em
+    data/publicacao_hora_config.json em vez de hardcoded no JS — mesmo
+    padrão já usado por data/demandas_config.json/data/anomalias_config.json
+    (config lida no servidor, servida como JSON). Só leitura local, sem
+    Mongo/API Beehus. Retorna JSON.
+
+    Pseudocódigo:
+      1. Parte dos defaults embutidos (08h/20h) — nunca falha por arquivo
+         ausente (1ª execução, ou alguém apagou o JSON sem querer).
+      2. Se o arquivo existir, lê e mescla por cima dos defaults (chave
+         ausente no JSON mantém o default); JSON malformado é ignorado
+         (defensivo — nunca derruba a tela por causa de um config quebrado).
+    """
+    config = dict(PUBLICACAO_HORA_CONFIG_PADRAO)
+    try:
+        if PUBLICACAO_HORA_CONFIG_PATH.exists():
+            with open(PUBLICACAO_HORA_CONFIG_PATH, "r", encoding="utf-8") as f:
+                config.update(json.load(f) or {})
+    except (OSError, ValueError):
+        pass
+    return jsonify(config)
 
 
 def _mensagem_amigavel_erro_atualizacao(exc):

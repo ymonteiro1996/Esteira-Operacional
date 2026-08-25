@@ -1,0 +1,53 @@
+/* matriz_hora_company.css — drill-down "Processamento por Hora × Empresa"
+   (aba Company, sub-visão "Por empresa"). [2026-08-25, pedido do usuário]
+   CSS 100% ADITIVO — arquivo novo, nenhuma regra de controle_cargas.css/
+   matriz_publicacao_hora.css foi tocada. Só o "chrome" do painel (cabeçalho,
+   botão fechar, botão ⏱) mora aqui: cor de fundo das células reaproveita
+   inteira via var() os tokens .company-ok/.company-att/.company-crit/
+   .company-neutral já existentes (a própria célula é montada por
+   celulaPublicacaoHoraHtml(), matriz_publicacao_hora.js — zero token novo,
+   funciona nos 2 temas de graça). */
+
+/* Botão "⏱" injetado dentro de cada <th data-date> da matriz "Por empresa"
+   — mesma linguagem visual do .th-filter-btn já existente (borda+fundo
+   sempre visíveis, não só no hover, pra ler como controle clicável mesmo
+   num cabeçalho pequeno). display:block pra ficar numa linha própria,
+   abaixo da data, sem disputar espaço com "▾ ref"/dia da semana. */
+.hcp-drill-btn{
+  display:block; margin:3px auto 0; cursor:pointer;
+  border:1px solid var(--border); background:var(--surface-sunk); color:var(--ink-muted);
+  font-size:10.5px; line-height:1.4; padding:0px 5px; border-radius:4px;
+}
+.hcp-drill-btn:hover{ color:var(--accent-ink); background:var(--accent); border-color:var(--accent); }
+
+/* Painel inline — injetado como irmão logo depois de #company-matrix-wrap,
+   dentro de #panel-company (NÃO é modal, sem backdrop/overlay). */
+.hcp-painel{
+  margin-top:14px; border:1px solid var(--border); border-radius:10px;
+  background:var(--surface-raised); padding:14px 16px;
+}
+.hcp-cabecalho{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  margin-bottom:10px;
+}
+.hcp-cabecalho h3{
+  margin:0; font-size:12.5px; font-weight:650; text-transform:uppercase;
+  letter-spacing:.04em; color:var(--ink-muted);
+}
+.hcp-fechar{
+  cursor:pointer; border:1px solid var(--border); background:var(--surface-sunk);
+  color:var(--ink-muted); font-size:15px; line-height:1; padding:2px 8px; border-radius:6px;
+}
+.hcp-fechar:hover{ color:var(--ink); background:var(--surface-raised); }
+
+/* Tabela do drill-down — reaproveita table.matrix/.cell/.col-companyname
+   (controle_cargas.css) e .pubhora-* (matriz_publicacao_hora.css) célula a
+   célula; aqui só o que é específico desta tabela: cabeçalho não é
+   clicável (não tem data-date, ao contrário das outras matrizes) e a
+   coluna "Total" (sempre a última) ganha destaque sutil de borda+peso, sem
+   precisar de classe própria por célula. */
+.hcp-table thead th{ cursor:default; }
+.hcp-table thead th:last-child,
+.hcp-table tbody td:last-child{
+  border-left:2px solid var(--border); font-weight:750;
+}

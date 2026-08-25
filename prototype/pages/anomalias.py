@@ -83,7 +83,11 @@ from flask import Blueprint, jsonify, request
 bp = Blueprint("anomalias", __name__)
 
 HERE = Path(__file__).resolve().parent
-DATA_DIR = HERE.parent / "data"
+# [2026-08-25, decisão do usuário: "consumirmos de um diretório" separado do código
+# rastreado pelo Git] mesmo override de CONTROLECARGAS_DATA_DIR que app.py já usa —
+# sem a variável configurada, cai no comportamento de sempre (pasta "data/" ao lado
+# do código).
+DATA_DIR = Path(os.environ["CONTROLECARGAS_DATA_DIR"]) if os.environ.get("CONTROLECARGAS_DATA_DIR") else HERE.parent / "data"
 ANOMALIAS_PATH = DATA_DIR / "anomalias.json"
 CONFIG_PATH = DATA_DIR / "demandas_config.json"  # reaproveitado (só leitura) da aba Demandas
 ANOMALIAS_CONFIG_PATH = DATA_DIR / "anomalias_config.json"  # config PRÓPRIA desta tela (limiares de aging + tags sugeridas)

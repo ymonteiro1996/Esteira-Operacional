@@ -847,6 +847,51 @@ membroAtivoNaData(membro, data){
 },
 
 /* Contexto:
+   Resolve as carteiras-membro que DEVERIAM publicar 1 agrupamento numa data
+   específica — extraído de dentro de computeGroupingPublishStat() [2026-08-24,
+   decisão do usuário: liberar a extração de 2 helpers puros, comportamento
+   IDÊNTICO ao que já vivia inline, só reorganizado em função própria] para
+   ser reaproveitado também pela matriz nova "Publicação por Hora"
+   (matriz_publicacao_hora.js), sem duplicar a regra. Cruza as carteiras-
+   membro rastreadas (tracked=true) ativas na data (membroAtivoNaData) com o
+   índice global window._WALLETS_BY_ID, mantendo só as que têm
+   mustPublish=true. Retorna array de carteiras (objetos de SNAPSHOT.wallets;
+   vazio quando nenhuma deveria publicar nesse dia).
+
+   Pseudocódigo:
+     1. Filtra os membros do agrupamento: rastreados e ativos na data.
+     2. Resolve a carteira de cada membro via o índice global.
+     3. Mantém só as carteiras existentes com mustPublish=true. */
+agrupamentoCarteirasQueDevemPublicarNaData(grouping, data){
+  return (grouping.members||[])
+    .filter(m=> m.tracked && ControleCargas.membroAtivoNaData(m, data))
+    .map(m=> window._WALLETS_BY_ID[m.walletId])
+    .filter(carteira=> carteira && carteira.mustPublish);
+},
+
+/* Contexto:
+   Decide se um agrupamento está com TODAS as carteiras-membro que deveriam
+   publicar (já resolvidas por agrupamentoCarteirasQueDevemPublicarNaData) de
+   fato publicadas numa data — extraído de dentro de
+   computeGroupingPublishStat() [2026-08-24, decisão do usuário, mesmo motivo
+   do helper acima: comportamento IDÊNTICO, só reorganizado], reaproveitado
+   também pela matriz "Publicação por Hora". Retorna bool.
+
+   Pseudocódigo:
+     1. Sem nenhuma carteira no denominador -> não conta como publicado
+        (o chamador normalmente já filtra esse caso antes de chegar aqui;
+        devolve false por segurança, nunca lança exceção).
+     2. Publicado quando TODA carteira do array tem célula com s==='p'
+        nessa data. */
+agrupamentoEstaPublicadoNaData(grouping, data, carteirasQueDevemPublicar){
+  if(!carteirasQueDevemPublicar || !carteirasQueDevemPublicar.length) return false;
+  return carteirasQueDevemPublicar.every(carteira=>{
+    const celula = ControleCargas.cellByDate(carteira)[data];
+    return celula && celula.s === 'p';
+  });
+},
+
+/* Contexto:
    Calcula o KPI "Agrupamentos Publicados" — pedido do usuário 2026-07-23,
    "seguindo igual o das Carteiras": cruza as carteiras do nosso Template
    (SNAPSHOT.wallets — só existem ali as que estão no registry), a data
@@ -864,35 +909,32 @@ membroAtivoNaData(membro, data){
    buildGroupingPublishStat(). Retorna {publicados, total, percentual,
    focusDate}.
 
+   [REVISADO 2026-08-24, decisão do usuário] A regra de "deveria publicar"/
+   "está publicado" foi extraída para agrupamentoCarteirasQueDevemPublicarNaData()/
+   agrupamentoEstaPublicadoNaData() logo acima — esta função só orquestra,
+   comportamento e retorno IDÊNTICOS a antes da extração.
+
    Pseudocódigo:
      1. Resolve a data em foco (state.focusDate ou a data de referência).
      2. Aplica os filtros correntes sobre os agrupamentos (mesma função da
         aba Agrupamentos).
-     3. Para cada agrupamento, resolve as carteiras-membro rastreadas
-        (tracked=true) ativas exatamente na data em foco (membroAtivoNaData)
-        e, entre essas, as que precisam publicar (mustPublish, resolvidas via
-        o índice global window._WALLETS_BY_ID).
+     3. Para cada agrupamento, resolve as carteiras-membro que deveriam
+        publicar na data em foco (agrupamentoCarteirasQueDevemPublicarNaData).
      4. Sem nenhuma carteira nessa condição, o agrupamento não entra no
         denominador (nada esperado dele na data em foco).
      5. Conta o total (agrupamentos com ao menos 1 carteira que devia
-        publicar) e quantos têm TODAS essas carteiras publicadas.
+        publicar) e quantos têm TODAS essas carteiras publicadas
+        (agrupamentoEstaPublicadoNaData).
      6. Calcula o percentual (null se total=0). */
 computeGroupingPublishStat(){
   const focusDate = ControleCargas.state.focusDate || ControleCargas.SNAPSHOT.meta.referenceDate;
   const agrupamentosFiltrados = ControleCargas.applyFilters(ControleCargas.SNAPSHOT.groupings, false);
   let total = 0, publicados = 0;
   agrupamentosFiltrados.forEach(grouping=>{
-    const carteirasQueDevemPublicar = (grouping.members||[])
-      .filter(m=> m.tracked && ControleCargas.membroAtivoNaData(m, focusDate))
-      .map(m=> window._WALLETS_BY_ID[m.walletId])
-      .filter(carteira=> carteira && carteira.mustPublish);
+    const carteirasQueDevemPublicar = ControleCargas.agrupamentoCarteirasQueDevemPublicarNaData(grouping, focusDate);
     if(!carteirasQueDevemPublicar.length) return;
     total++;
-    const todasPublicadas = carteirasQueDevemPublicar.every(carteira=>{
-      const celula = ControleCargas.cellByDate(carteira)[focusDate];
-      return celula && celula.s === 'p';
-    });
-    if(todasPublicadas) publicados++;
+    if(ControleCargas.agrupamentoEstaPublicadoNaData(grouping, focusDate, carteirasQueDevemPublicar)) publicados++;
   });
   const percentual = total ? (publicados/total*100) : null;
   return { publicados, total, percentual, focusDate };

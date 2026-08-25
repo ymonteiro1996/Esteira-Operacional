@@ -999,6 +999,74 @@ db.navPackages.find(
 - **Alerta:** se a etapa X do dia corrente ainda não ocorreu até o `Horário Limite` da instituição (`data/horarios_cargas.json`, seed da aba Lista Cargas; fallback: marcos da aba Horários — Unprocessed até 10:00, Publicada até 15:00 BRT) ⇒ `yellow`; 1h além ⇒ `red`.
 - **Caveat documentado:** `updatedAt` é sobrescrito a cada reprocesso — o banco **não guarda histórico de execuções** (ver Lacunas §3).
 
+- **[2026-08-24 — MATERIALIZAÇÃO PARCIAL no protótipo `ControleCargas`]**
+  Esta seção descreve a página `Horários` do desenho SWAT original (nunca
+  implementada nesse formato). O protótipo `ControleCargas` (app separado,
+  monólito Flask em `prototype/`, ver topo deste arquivo) ganhou uma versão
+  parcial e mais estreita da mesma ideia: a sub-visão **"Publicação por
+  Hora"**, dentro da aba **Company** já existente (seletor "Por empresa" /
+  "Por hora"), mostrando — por dia da janela do grid, em baldes de hora
+  (até 08h / hora cheia 09h..20h / após 20h / "sem hora") — quantos
+  AGRUPAMENTOS foram publicados em cada balde, contra a meta fixa do dia
+  (mesmo denominador do card "Agrupamentos Publicados").
+  - **Escopo bem mais estreito que o desenho original**: só a etapa
+    "Publicada" (não Unprocessed/Processada/reprocesso), só a granularidade
+    de AGRUPAMENTO (não carteira — a hora de publicação por carteira
+    continua código morto no protótipo, ver nota de `db.py`/
+    `snapshot_builder.py` no `prototype/CLAUDE.md`), sem alertas de SLA por
+    horário-limite (a "meta" é só o denominador fixo do dia, não uma curva
+    de prazo por hora) e sem histórico além da janela já carregada no grid
+    (5-7 dias úteis).
+  - **Fonte da hora**: `publishedAt` do próprio agrupamento
+    (`groupingsDetailed`, mesma chamada de `get_nav_results` que o boot já
+    fazia — zero chamada de API nova), convertido para BRT com
+    `formatar_horario_brt()` (o mesmo formatador já citado acima para
+    Unprocessed/Processada/Publicada de carteira).
+  - **Faixa de hora configurável** em `prototype/data/publicacao_hora_config.json`
+    (servida por uma rota nova `GET /api/publicacao-hora-config`), não
+    hardcoded — mesmo espírito do `data/horarios_cargas.json` citado acima
+    para o desenho original.
+  - Ver `prototype/CLAUDE.md` (nota datada 2026-08-24) para a implementação
+    completa (arquivos tocados, decisões do usuário, limitação de validar
+    `publishedAt` ao vivo).
+
+- **[2026-08-25 — DRILL-DOWN "Processamento por Hora × Empresa"]** Segunda
+  materialização parcial do Alerta 7, desta vez pela granularidade que a
+  sub-visão agregada acima deixou de fora: CARTEIRA (não agrupamento) e a
+  etapa **Processamento** (não Publicação). Botão novo "⏱" no cabeçalho de
+  cada dia da matriz "Por empresa" (aba Company) abre um painel inline
+  (dentro do próprio painel da aba, não modal) cruzando hora de
+  processamento × company só para aquele dia — linhas = mesmos baldes de
+  hora da sub-visão agregada, colunas = companies com meta > 0 naquele dia
+  + coluna "Total".
+  - **Métrica = Processamento, dado real sem depender da Beehus**: usa
+    `celula.tt.c` (hora de `processedPosition.createdAt`, já formatada
+    BRT), campo que já existe em toda célula de carteira do snapshot desde
+    sempre (`montar_horarios_celula()`, `prototype/snapshot_builder.py`) —
+    ao contrário de `publishedAt` (sub-visão de agrupamento acima), este
+    dado está CONFIRMADO populado (1825 de 6192 células no snapshot de
+    teste). Reprocesso usa a mesma hora `tt.c` (1ª geração/`createdAt`),
+    nunca `tt.reproc`/`updatedAt`.
+  - **100% aditivo, zero mudança de backend**: nenhuma rota/função
+    pré-existente foi alterada, inclusive o botão "⏱" em si — é injetado
+    via DOM (`insertAdjacentHTML`/`appendChild`) depois que
+    `buildCompanyMatrix()` já desenhou a tabela, religado por um
+    `MutationObserver` a cada redesenho (troca de aba/foco de
+    data/"Atualizar"). O clique que já existia no `<th data-date>` inteiro
+    (foco de data, `wireHeaderDateClicks()`) continua idêntico — o botão
+    novo tem `stopPropagation()` próprio.
+  - **Achado de teste, reportado ao usuário como desvio do pedido**: o
+    pedido original esperava que a coluna "Total" do drill-down batesse com
+    a coluna do mesmo dia na sub-visão agregada "Publicação por Hora", como
+    teste de sanidade. Testado ao vivo (27/07/2026): drill-down Total =
+    251/1029 processadas (24%); agregada = 30/1093 publicadas (2%) — **não
+    batem**, porque são entidades e etapas DIFERENTES por desenho (carteiras
+    processadas vs. agrupamentos publicados), não um bug de implementação.
+    As metas (1029 vs. 1093) ficam próximas mas também não são idênticas
+    pelo mesmo motivo (nº de carteiras mustPublish ≠ nº de agrupamentos
+    mustPublish naquele dia). Ver `prototype/CLAUDE.md` (nota datada
+    2026-08-25) para o detalhe completo.
+
 ### 8. Revisão Última Posição Processada (gate cronológico D-1)
 
 - **Regra:** para cada carteira diária, com o set `P = {positionDate processadas no range}` (já em memória pela batch query do grid, cap em hoje): para cada `d ∈ P`, se o dia útil anterior `d⁻¹ ∉ P` **e** `d⁻¹ ≥ startDateConsolidation` ⇒ **buraco na sequência** — a posição de `d` foi processada sem a base de `d⁻¹`. Marcar a célula `d` com anel vermelho (rodada 6; era roxo) e emitir alerta `red` ("processada fora de sequência — D-1 ausente"), pois contribuições/rentabilidades de `d` ficam suspeitas.

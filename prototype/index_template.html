@@ -4,6 +4,15 @@
 <meta charset="utf-8">
 <title>Controle de Cargas — Protótipo (dados reais)</title>
 <link rel="stylesheet" href="/static/css/controle_cargas.css">
+<!-- [2026-08-24] Layout da sub-visão "Por hora" (aba Company) — só layout,
+     cor 100% via var() dos tokens .company-ok/att/crit/neutral já definidos
+     acima em controle_cargas.css (zero token novo). -->
+<link rel="stylesheet" href="/static/css/matriz_publicacao_hora.css">
+<!-- [2026-08-25] Chrome do drill-down "Processamento por Hora × Empresa"
+     (aba Company, sub-visão "Por empresa") — só o painel/botão ⏱, cor 100%
+     via var() dos mesmos tokens .company-ok/att/crit/neutral, zero token
+     novo. -->
+<link rel="stylesheet" href="/static/css/matriz_hora_company.css">
 <!-- [2026-08-21] CSS autocontido da aba "Controle de Demandas" — não usa
      nenhum token/classe de controle_cargas.css (visual preservado fiel à
      origem beehus-rotinas, escopado sob #panel-demandas/.kd-modal-*). -->
@@ -156,12 +165,25 @@
        Painel próprio (escondido por padrão): mesmo estilo visual da grade
        principal (célula .cell, cabeçalho sticky, coluna de referência), mas
        linha = company (não carteira/agrupamento) — ver
-       static/js/controle_cargas/matriz_company.js. -->
+       static/js/controle_cargas/matriz_company.js.
+       [2026-08-24, pedido do usuário — adição pura, nada do bloco acima foi
+       removido/alterado, só o wrapper da tabela ganhou um id novo
+       ("company-matrix-wrap") para o seletor abaixo poder escondê-lo] Sub-
+       visão nova "Publicação por Hora" (static/js/controle_cargas/
+       matriz_publicacao_hora.js): seletor "Por empresa"/"Por hora" na
+       toolbar + painel próprio #pubhora-wrap (escondido por padrão),
+       reaproveitando a MESMA legenda .company-ok/att/crit/neutral já
+       existente logo abaixo (as cores da matriz nova são as mesmas, zero
+       token novo). -->
   <div class="panel" id="panel-company" style="display:none;">
     <div class="toolbar2">
       <span class="resultcount" id="company-count"></span>
+      <div class="pubhora-switch" id="pubhora-switch">
+        <button type="button" class="pubhora-switch-btn active" id="pubhora-btn-empresa">Por empresa</button>
+        <button type="button" class="pubhora-switch-btn" id="pubhora-btn-hora">Por hora</button>
+      </div>
     </div>
-    <div class="grid-scroll">
+    <div class="grid-scroll" id="company-matrix-wrap">
       <table class="matrix" id="company-matrix"></table>
     </div>
     <div class="cu-legend" id="company-legend">
@@ -171,6 +193,14 @@
       <span class="legend-item"><span class="legend-swatch company-neutral">—</span><span>Nenhuma carteira da company deveria publicar nesse dia (todas não cobertas)</span></span>
     </div>
     <p class="note" id="company-note"></p>
+
+    <!-- Sub-visão "Publicação por Hora" — escondida até o usuário clicar
+         "Por hora" no seletor acima (ligarSeletorSubVisaoCompany(),
+         matriz_publicacao_hora.js). -->
+    <div class="grid-scroll" id="pubhora-wrap" style="display:none;">
+      <table class="matrix" id="pubhora-matrix"></table>
+    </div>
+    <p class="note" id="pubhora-note" style="display:none;"></p>
   </div>
 
   <!-- ── Aba "Controle de Demandas" — Kanban de demandas operacionais ──
@@ -495,6 +525,18 @@
 <script src="/static/js/controle_cargas/matriz.js"></script>
 <script src="/static/js/controle_cargas/matriz_custodiantes.js"></script>
 <script src="/static/js/controle_cargas/matriz_company.js"></script>
+<!-- [2026-08-24] Sub-visão "Por hora" da aba Company — precisa vir depois de
+     matriz.js (reaproveita agrupamentoCarteirasQueDevemPublicarNaData/
+     agrupamentoEstaPublicadoNaData/cellByDate/wireHeaderDateClicks) e de
+     matriz_company.js (liga o seletor dentro do mesmo painel). -->
+<script src="/static/js/controle_cargas/matriz_publicacao_hora.js"></script>
+<!-- [2026-08-25] Drill-down "Processamento por Hora × Empresa" — botão "⏱"
+     no cabeçalho de cada dia da matriz "Por empresa". Precisa vir depois de
+     matriz_company.js (computeCompanyPublishMatrix, meta por company/dia) e
+     de matriz_publicacao_hora.js (montarBaldesHoraPublicacao/
+     horaInteiraDeHoraPub/celulaPublicacaoHoraHtml/carregarConfigPublicacaoHora,
+     todos reaproveitados). -->
+<script src="/static/js/controle_cargas/matriz_hora_company.js"></script>
 <script src="/static/js/controle_cargas/paineis.js"></script>
 <script src="/static/js/controle_cargas/comentarios.js"></script>
 <script src="/static/js/controle_cargas/anotacoes.js"></script>

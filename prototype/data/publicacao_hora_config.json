@@ -1,0 +1,6 @@
+{
+  "_comentario": "Config da visão 'Publicação por Hora' (aba Company, sub-visão 'Por hora'). Servido por GET /api/publicacao-hora-config (app.py). Ajuste os limites abaixo sem editar código — CLAUDE.md secao 10.",
+  "nomeVisao": "Publicação por Hora",
+  "limiteInicioHoraCheia": 8,
+  "limiteFimHoraCheia": 20
+}

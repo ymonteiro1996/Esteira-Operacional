@@ -1,0 +1,50 @@
+/* matriz_publicacao_hora.css — sub-visão "Por hora" da aba Company.
+   [2026-08-24, pedido do usuário] CSS 100% ADITIVO — arquivo novo, nenhuma
+   regra de controle_cargas.css foi tocada. Só LAYOUT aqui: cor de fundo das
+   células vem inteira de var() dos tokens já existentes via as classes
+   .company-ok/.company-att/.company-crit/.company-neutral (controle_cargas.css)
+   — zero token de cor novo, funciona nos 2 temas de graça (claro/escuro),
+   igual à matriz "Por empresa". */
+
+/* Seletor segmentado "Por empresa" / "Por hora" — mesma linguagem visual dos
+   botões .sortbtn já existentes (controle_cargas.css), só que agrupados
+   lado a lado sem espaço entre si (like um toggle). */
+.pubhora-switch{
+  display:flex; align-items:center; gap:0; border:1px solid var(--border);
+  border-radius:8px; overflow:hidden; flex:none;
+}
+.pubhora-switch-btn{
+  font-size:11.5px; font-weight:600; padding:5px 12px; border:none;
+  background:var(--surface-sunk); color:var(--ink-muted); cursor:pointer;
+}
+.pubhora-switch-btn + .pubhora-switch-btn{ border-left:1px solid var(--border); }
+.pubhora-switch-btn:hover{ color:var(--ink); }
+.pubhora-switch-btn.active{ background:var(--ink); color:var(--surface-raised); }
+
+/* Célula com 2 números (incremento grande + acumulado/percentual menor) —
+   a .cell base (controle_cargas.css) é single-line/centralizada; aqui vira
+   coluna, com altura própria pra caber as 2 linhas. */
+.pubhora-cell{
+  flex-direction:column; height:auto; min-height:40px; padding:3px 2px; gap:1px;
+  line-height:1.15;
+}
+.pubhora-incremento{ font-size:12.5px; font-weight:750; }
+.pubhora-acumulado{ font-size:9.5px; font-weight:600; opacity:.85; font-variant-numeric:tabular-nums; }
+
+/* Linha "Meta" (topo) — denominador fixo do dia, constante ao longo das
+   horas; linha "Fim do dia" (rodapé) — total acumulado final da coluna.
+   Sutilmente destacadas (fundo levemente diferente da grade), sem inventar
+   cor nova. */
+.pubhora-row-meta td, .pubhora-row-fim td{
+  background:var(--surface-sunk); font-weight:650; font-size:12px;
+  font-variant-numeric:tabular-nums; text-align:center; padding:6px 4px;
+}
+.pubhora-row-meta td.col-companyname, .pubhora-row-fim td.col-companyname{
+  text-align:left; color:var(--ink-muted); font-size:11px; text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.pubhora-sublabel{
+  display:block; font-size:9px; font-weight:500; text-transform:none;
+  letter-spacing:normal; color:var(--ink-faint); margin-top:1px;
+}
+.pubhora-fim-pct{ color:var(--ink-faint); font-weight:500; }

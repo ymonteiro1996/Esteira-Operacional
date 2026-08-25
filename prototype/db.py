@@ -711,6 +711,15 @@ def _buscar_datas_faltantes_via_api(datas_faltantes, wallet_ids, grouping_ids, t
                     "returnNavPerShare": item.get("returnNavPerShare"),
                     "nav": item.get("nav"), "navPerShare": item.get("navPerShare"),
                     "published": item.get("published"),
+                    # [2026-08-24, decisão do usuário — Rota A da visão "Publicação
+                    # por Hora" (aba Company)] `get_nav_results` já devolve
+                    # `publishedAt` a nível de agrupamento (docstring de
+                    # beehus_api/consolidation.py) — antes só era descartado (só
+                    # "published" era copiado). Passa por `_parse_iso_dt` como todo
+                    # timestamp ISO vindo da API (mesmo padrão de createdAt/updatedAt
+                    # acima); vira None com segurança se o campo vier ausente/em
+                    # formato inesperado (nunca lança exceção por causa dele).
+                    "publishedAt": _parse_iso_dt(item.get("publishedAt")),
                 })
 
             status = resultados_por_tarefa.get(("issues", data, company_id))

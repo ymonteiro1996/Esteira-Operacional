@@ -670,6 +670,147 @@ Complementa a divisão de código da seção 4 — juntas atacam a causa dos con
     em comum) e o resultado do teste Playwright (8 melhorias, 2 temas, zero regressão
     nas outras 5 abas, dados de teste apagados de `data/anomalias.json` ao final).
 
+- **[2026-08-24, pedido do usuário] Sub-visão nova "Publicação por Hora" na aba
+  Company** — materialização PARCIAL do "Alerta 7 — Horários Execução" que já estava
+  planejado em `docs/PLANNING.md` desde o desenho original e nunca tinha sido
+  implementado (ver lá o detalhe completo, seção atualizada nesta mesma tarefa).
+  Seletor "Por empresa"/"Por hora" dentro do painel `#panel-company` já existente:
+  linhas = baldes de hora (até 08h / hora cheia 09h..20h / após 20h / "sem hora",
+  limites configuráveis), colunas = mesmos dias da janela do grid; célula = quantos
+  AGRUPAMENTOS foram publicados naquele balde (incremento) + acumulado/% sobre a meta
+  fixa do dia (mesmo denominador do card "Agrupamentos Publicados").
+  - **Decisões do usuário, já confirmadas antes de codar** (via plano prévio,
+    `PLANO_PUBLICACAO_POR_HORA.md`): (1) fonte da hora = "Rota A", o `publishedAt`
+    real que a API Beehus já devolve em `groupingsDetailed` (MESMA chamada que o boot
+    já fazia — zero chamada de API nova; nem Rota A nem Rota B usam Mongo, o app é
+    100% API desde 2026-08-05); (2) "deveria publicar" = meta FIXA por dia, mesma
+    regra de denominador de `computeGroupingPublishStat()` (não é uma curva de SLA por
+    hora); (3) sempre todas as empresas, ignorando o filtro corrente (igual a matriz
+    "Por empresa" já faz); (4) 2 helpers extraídos de dentro de
+    `computeGroupingPublishStat()` (matriz.js) —
+    `agrupamentoCarteirasQueDevemPublicarNaData()`/`agrupamentoEstaPublicadoNaData()` —
+    comportamento IDÊNTICO, comprovado por teste automatizado (ver abaixo); (5) faixa
+    até 08h/09h..20h/após 20h/"sem hora", limites em `data/publicacao_hora_config.json`
+    (novo, CLAUDE.md §10); (6) só os dias já carregados na janela atual (zero API
+    nova); (7) nome da visão "Publicação por Hora".
+  - **3 exceções cirúrgicas liberadas** (documentadas com comentário
+    `[2026-08-24, decisão do usuário]` em cada arquivo, tudo o mais é adição pura):
+    `db.py` (~L711-719, copia `publishedAt` de `groupingsDetailed` via `_parse_iso_dt`,
+    antes descartado), `snapshot_builder.py::montar_celula_grouping_dia()` (~L994-1002,
+    grava `entrada["horaPub"]` formatado via `formatar_horario_brt()`, guardado —
+    só grava a chave quando há hora), `matriz.js::computeGroupingPublishStat()`
+    (extração dos 2 helpers acima, retorno idêntico).
+  - **1 desvio do plano original, decidido nesta implementação e reportado ao
+    usuário**: o plano previa `data/publicacao_hora_config.json` sendo lido
+    diretamente pelo JS — impossível sem uma rota nova (`data/` não é servido pelo
+    Flask; a allowlist `_ALLOWED_STATIC_FILES` de `app.py` só cobre `snapshot.json`, e
+    editar essa allowlist ou criar acesso cru a `data/*.json` não estava entre as 3
+    exceções liberadas). Em vez disso, `app.py` ganhou 1 rota NOVA (não uma
+    modificação de rota existente) `GET /api/publicacao-hora-config`, no MESMO padrão
+    já usado por `data/demandas_config.json`/`data/anomalias_config.json` (config lida
+    no servidor, servida como JSON) — decisão registrada aqui por transparência, já
+    que o plano listava só 3 arquivos a tocar e este é um 4º (adição pura, nenhuma
+    rota/função pré-existente foi alterada).
+  - **Arquivos novos**: `static/js/controle_cargas/matriz_publicacao_hora.js` (compute
+    + render + o seletor "Por empresa"/"Por hora", tudo num arquivo só — decisão
+    tomada por simplicidade, o plano permitia essa opção), `static/css/
+    matriz_publicacao_hora.css` (só layout — cor 100% via `var()` dos tokens
+    `.company-ok/att/crit/neutral` já existentes, zero token novo),
+    `data/publicacao_hora_config.json`.
+  - **Testado via Playwright**: as 6 abas sem regressão; comparação numérica
+    automatizada (dentro da própria página, via `page.evaluate`) da fórmula ORIGINAL
+    inline de `computeGroupingPublishStat()` contra a versão pós-extração, para os 6
+    dias da janela — bateram 100% (mesmos `total`/`publicados` em todos os dias);
+    seletor "Por hora" renderiza sem erro (todas as células caem em "sem hora" —
+    esperado, ver limitação abaixo); 2 temas (claro/escuro, `page.emulate_media`);
+    zero erro de console novo além do 401 já esperado no sandbox.
+  - **Limitação explícita, não validável neste ambiente**: o sandbox usado para
+    implementar e testar esta tarefa não tem acesso real à API Beehus (`/api/
+    atualizar` sempre 401 aqui). Não foi possível confirmar, com um token/rede reais,
+    que `publishedAt` de fato vem preenchido no payload de `groupingsDetailed` — só a
+    docstring do cliente HTTP (`beehus_api/consolidation.py`) documenta esse campo. O
+    código é 100% defensivo quanto a isso (`.get()` com fallback `None` em toda a
+    cadeia, nunca acesso direto por chave — mesmo espírito do mecanismo `hora_pub`,
+    hoje morto para carteira): se o campo vier ausente, a linha "sem hora" absorve a
+    publicação (como aconteceu em todo o teste desta tarefa) em vez de quebrar. **Só o
+    usuário, rodando a aplicação na própria máquina com token/rede reais, pode
+    confirmar se a hora real aparece preenchida.**
+
+- **[2026-08-25, pedido do usuário] Drill-down "Processamento por Hora ×
+  Empresa" na aba Company** — 2ª materialização parcial do "Alerta 7 —
+  Horários Execução" (ver `docs/PLANNING.md`, mesma seção da rodada
+  anterior), desta vez pela granularidade CARTEIRA (não agrupamento) e pela
+  etapa **Processamento** (não Publicação) — decisão explícita do usuário,
+  porque `celula.tt.c` (hora de `processedPosition.createdAt`, já formatada
+  BRT) é dado REAL confirmado populado no snapshot (1825 de 6192 células),
+  ao contrário de `publishedAt` de agrupamento (sub-visão agregada "Por
+  hora" já existente, ainda sem confirmação ao vivo).
+  - **Gatilho**: botão novo "⏱" no cabeçalho de cada dia da matriz "Por
+    empresa" (`static/js/controle_cargas/matriz_company.js`). **100%
+    aditivo por DOM, zero edição em `matriz_company.js`**: o botão é
+    injetado (`insertAdjacentHTML`/`appendChild`) DEPOIS que
+    `buildCompanyMatrix()` já desenhou a tabela — não o template do `<th>`
+    dentro daquela função. Um `MutationObserver` dedicado
+    (`_observarMatrizCompanyParaBotoesHora()`, novo arquivo) religa o botão
+    a cada redesenho de `#company-matrix` (troca de aba, clique de foco de
+    data, "Atualizar"), de forma idempotente. O clique que já existia no
+    `<th data-date>` inteiro (`wireHeaderDateClicks()`, matriz.js — foco de
+    data) continua funcionando SEM NENHUMA alteração: o botão novo tem seu
+    próprio listener com `stopPropagation()`.
+  - **Renderização**: painel inline (`#hcp-painel`, criado 1x via JS),
+    injetado como irmão logo depois de `#company-matrix-wrap` dentro de
+    `#panel-company` — NÃO é modal (sem backdrop). Fecha pelo botão "×" do
+    painel ou clicando de novo no mesmo botão "⏱" (alterna abrir/fechar).
+  - **Cálculo**: linhas = mesmos baldes de hora da sub-visão agregada
+    (`montarBaldesHoraPublicacao()`, reaproveitado); colunas = companies com
+    meta > 0 NESSE dia específico (meta vem de
+    `computeCompanyPublishMatrix()[company].porData[dia].total`, também
+    reaproveitado, sem duplicar a regra de "deveria publicar") + coluna
+    final "Total" (soma de todas as companies). Reprocesso usa a MESMA hora
+    `tt.c` (1ª geração/`createdAt`), nunca `tt.reproc`/`updatedAt` — decisão
+    explícita do usuário. Rodapé "Fim do dia" com número absoluto e
+    percentual acumulado, mesmo padrão da sub-visão agregada.
+  - **Filtro de empresa da toolbar**: ignorado, sempre todas as companies
+    (mesmo comportamento de `computeCompanyPublishMatrix()`/
+    `computePublicacaoHoraMatrix()`, decisão explícita do usuário).
+  - **Arquivos novos**: `static/js/controle_cargas/matriz_hora_company.js`
+    (compute + render + abrir/fechar + o `MutationObserver` do botão "⏱",
+    tudo num arquivo só, mesma decisão de simplicidade da sub-visão
+    agregada) e `static/css/matriz_hora_company.css` (só o "chrome" do
+    painel/botão — cor 100% via `var()` dos tokens `.company-ok/att/crit/
+    neutral` já existentes, reaproveitados por `celulaPublicacaoHoraHtml()`;
+    zero token novo). `index_template.html`/`index.html` ganharam 1
+    `<link>` + 1 `<script>` cada (confirmado idênticos entre si via `diff`
+    ao final).
+  - **Nenhuma mudança de backend/Python** — confirmado por `diff` contra o
+    backup pré-tarefa: `db.py`/`snapshot_builder.py`/`beehus_api/`/`app.py`
+    não foram tocados (o `diff` completo do backup mostrou `app.py`/
+    `pages/anomalias.py`/`pages/controle_demandas.py` divergentes, mas por
+    uma mudança PRÉ-EXISTENTE e não relacionada — `CONTROLECARGAS_DATA_DIR`,
+    já datada 2026-08-25 mas de uma tarefa anterior a esta, confirmada por
+    inspeção do diff antes de reportar).
+  - **Achado de teste, desvio reportado ao usuário**: o pedido esperava que
+    a coluna "Total" do drill-down batesse com a coluna do mesmo dia na
+    sub-visão agregada "Publicação por Hora", como teste de sanidade.
+    Testado ao vivo com Playwright (dia 2026-07-27, snapshot local): o
+    drill-down deu 251/1029 carteiras processadas (24%) contra a agregada
+    30/1093 agrupamentos publicados (2%) — **os números NÃO batem**, porque
+    Processamento×Carteira e Publicação×Agrupamento são entidades e etapas
+    diferentes por desenho (não um bug desta implementação); as metas (1029
+    carteiras mustPublish vs. 1093 agrupamentos mustPublish naquele dia)
+    ficam próximas mas também não são idênticas pelo mesmo motivo.
+  - **Testado via Playwright**: matriz "Por empresa" sem regressão (5
+    companies, 6 dias, botão "⏱" 1x por dia); abrir/fechar o painel (botão
+    "⏱" de novo no mesmo dia, e botão "×"); clique normal no `<th>` (fora do
+    botão) continua focando a data como sempre (`ControleCargas.state.
+    focusDate` mudou corretamente); botão nunca duplica após redesenho
+    (`MutationObserver` idempotente, confirmado clicando no `<th>` — que
+    dispara `buildCompanyMatrix()` — e recontando os botões no mesmo `<th>`);
+    2 temas (claro/escuro, via `localStorage['controlecargas.tema']` +
+    reload, cores do painel/células corretas nos dois); zero erro de
+    console novo além do 401 esperado (`/api/atualizar`, sem rede real
+    neste sandbox).
+
 ---
 
 ## Checklist rápido (antes de considerar uma tarefa pronta)
