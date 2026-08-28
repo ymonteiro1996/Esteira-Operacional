@@ -33,13 +33,24 @@ Estrutura da planilha (validada em 2026-07-18):
 """
 
 import datetime as dt
+import os
+from pathlib import Path
 
 import openpyxl
 
 # Caminho do Excel externo (fora do projeto — somente leitura).
-CONTROLE_UPLOAD_XLSX = (r"C:\Users\efigueira\Beehus Tecnologia Ltda"
-                        r"\Beehus Tecnologia Ltda - Documentos"
-                        r"\Cliente Beehus\ControleUpload.xlsx")
+# [2026-08-28, achado do usuário: "há parte no código usando meu user no
+# diretório"] Estava fixo em "C:\Users\efigueira\..." — só funcionava na
+# máquina de quem escreveu o módulo. O caminho corporativo do OneDrive é
+# igual pra todo mundo a partir da pasta do usuário (Path.home()), então o
+# default agora monta com o usuário logado de cada máquina; aceita override
+# via CONTROLECARGAS_UPLOAD_XLSX (mesmo padrão de CONTROLECARGAS_DATA_DIR em
+# app.py) pra quem tiver o arquivo em outro lugar.
+CONTROLE_UPLOAD_XLSX = os.environ.get("CONTROLECARGAS_UPLOAD_XLSX") or str(
+    Path.home() / "Beehus Tecnologia Ltda"
+    / "Beehus Tecnologia Ltda - Documentos"
+    / "Cliente Beehus" / "ControleUpload.xlsx"
+)
 SHEET_NAME = "Planilha1"
 HEADER_ROW = 2       # linha do cabeçalho de datas
 FIRST_DATA_ROW = 3   # primeira linha de custodiante
