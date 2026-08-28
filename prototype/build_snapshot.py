@@ -62,7 +62,6 @@ from custodian_upload import load_controle_upload
 # ─────────────────────────────────────────────────────────────────────────
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(HERE, "data")
 
 # [REVISADO 2026-07-28, pedido do usuário: "traga os arquivos externo que a
 # rotina usa para esse diretório, exclui da minha máquina pessoal"] Antes
@@ -73,9 +72,16 @@ DATA_DIR = os.path.join(HERE, "data")
 # Migrado para dentro do projeto (data/ — mesma pasta de
 # alert_comments.json/wallet_annotations.json, já coberta pelas mesmas
 # regras de "dados reais de cliente" do CLAUDE.md §9); o arquivo original
-# foi apagado da conta pessoal depois da migração confirmada. A PARTIR DE
-# AGORA o cadastro deve ser editado direto em data/TemplateCarteiras.xlsx
-# (nunca mais no OneDrive pessoal).
+# foi apagado da conta pessoal depois da migração confirmada.
+# [REVISADO 2026-08-28, achado do usuário: clone Git isolado não recebe as
+# edições do cadastro compartilhado] DATA_DIR agora aceita override via
+# CONTROLECARGAS_DATA_DIR — MESMA variável e mesmo comportamento que
+# app.py:113 já usa para alert_comments.json/wallet_annotations.json; sem
+# isso, XLSX_PATH ficava preso a HERE/data mesmo com a variável configurada
+# apontando pro OneDrive compartilhado, então o Excel lido nunca era o
+# cadastro vivo (mantido por outra pessoa), e sim uma cópia estática que
+# cada desenvolvedor tivesse colado manualmente no próprio clone.
+DATA_DIR = os.environ.get("CONTROLECARGAS_DATA_DIR") or os.path.join(HERE, "data")
 XLSX_PATH = os.path.join(DATA_DIR, "TemplateCarteiras.xlsx")
 SNAPSHOT_JSON_PATH = os.path.join(HERE, "snapshot.json")
 HTML_TEMPLATE_PATH = os.path.join(HERE, "index_template.html")
