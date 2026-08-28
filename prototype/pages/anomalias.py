@@ -80,6 +80,8 @@ from pathlib import Path
 
 from flask import Blueprint, jsonify, request
 
+from utils.caminhos import resolver_data_dir
+
 bp = Blueprint("anomalias", __name__)
 
 HERE = Path(__file__).resolve().parent
@@ -87,7 +89,14 @@ HERE = Path(__file__).resolve().parent
 # rastreado pelo Git] mesmo override de CONTROLECARGAS_DATA_DIR que app.py já usa —
 # sem a variável configurada, cai no comportamento de sempre (pasta "data/" ao lado
 # do código).
-DATA_DIR = Path(os.environ["CONTROLECARGAS_DATA_DIR"]) if os.environ.get("CONTROLECARGAS_DATA_DIR") else HERE.parent / "data"
+# [REVISADO 2026-08-28, achado de um colega de time: "acha que o projeto está
+# salvando dados no local em vez de apontar para os arquivos do onedrive" —
+# confirmado: esta tela tinha sua PRÓPRIA cópia da lógica antiga (só variável
+# de ambiente, sem o caminho dinâmico do OneDrive), então quem não configurasse
+# CONTROLECARGAS_DATA_DIR manualmente ficava com anomalias.json local, isolado
+# do resto do time] Resolução unificada com app.py/build_snapshot.py via
+# utils.caminhos.resolver_data_dir() (ver docstring lá).
+DATA_DIR = Path(resolver_data_dir(HERE.parent))
 ANOMALIAS_PATH = DATA_DIR / "anomalias.json"
 CONFIG_PATH = DATA_DIR / "demandas_config.json"  # reaproveitado (só leitura) da aba Demandas
 ANOMALIAS_CONFIG_PATH = DATA_DIR / "anomalias_config.json"  # config PRÓPRIA desta tela (limiares de aging + tags sugeridas)
