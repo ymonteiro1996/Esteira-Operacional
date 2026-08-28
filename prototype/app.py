@@ -102,6 +102,7 @@ from build_snapshot import montar_snapshot, escrever_snapshot_json
 from pages.controle_demandas import bp as controle_demandas_bp
 from pages.anomalias import bp as anomalias_bp
 from utils.datas import CalendarioDiasUteis, JANELA_INICIAL_DIAS_UTEIS, calcular_janela_grid
+from utils.caminhos import resolver_data_dir
 
 HERE = Path(__file__).resolve().parent
 # [2026-08-25, decisão do usuário: "consumirmos de um diretório" separado do código
@@ -110,7 +111,16 @@ HERE = Path(__file__).resolve().parent
 # (pasta "data/" ao lado do código). Isso permite apontar pra uma pasta FORA do
 # clone do Git (ex.: a mesma pasta OneDrive de antes, num caminho irmão do
 # repositório), sem quebrar quem ainda não configurou nada.
-DATA_DIR = Path(os.environ["CONTROLECARGAS_DATA_DIR"]) if os.environ.get("CONTROLECARGAS_DATA_DIR") else HERE / "data"
+# [REVISADO 2026-08-28, achado do usuário: "temos que funcionar com os caminhos
+# dinâmicos para o onedrive" — sem a variável configurada manualmente em cada
+# máquina, caía direto pro `data/` local vazio] Resolução movida pra
+# utils.caminhos.resolver_data_dir() (mesma função usada por build_snapshot.py
+# pro TemplateCarteiras.xlsx — as duas fontes de dado do app agora seguem a
+# MESMA regra de pasta, eliminando a divergência que existia antes entre
+# app.py e build_snapshot.py): além do override por variável de ambiente,
+# tenta o caminho dinâmico do OneDrive corporativo (Path.home()) antes de
+# cair no `data/` local.
+DATA_DIR = Path(resolver_data_dir(HERE))
 COMMENTS_PATH = DATA_DIR / "alert_comments.json"
 ANNOTATIONS_PATH = DATA_DIR / "wallet_annotations.json"
 CONFLITOS_DIR = DATA_DIR / "_conflitos_resolvidos"

@@ -49,6 +49,7 @@ from snapshot_builder import (
     LIMIAR_DIVERGENCIA_PADRAO, LIMIAR_DIVERGENCIA_REAIS_PADRAO,
 )
 from utils.datas import CalendarioDiasUteis, calcular_janela_grid, GRID_REFERENCE_LAG_DU
+from utils.caminhos import resolver_data_dir
 from excel_report import write_excel_report
 
 # Ingestão do ControleUpload.xlsx (aba "Controle de Cargas" — custodiantes).
@@ -73,15 +74,15 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # alert_comments.json/wallet_annotations.json, já coberta pelas mesmas
 # regras de "dados reais de cliente" do CLAUDE.md §9); o arquivo original
 # foi apagado da conta pessoal depois da migração confirmada.
-# [REVISADO 2026-08-28, achado do usuário: clone Git isolado não recebe as
-# edições do cadastro compartilhado] DATA_DIR agora aceita override via
-# CONTROLECARGAS_DATA_DIR — MESMA variável e mesmo comportamento que
-# app.py:113 já usa para alert_comments.json/wallet_annotations.json; sem
-# isso, XLSX_PATH ficava preso a HERE/data mesmo com a variável configurada
-# apontando pro OneDrive compartilhado, então o Excel lido nunca era o
-# cadastro vivo (mantido por outra pessoa), e sim uma cópia estática que
-# cada desenvolvedor tivesse colado manualmente no próprio clone.
-DATA_DIR = os.environ.get("CONTROLECARGAS_DATA_DIR") or os.path.join(HERE, "data")
+# [REVISADO 2026-08-28, achado do usuário: "temos que funcionar com os
+# caminhos dinâmicos para o onedrive" — clone Git isolado, sem
+# CONTROLECARGAS_DATA_DIR configurada manualmente, não recebia as edições
+# do cadastro compartilhado] DATA_DIR agora vem de
+# utils.caminhos.resolver_data_dir() — mesma função usada por app.py, que
+# tenta CONTROLECARGAS_DATA_DIR, depois o caminho dinâmico do OneDrive
+# corporativo (Path.home()), só caindo pro `data/` local se nenhum dos dois
+# existir. Ver docstring de resolver_data_dir() para o detalhe.
+DATA_DIR = resolver_data_dir(HERE)
 XLSX_PATH = os.path.join(DATA_DIR, "TemplateCarteiras.xlsx")
 SNAPSHOT_JSON_PATH = os.path.join(HERE, "snapshot.json")
 HTML_TEMPLATE_PATH = os.path.join(HERE, "index_template.html")
