@@ -49,6 +49,7 @@ from snapshot_builder import (
     LIMIAR_DIVERGENCIA_PADRAO, LIMIAR_DIVERGENCIA_REAIS_PADRAO,
 )
 from utils.datas import CalendarioDiasUteis, calcular_janela_grid, GRID_REFERENCE_LAG_DU
+from utils.caminhos import resolver_data_dir
 from excel_report import write_excel_report
 
 # Ingestão do ControleUpload.xlsx (aba "Controle de Cargas" — custodiantes).
@@ -62,7 +63,6 @@ from custodian_upload import load_controle_upload
 # ─────────────────────────────────────────────────────────────────────────
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(HERE, "data")
 
 # [REVISADO 2026-07-28, pedido do usuário: "traga os arquivos externo que a
 # rotina usa para esse diretório, exclui da minha máquina pessoal"] Antes
@@ -73,9 +73,16 @@ DATA_DIR = os.path.join(HERE, "data")
 # Migrado para dentro do projeto (data/ — mesma pasta de
 # alert_comments.json/wallet_annotations.json, já coberta pelas mesmas
 # regras de "dados reais de cliente" do CLAUDE.md §9); o arquivo original
-# foi apagado da conta pessoal depois da migração confirmada. A PARTIR DE
-# AGORA o cadastro deve ser editado direto em data/TemplateCarteiras.xlsx
-# (nunca mais no OneDrive pessoal).
+# foi apagado da conta pessoal depois da migração confirmada.
+# [REVISADO 2026-08-28, achado do usuário: "temos que funcionar com os
+# caminhos dinâmicos para o onedrive" — clone Git isolado, sem
+# CONTROLECARGAS_DATA_DIR configurada manualmente, não recebia as edições
+# do cadastro compartilhado] DATA_DIR agora vem de
+# utils.caminhos.resolver_data_dir() — mesma função usada por app.py, que
+# tenta CONTROLECARGAS_DATA_DIR, depois o caminho dinâmico do OneDrive
+# corporativo (Path.home()), só caindo pro `data/` local se nenhum dos dois
+# existir. Ver docstring de resolver_data_dir() para o detalhe.
+DATA_DIR = resolver_data_dir(HERE)
 XLSX_PATH = os.path.join(DATA_DIR, "TemplateCarteiras.xlsx")
 SNAPSHOT_JSON_PATH = os.path.join(HERE, "snapshot.json")
 HTML_TEMPLATE_PATH = os.path.join(HERE, "index_template.html")
