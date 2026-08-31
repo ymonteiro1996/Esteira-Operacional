@@ -842,6 +842,65 @@ Complementa a divisão de código da seção 4 — juntas atacam a causa dos con
     o usuário clicar Salvar). Não gera perda de dado por si só, mas é confuso —
     revisitar se o time achar que ainda causa confusão depois deste fix.
 
+- **[2026-08-31, achado do usuário: "aqui está rodando normal e no meu colega
+  não"] TELA MORTA (filtros ▾/ordenação/campos De-Até sem efeito) NA 1ª VEZ QUE
+  ALGUÉM RODA O APP APÓS `git clone`/`git pull`.** Causa raiz, confirmada por
+  leitura de código (não por reprodução — o sandbox não roda o servidor): (1)
+  `prototype/snapshot.json` nunca é versionado (.gitignore — é gerado
+  localmente, ~4MB); (2) `atualizar_snapshot_no_boot()` (app.py) tenta gerá-lo
+  no boot, mas SEMPRE falha numa máquina nova, silenciosamente — desde
+  2026-08-06 o token da API Beehus vive POR SESSÃO DE NAVEGADOR
+  (`beehus_api/client.py::_current_session_id`, uma contextvar amarrada só
+  dentro de uma requisição HTTP via `before_request`); o boot roda ANTES de
+  qualquer requisição existir, então `get_token()` sempre devolve `None` ali,
+  `montar_snapshot()` sempre lança `BeehusAuthError`, e o `except` do boot cai
+  no fallback "segue com o snapshot.json existente" — que numa máquina nova
+  não existe; (3) sem o arquivo em disco, `GET /snapshot.json` devolvia 404
+  puro, e `fetch('snapshot.json').catch(...)` (index.js) só mostra 1 aviso e
+  PARA — `ControleCargas.init()` (que chama `wire()`: liga filtros ▾,
+  ordenação, busca, campos De/Até, botão "Salvar" de Responsável/Comentário)
+  nunca roda. O botão "Atualizar" continua funcionando (ligado à parte, fora
+  do `init()`, por `wireAtualizar()`) e redesenha a matriz com dado novo via
+  `/api/atualizar` — mas como `wire()` nunca rodou, os filtros/ordenação
+  ficam mortos para sempre, exatamente o sintoma relatado. No colega o
+  problema não aparecia só porque a máquina dele já tinha um `snapshot.json`
+  local de um uso anterior (o `fetch` inicial já achava sucesso de cara).
+  - **Fix, só em `app.py`** (`static_files()` + `_montar_snapshot_vazio()`
+    novo, perto de `_ALLOWED_STATIC_FILES`): quando `GET /snapshot.json` é
+    pedido e o arquivo AINDA não existe em disco, o servidor devolve 200 com
+    um snapshot **vazio mas com o schema idêntico** ao de `montar_snapshot()`
+    (mesmas chaves de `meta`, `wallets: []`, `groupings: []`,
+    `custodianUpload: null`) em vez de 404 — montado só com aritmética de
+    calendário (`calcular_janela_grid`, mesma base de `/api/janela-padrao`),
+    **sem nenhuma chamada à API Beehus**, então funciona mesmo sem token
+    nenhum. Isso faz o `fetch('snapshot.json')` do front-end SEMPRE ter
+    sucesso na 1ª carga — `startWithSnapshot()` → `init()` → `wire()` rodam
+    normalmente (zero mudança em JS: o front-end já sabia lidar com esse
+    caminho, só nunca tinha chance de entrar nele). O resto já existia e
+    passou a ser aproveitado de graça: o modal "🔑 Beehus API" já abre
+    sozinho quando falta token (`beehus_token.js::verificarTokenBeehus()`), e
+    o refresh automático já embutido no fim de `init()`
+    (`preencherCamposDataAtualizar().then(()=> executarAtualizacao())`) puxa
+    o dado real via `/api/atualizar` assim que a pessoa colar o token —
+    tela nasce vazia por 1 instante, mas 100% interativa, e se autopreenche
+    sozinha.
+  - **Verificado** (sem servidor rodando — via `app.test_client()` do Flask,
+    renomeando `snapshot.json` temporariamente e restaurando em seguida):
+    `GET /snapshot.json` sem o arquivo em disco → 200 com o snapshot vazio
+    (schema conferido campo a campo); com o arquivo presente → continua
+    servindo o arquivo real, byte a byte, sem alteração de comportamento;
+    filename fora do allowlist → continua 404, como sempre.
+  - **O que NÃO foi tocado**: `atualizar_snapshot_no_boot()` continua
+    tentando gerar o snapshot real no boot (best-effort, como já era) —
+    ela vai continuar falhando silenciosamente numa máquina sem sessão de
+    navegador ainda aberta (comportamento inerente ao token por sessão,
+    2026-08-06), mas isso deixou de importar: o fallback novo cobre o
+    intervalo até o 1º token ser colado. Nenhuma mudança de front-end, de
+    schema de dado real, nem de `build_snapshot.py`/CLI.
+  - **Feito na branch `development`** (pedido explícito do usuário: também
+    precisa ir para `main`) — commitar aqui e trazer/aplicar o mesmo diff em
+    `main` (merge, cherry-pick, ou PR de `development` — a critério do time).
+
 ---
 
 ## Checklist rápido (antes de considerar uma tarefa pronta)

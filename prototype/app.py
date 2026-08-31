@@ -101,7 +101,8 @@ from beehus_api import BeehusAPIError, BeehusAuthError, bind_session_id, clear_t
 from build_snapshot import montar_snapshot, escrever_snapshot_json
 from pages.controle_demandas import bp as controle_demandas_bp
 from pages.anomalias import bp as anomalias_bp
-from utils.datas import CalendarioDiasUteis, JANELA_INICIAL_DIAS_UTEIS, calcular_janela_grid
+from snapshot_builder import LIMIAR_DIVERGENCIA_PADRAO, LIMIAR_DIVERGENCIA_REAIS_PADRAO
+from utils.datas import CalendarioDiasUteis, GRID_REFERENCE_LAG_DU, JANELA_INICIAL_DIAS_UTEIS, calcular_janela_grid
 from utils.caminhos import resolver_data_dir
 
 HERE = Path(__file__).resolve().parent
@@ -325,6 +326,71 @@ def _mesclar_copias_conflito_annotations(annotations):
 # nunca um `send_from_directory` genérico sobre HERE (vazaria build_snapshot.py,
 # app.py, db.py ou data/alert_comments.json).
 _ALLOWED_STATIC_FILES = {"snapshot.json"}
+
+
+def _montar_snapshot_vazio():
+    """Contexto:
+    Placeholder de snapshot.json (MESMO schema de montar_snapshot()/
+    build_snapshot.py, zero carteira/agrupamento) servido por static_files()
+    quando o arquivo ainda não existe em disco — 1ª vez que alguém roda
+    `python app.py` depois de um `git clone`/`git pull` novo, já que
+    snapshot.json NUNCA é versionado (gerado localmente, ver .gitignore).
+
+    [2026-08-31, achado do usuário: "aqui está rodando normal e no meu
+    colega não"] Sem isso, fetch('snapshot.json') do front-end (index.js)
+    recebia 404 puro e caía no `.catch()`, que só mostra um aviso e PARA —
+    `ControleCargas.init()` (que liga `wire()`: filtros ▾, ordenação, busca,
+    campos De/Até, botão "Salvar") nunca roda. O botão "Atualizar" continua
+    funcionando (é ligado à parte, fora do init()) e redesenha a matriz com
+    dado novo, mas os filtros/ordenação ficam mortos pra sempre — exatamente
+    o sintoma relatado. `atualizar_snapshot_no_boot()` (abaixo) já tentava
+    cobrir esse caso gerando o arquivo no boot, mas SEMPRE falha desde
+    2026-08-06 (token da API Beehus é por sessão de navegador — o boot roda
+    fora de qualquer requisição HTTP, então nunca tem token nenhum) e cai no
+    fallback "segue com o snapshot.json existente", que numa máquina nova
+    não existe. No colega o problema não aparecia só porque a máquina dele
+    já tinha um snapshot.json local de um uso anterior.
+
+    Esta função NÃO toca a API Beehus (calendário é aritmética pura — mesma
+    base de /api/janela-padrao) nem grava nada em disco: o front-end recebe
+    uma tela vazia mas 100% interativa (wire() roda normalmente), e o
+    refresh automático já existente no fim de init()
+    (preencherCamposDataAtualizar -> executarAtualizacao(), atualizar.js)
+    puxa o dado real assim que a pessoa colar o token Beehus (o modal já
+    abre sozinho — beehus_token.js). Retorna o dict do snapshot vazio.
+
+    Pseudocódigo:
+      1. Calendário ANBIMA + janela default (mesma fórmula do snapshot real,
+         calcular_janela_grid — nenhuma chamada à API Beehus).
+      2. Monta o dict com o MESMO formato de montar_snapshot(), zerando
+         wallets/groupings/custodianUpload e os agregados derivados deles. """
+    calendario = CalendarioDiasUteis()
+    hoje = _today_str()
+    data_referencia, janela = calcular_janela_grid(calendario, hoje)
+    return {
+        "generatedAt": dt.datetime.now().isoformat(timespec="seconds"),
+        "meta": {
+            "today": hoje,
+            "referenceDate": data_referencia,
+            "gridReferenceLagDu": GRID_REFERENCE_LAG_DU,
+            "window": janela,
+            "calendarSource": calendario.fonte,
+            "calendarFallback": calendario.fallback,
+            "companies": [],
+            "institutions": [],
+            "totalWallets": 0,
+            "orphanWallets": 0,
+            "orphanNames": [],
+            "groupingBlocoCounts": {},
+            "queryTimings": {},
+            "cacheInfo": {"datasNovasConsultadas": 0, "datasDoCache": 0},
+            "limiarDivergenciaPct": LIMIAR_DIVERGENCIA_PADRAO,
+            "limiarDivergenciaReais": LIMIAR_DIVERGENCIA_REAIS_PADRAO,
+        },
+        "wallets": [],
+        "groupings": [],
+        "custodianUpload": None,
+    }
 
 VALID_SEVERITIES = ("green", "yellow", "red")
 VALID_TARGET_TYPES = ("wallet", "grouping")
@@ -617,14 +683,33 @@ def static_files(filename):
     fora de "/" e de "/static/..." (que o Flask já resolve nativamente).
     Nunca serve um diretório inteiro — só o allowlist explícito
     (_ALLOWED_STATIC_FILES), pra não vazar data/alert_comments.json nem o
-    código-fonte .py. Retorna o arquivo ou 404 JSON.
+    código-fonte .py. Retorna o arquivo (ou o placeholder vazio, só para
+    snapshot.json — ver abaixo) ou 404 JSON.
+
+    [2026-08-31, achado do usuário — "rodando normal aqui e no colega não"]
+    `snapshot.json` nunca é versionado (gerado localmente, ver .gitignore) —
+    numa máquina nova (`git clone`/`git pull` sem nunca ter rodado
+    `build_snapshot.py`/tido um "Atualizar" bem-sucedido), o arquivo
+    simplesmente não existe em disco. Um 404 puro aqui fazia o front-end
+    (index.js) cair no `.catch()` do fetch inicial, que nunca chama
+    `ControleCargas.init()`/`wire()` — filtros ▾/ordenação/campos De-Até
+    ficavam mortos para sempre (ver _montar_snapshot_vazio() para o detalhe
+    completo da causa raiz).
 
     Pseudocódigo:
       1. Se `filename` não está no allowlist, devolve 404 {"error": ...}.
-      2. Caso contrário, serve o arquivo da raiz do protótipo.
-    """
+      2. Caso seja snapshot.json e o arquivo AINDA não exista em disco,
+         devolve um snapshot vazio (mesmo schema, zero carteira/agrupamento)
+         montado na hora — 200, nunca 404. O boot inicial do app.py
+         (atualizar_snapshot_no_boot) já TENTA gerar o arquivo de verdade
+         antes de chegar aqui; isto é só o fallback para quando aquela
+         tentativa falhar (ex.: sem token da API Beehus, o caso normal numa
+         máquina que nunca abriu a tela).
+      3. Caso contrário, serve o arquivo real da raiz do protótipo. """
     if filename not in _ALLOWED_STATIC_FILES:
         return jsonify({"error": "not found"}), 404
+    if filename == "snapshot.json" and not (HERE / filename).exists():
+        return jsonify(_montar_snapshot_vazio())
     return send_from_directory(HERE, filename)
 
 
