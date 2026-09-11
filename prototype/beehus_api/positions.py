@@ -69,7 +69,7 @@ def _get_positions_chunked(path, base_params, wallet_ids, timeout):
         merged = []
         sid = id_sessao_atual()
         with concurrent.futures.ThreadPoolExecutor(
-                max_workers=min(5, len(chunks))) as ex:
+                max_workers=min(2, len(chunks))) as ex:
             for out in ex.map(lambda c: _one_com_sessao(c, sid), chunks):
                 merged.extend(out)
         return merged

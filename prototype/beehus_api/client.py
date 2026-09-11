@@ -45,7 +45,16 @@ from requests.adapters import HTTPAdapter
 
 from .exceptions import BeehusAPIError, BeehusAuthError
 
-BASE_URL = "https://controladoria.beehus.com.br"
+# [2026-09-11, relato do usuário: "Erro ao atualizar: ... Read timed out"]
+# O host ANTIGO (controladoria.beehus.com.br, sem o "api.") parou de responder —
+# medido nesta máquina: timeout de leitura em TODA chamada, inclusive sem token,
+# enquanto api.controladoria.beehus.com.br responde 401 em 0,1s no MESMO path
+# (/beehus/partners/companies), ou seja, está de pé e só pede autenticação. Com
+# toda chamada estourando 30s, /api/atualizar sempre falhava e a tela ficava
+# pintando o snapshot.json congelado (a matriz "presa no dia 03/08").
+# ATENÇÃO: os apps-irmãos (beehus-swat, conciliacao, beehus-rotinas) têm cada um
+# a SUA cópia deste client, todas ainda no host antigo — precisam do mesmo ajuste.
+BASE_URL = "https://api.controladoria.beehus.com.br"
 DEFAULT_TIMEOUT = 30  # seconds
 
 _lock = threading.Lock()
@@ -445,12 +454,12 @@ def request(method: str, path: str, *, json=None, params=None, timeout: int | No
         if _timing_on:
             _record_timing(method, path, params, r.status_code,
                            (time.monotonic() - _t0) * 1000.0)
-        if r.status_code == 429 and attempt <= 5:
+        if r.status_code == 429 and attempt <= 8:
             ra = r.headers.get("Retry-After")
             try:
-                delay = float(ra) if ra else min(0.5 * (2 ** attempt), 8.0)
+                delay = float(ra) if ra else min(0.5 * (2 ** attempt), 30.0)
             except (TypeError, ValueError):
-                delay = min(0.5 * (2 ** attempt), 8.0)
+                delay = min(0.5 * (2 ** attempt), 30.0)
             time.sleep(delay)
             continue
         break

@@ -107,7 +107,7 @@ from cache import cache_esteira_por_data, cache_ttl_colecoes
 # Nº de empresas buscadas em paralelo nos fan-outs "por empresa" deste módulo
 # (colecoes_pequenas: até ~19 empresas visíveis ao token) — mesma ordem de
 # grandeza usada pelos apps-irmãos (beehus_catalog._NAV_WARM_WORKERS).
-_FAN_OUT_WORKERS = 8
+_FAN_OUT_WORKERS = 4
 
 # [2026-08-05, pedido do usuário: "está demorando muito a inicialização"]
 # Workers do fan-out ÚNICO de processed/nav/issues em _buscar_datas_
@@ -117,7 +117,7 @@ _FAN_OUT_WORKERS = 8
 # "só por empresa" deste módulo — precisa de mais workers pra não virar
 # gargalo (I/O-bound — esperar rede, não CPU — então um pool maior que o nº
 # de núcleos é seguro e esperado aqui).
-_FAN_OUT_WORKERS_ESTEIRA = 40
+_FAN_OUT_WORKERS_ESTEIRA = 6
 
 # 6 dos 8 tipos de issue que este protótipo usava do Mongo (docs/PLANNING.md
 # "Tipos de issue confirmados") têm equivalente nos arrays `*Detailed` do
