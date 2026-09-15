@@ -901,6 +901,130 @@ Complementa a divisão de código da seção 4 — juntas atacam a causa dos con
     precisa ir para `main`) — commitar aqui e trazer/aplicar o mesmo diff em
     `main` (merge, cherry-pick, ou PR de `development` — a critério do time).
 
+- **[2026-09-03, pedido do usuário: "tratar data inicial para não aparecer
+  vazio, deixar a matriz em branco (sem nada) e na cor verde se a carteira
+  não iniciou ou se já encerrou"] REINTRODUZ (de forma mais estreita) o gate
+  de onboarding que tinha saído de compute_cell() em 2026-07-25.** Daquela
+  vez a decisão foi confiar 100% no processo operacional ("só cadastraremos
+  no Template quando realmente iniciar"), mas na prática isso nem sempre se
+  confirmou — carteiras aparecendo com mockkey vermelho/âmbar (miss/wait) em
+  dias fora do seu período real de atividade.
+  - **Sem campo de encerramento na carteira**: investigado ao vivo o payload
+    real de `GET /partner/wallets` (997 carteiras de uma empresa) — não
+    existe NENHUM campo de data de encerramento no cadastro da carteira
+    (só `startDateConsolidation`/`startDateReturn`, sem par de "fim";
+    `trashed`/`trashedData` existem mas nenhuma das 997 veio `trashed:true`,
+    e não dá pra confiar num booleano sem data mesmo se viesse). O usuário
+    então localizou o campo certo, mas em outro lugar: `initialDateOnGrouping`/
+    `finalDateOnGrouping`, que existem por MEMBRO de agrupamento (endpoint de
+    groupings, `wallets[].{walletId, initialDateOnGrouping,
+    finalDateOnGrouping}`) — dado que este app JÁ buscava e já usava pro
+    roll-up de Agrupamentos (`_membro_ativo_em()`/`_membro_intersecta_janela()`,
+    tarefa "Publicação por Hora" 2026-08-24), só nunca tinha sido aplicado à
+    própria linha da CARTEIRA.
+  - **Decisão do usuário sobre a fonte, 2 casos**: (1) carteira com
+    "Agrupamentos Indexados" preenchido no Template -> usa o par
+    (initialDateOnGrouping..finalDateOnGrouping) do PRIMEIRO agrupamento da
+    lista (`registry.py::_membro_no_1o_agrupamento()`) como fonte ÚNICA de
+    início E fim, substituindo `startDateConsolidation` pra ela; (2) carteira
+    sem nenhum agrupamento vinculado -> só `startDateConsolidation` continua
+    valendo (não iniciou), sem noção de "encerrou" (não existe fonte de dado
+    pra isso nesse caso).
+  - **Limitação aceita, reportada ao usuário**: `initialDateOnGrouping` é a
+    data de ENTRADA naquele agrupamento específico, não necessariamente a
+    mesma data em que a carteira começou a ser consolidada de fato — podem
+    divergir se ela só foi agrupada bem depois de já estar sendo consolidada
+    (nesse caso, dias reais de atividade anteriores à entrada no agrupamento
+    ficariam incorretamente em branco). Aceito pelo usuário como parte da
+    escolha desta fonte de dado.
+  - **Mockkey novo `"fp"` (fora do período)** — célula SEM LETRA (`letter:
+    ''`, "sem nada" mesmo, diferente de `notcov` que mostra "—") e cor VERDE
+    PRÓPRIA (`--state-fp-bg`/`--state-fp-fg`, tokens novos nos 4 blocos de
+    tema de `controle_cargas.css` — canal deliberadamente distinto de
+    `--state-p-bg`/`--state-pro-bg`, que sinalizam progresso real, e de
+    `--state-g1`/`g2`, cinza/"não cobrado"). Reaproveita o "estado-base"
+    `not_due` de `notcov` (mesmo lugar no ranking de severidade do roll-up de
+    Agrupamento — `RANKING_SEVERIDADE["not_due"]=0`, já existia) mas com
+    mockkey/cor/prioridade PRÓPRIOS: `notcov` continua exclusivo de
+    Agrupamento sem membro ativo (comportamento intocado); `"fp"` é o único
+    mockkey que uma linha de CARTEIRA pode ter fora do estágio normal.
+    `MOCKKEY_PRIORITY_RANK["fp"]=7` (depois de "p" — menos urgente que tudo).
+  - **`wallet_fora_do_periodo(wallet, data)`** (snapshot_builder.py, novo) —
+    chamada célula a célula em `compute_wallet_row()`, ANTES de
+    `compute_cell()`: quando True, a célula vira `{"s":"fp","d":data}` direto
+    (sem chamar compute_cell/compute_overlays/montar_horarios_celula/
+    montar_tooltip — literalmente nenhum cálculo a mais rodou pra esse dia).
+  - **Todo check de "tem pendência" do app ganhou `"fp"` junto de `"p"`/`"cD"`**
+    (carteira fora do próprio período não é uma pendência): `ainda_nao_
+    publicada` (fura-fila de "Comprada"), classificação de bloco de
+    Agrupamento (`classificar_grouping_em_bloco`), lista de "não processadas"
+    do tooltip de Agrupamento (`montar_tooltip_celula_grouping`),
+    `ids_com_pendencia`/fetch de issuesDetail (`build_snapshot.py` — bônus:
+    menos chamada à API pra carteira fora do período), e o front-end
+    (`paineis.js::semPendencia`, drill-down de Agrupamento).
+  - **Arquivos tocados**: `registry.py` (novo campo + helper
+    `_membro_no_1o_agrupamento`), `snapshot_builder.py` (mockkey + gate +
+    checks de pendência), `build_snapshot.py` (2 checks de pendência),
+    `excel_report.py` (`_PREENCHIMENTO_XLSX["fp"]`), `static/css/
+    controle_cargas.css` (tokens `--state-fp-*` + `.s-fp`), `static/js/
+    controle_cargas/state.js` (`STATES.fp` + `PRIORITY_ORDER`), `static/js/
+    controle_cargas/matriz.js` (linha nova na legenda `colorRows`),
+    `static/js/controle_cargas/paineis.js` (`semPendencia`), `static/js/
+    controle_cargas/exportar.js` (`XML_BG`/`XML_FG`). Filtro "Status (Data
+    Referência)"/legenda/chip de prioridade não precisaram de código novo —
+    são 100% data-driven a partir de `STATES`/`PRIORITY_ORDER`.
+
+- **[2026-09-11, relato do usuário: "estou com problemas ao selecionar data e
+  atualizar, às vezes fica em data antiga ou no dia 03/08"] MATRIZ PRESA NUMA
+  DATA ANTIGA — 3 causas independentes, todas corrigidas.**
+  1. **Host da API Beehus desatualizado** (causa do print enviado: "Erro ao
+     atualizar: ... Read timed out (read timeout=30)"). Medido nesta máquina:
+     `controladoria.beehus.com.br` (host antigo) dá timeout de leitura em
+     TODA chamada, mesmo sem token; `api.controladoria.beehus.com.br`
+     responde 401 em 0,1s no MESMO path. Com toda chamada estourando 30s,
+     `/api/atualizar` sempre falhava e a tela continuava com o snapshot
+     estático. Fix: `BASE_URL` de `beehus_api/client.py`. **Os apps-irmãos
+     (`beehus-swat`, `conciliacao`, `beehus-rotinas`) têm cada um a SUA cópia
+     do client, todas ainda no host antigo — precisam do mesmo ajuste.**
+  2. **`snapshot.json` congelado servido como se fosse atual** (a origem
+     do "dia 03/08"): o arquivo desta máquina estava em
+     `meta.referenceDate = 2026-08-03` porque `atualizar_snapshot_no_boot()`
+     SEMPRE falha desde 2026-08-06 (token é por sessão de navegador, o boot
+     roda fora de requisição HTTP — ver nota de 2026-08-31) e `/api/atualizar`
+     devolve o snapshot pro navegador sem nunca reescrever o arquivo. Todo
+     carregamento de página pintava a matriz inteira em 03/08, e ela só saía
+     de lá se o refresh automático do `init()` desse certo. Fix em `app.py`:
+     `_snapshot_json_esta_desatualizado()` (novo) + `static_files()` — um
+     arquivo com referenceDate anterior à referência de hoje passa a cair no
+     MESMO caminho do arquivo ausente (`_montar_snapshot_vazio()`, que já
+     existia desde 2026-08-31). A tela nasce vazia com as datas CERTAS e o
+     refresh a preenche, em vez de exibir dado de semanas atrás como se fosse
+     de hoje.
+  3. **Corrida entre atualizações simultâneas** (o "às vezes"): a tela dispara
+     `/api/atualizar` de 4 lugares (refresh automático do `init()`, clique,
+     Enter nos campos, e logo após colar o token) e cada chamada leva 30-100s
+     — a resposta que chegasse POR ÚLTIMO sobrescrevia `SNAPSHOT`, mesmo sendo
+     de uma janela mais antiga. Fix em `static/js/controle_cargas/atualizar.js`
+     + `filtros.js`: `state.sequenciaAtualizacao` numera cada pedido e só a
+     resposta do mais novo mexe na tela; `state.sincronizacaoDataInicial`
+     guarda o recálculo pendente do campo "de" e `executarAtualizacao()`
+     espera por ele antes de montar a URL (evita mandar a janela velha e tomar
+     400 ao clicar Atualizar logo depois de trocar o "até"); o rótulo do botão
+     voltou a ser texto fixo (com 2 pedidos no ar, o 2º capturava
+     "Atualizando..." como "original" e o botão ficava assim pra sempre).
+     `executarAtualizacao()` virou uma função fina (espera a sincronização) +
+     `enviarAtualizacao()` (monta e envia o pedido), CLAUDE.md §3.
+  4. Campos De/Até ganharam `autocomplete="off"` (`index.html` +
+     `index_template.html`, mantidos idênticos): o navegador restaurava o
+     valor digitado numa sessão anterior no F5, e
+     `preencherCamposDataAtualizar()` não sobrescreve campo já preenchido —
+     a data velha sobrevivia e o Atualizar só reenviava ela.
+  - **Verificado**: `GET /snapshot.json` via `app.test_client()` com o arquivo
+    velho em disco → devolve a janela de hoje (2026-08-31..2026-09-08) com
+    `wallets: []` em vez do grid de 03/08; allowlist de estáticos intacta
+    (`/db.py` continua 404). O caminho com API real depende de token/rede e
+    só pode ser confirmado pelo usuário na própria máquina.
+
 ---
 
 ## Checklist rápido (antes de considerar uma tarefa pronta)

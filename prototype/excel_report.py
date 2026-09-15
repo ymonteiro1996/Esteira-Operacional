@@ -35,6 +35,10 @@ _PREENCHIMENTO_XLSX = {
     "wu": ("FDE68A", "78350F"), "wc": ("DCFCE7", "15803D"),
     "miss": ("FEE2E2", "B91C1C"),
     "wait": ("F3F4F6", "9CA3AF"), "notcov": ("F9FAFB", "D1D5DB"),
+    # "fp" [NOVO 2026-09-03] fora do período ativo da carteira — verde bem
+    # pálido de propósito, distinto do verde de Publicada/Processada acima
+    # (mesmo tom usado em static/css/controle_cargas.css --state-fp-*).
+    "fp": ("ECFDF5", "6EE7B7"),
 }
 
 

@@ -60,19 +60,27 @@ wireAtualizar(){
      3. Em sucesso, grava o valor devolvido em "de".
      4. Em falha de rede, não altera "de" — o pior caso é o usuário ver o
         400 de /api/atualizar de novo ao clicar Atualizar, igual ao
-        comportamento anterior a esta função existir. */
+        comportamento anterior a esta função existir.
+     5. [2026-09-11, relato do usuário: "às vezes fica em data antiga"]
+        Guarda a promessa em state.sincronizacaoDataInicial e a devolve —
+        executarAtualizacao() espera por ela antes de ler os campos, pra um
+        Atualizar disparado logo depois de trocar o "até" (clique rápido ou
+        Enter, que chega ANTES desta resposta) não enviar o "de" velho e
+        tomar 400 "janela maior que o teto". Retorna Promise. */
 sincronizarDataInicial(){
   const de = document.getElementById('data-inicial');
   const ate = document.getElementById('data-final');
-  if(!de || !ate || !ate.value) return;
+  if(!de || !ate || !ate.value) return Promise.resolve();
 
-  fetch(`/api/data-inicial-padrao?data_final=${encodeURIComponent(ate.value)}`)
+  const sincronizacao = fetch(`/api/data-inicial-padrao?data_final=${encodeURIComponent(ate.value)}`)
     .then(r=> r.json().then(data=> ({ok:r.ok, data})))
     .then(({ok,data})=>{
       if(!ok) throw new Error(data.error || 'falha ao calcular data inicial');
       de.value = data.dataInicial;
     })
     .catch(()=>{});
+  ControleCargas.state.sincronizacaoDataInicial = sincronizacao;
+  return sincronizacao;
 },
 
 /* Contexto:
@@ -257,8 +265,24 @@ formatarDataHoraAgora(){
         não notar; a faixa fica na tela até o usuário fechar ou até um
         próximo Atualizar dar certo] — mantém o snapshot antigo na tela
         (nunca deixa a matriz em branco por causa de uma falha aqui).
-     8. Sempre reabilita o botão ao final (sucesso ou erro). */
+     8. Sempre reabilita o botão ao final (sucesso ou erro) — menos quando
+        uma atualização MAIS NOVA já assumiu (ver sequenciaAtualizacao no
+        passo 0), pra não reabilitar o botão no meio dela. */
 executarAtualizacao(){
+  return Promise.resolve(ControleCargas.state.sincronizacaoDataInicial)
+    .then(ControleCargas.enviarAtualizacao);
+},
+
+/* Contexto:
+   Corpo do "Atualizar" propriamente dito — separado de
+   executarAtualizacao() [2026-09-11] só pra aquela função ter um único
+   contexto (esperar o campo "de" ficar consistente) e esta outro (montar e
+   enviar o pedido). Não chame direto: o ponto de entrada é sempre
+   executarAtualizacao(). Não retorna nada de útil (Promise da requisição).
+
+   Pseudocódigo: ver executarAtualizacao() — os passos 1 a 8 são todos
+   daqui. */
+enviarAtualizacao(){
   const btn = document.getElementById('btn-atualizar');
   const de = document.getElementById('data-inicial');
   const ate = document.getElementById('data-final');
@@ -279,7 +303,19 @@ executarAtualizacao(){
   const tsEl = document.getElementById('atualizar-timestamp');
   if(tsEl) tsEl.textContent = 'Último clique em Atualizar: ' + ControleCargas.formatarDataHoraAgora();
 
-  const textoOriginal = btn.textContent;
+  // [2026-09-11, relato do usuário: "às vezes fica em data antiga"] Numera
+  // este pedido: se outro Atualizar for disparado enquanto este ainda está
+  // no ar (refresh automático do init() + clique/Enter do usuário + o
+  // disparo de salvarTokenBeehus), só a resposta do pedido MAIS NOVO pode
+  // mexer na tela — antes disso, a resposta lenta da janela ANTIGA chegava
+  // por último e sobrescrevia ControleCargas.SNAPSHOT, devolvendo a matriz
+  // pra data velha.
+  const sequencia = ++ControleCargas.state.sequenciaAtualizacao;
+  const estaObsoleto = ()=> sequencia !== ControleCargas.state.sequenciaAtualizacao;
+
+  // Texto fixo (e não o textContent corrente): com 2 atualizações no ar, o
+  // 2º disparo capturava "Atualizando..." como "original" e o botão ficava
+  // com esse rótulo pra sempre.
   btn.disabled = true;
   btn.textContent = 'Atualizando...';
   if(msgEl) msgEl.textContent = '';
@@ -292,6 +328,7 @@ executarAtualizacao(){
   fetch(url)
     .then(r=> r.json().then(data=> ({ok:r.ok, data})))
     .then(({ok,data})=>{
+      if(estaObsoleto()) return;   // resposta de um pedido já substituído por outro mais novo
       if(!ok) throw new Error(data.error || 'falha ao atualizar');
       ControleCargas.esconderAlertaAtualizacao();
       ControleCargas.SNAPSHOT = data;
@@ -317,12 +354,14 @@ executarAtualizacao(){
       });
     })
     .catch(err=>{
+      if(estaObsoleto()) return;
       if(msgEl) msgEl.textContent = 'Erro ao atualizar: ' + err.message;
       ControleCargas.mostrarAlertaAtualizacao('Falha ao atualizar: ' + err.message);
     })
     .finally(()=>{
+      if(estaObsoleto()) return;   // quem reabilita o botão é o pedido mais novo, ainda no ar
       btn.disabled = false;
-      btn.textContent = textoOriginal;
+      btn.textContent = '↻ Atualizar';
     });
 },
 

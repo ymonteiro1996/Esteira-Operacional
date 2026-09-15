@@ -640,6 +640,7 @@ buildLegend(){
     ['notcov', 'Não coberto — só em Agrupamentos (sem carteira-membro rastreada/ativa nesta data); [REVISADO 2026-07-25] carteiras nunca mais mostram este estado'],
     ['wait',   'Aguardando — no prazo, situação normal'],
     ['miss',   'Sem Unprocessed — prazo VENCIDO, agir (atraso = badge)'],
+    ['fp',     '[NOVO 2026-09-03] Fora do período — carteira ainda não iniciou (antes do início) ou já saiu do agrupamento vinculado no Template (depois do fim); célula em branco, não é pendência'],
   ];
   let colorGroup = '<div class="legend-group"><span class="lg-title">Cor de fundo = estágio da esteira · ordem = melhor → pior (só nesta legenda)</span>';
   colorRows.forEach(([k,label])=>{

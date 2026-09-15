@@ -392,6 +392,43 @@ def _montar_snapshot_vazio():
         "custodianUpload": None,
     }
 
+def _snapshot_json_esta_desatualizado():
+    """Contexto:
+    [2026-09-11, relato do usuário: "às vezes fica em data antiga ou no dia
+    03/08"] Diz se o `snapshot.json` em disco ficou VELHO — isto é, se a
+    `meta.referenceDate` gravada nele é anterior à data de referência do
+    grid de HOJE (hoje real − GRID_REFERENCE_LAG_DU du). Usada por
+    static_files() pra tratar um arquivo velho igual a um arquivo AUSENTE
+    (serve o placeholder vazio em vez do dado congelado). Retorna bool
+    (True = está velho / ilegível, não sirva).
+
+    Causa raiz do sintoma: `atualizar_snapshot_no_boot()` SEMPRE falha desde
+    2026-08-06 (token da API Beehus é por sessão de navegador, e o boot roda
+    fora de qualquer requisição HTTP — ver _montar_snapshot_vazio()), e
+    `/api/atualizar` devolve o snapshot pro navegador sem nunca reescrever o
+    arquivo. Resultado: o `snapshot.json` desta máquina parou em
+    referenceDate 2026-08-03 e TODO carregamento de página pintava a matriz
+    inteira nessa data antiga — até o refresh automático do init() terminar
+    (30-100s) ou, se ele falhasse (token ainda não colado), pra sempre.
+
+    Pseudocódigo:
+      1. Lê a meta.referenceDate do arquivo; qualquer falha de leitura/JSON
+         malformado -> True (defensivo: melhor a tela vazia e interativa do
+         que dado errado em tela).
+      2. Compara com a data de referência default de hoje (mesma fórmula de
+         /api/janela-padrao — só aritmética de calendário, sem API Beehus).
+    """
+    try:
+        with open(HERE / "snapshot.json", "r", encoding="utf-8") as f:
+            referencia_do_arquivo = (json.load(f) or {}).get("meta", {}).get("referenceDate", "")
+    except (OSError, ValueError):
+        return True
+    if not referencia_do_arquivo:
+        return True
+    data_referencia_hoje, _ = calcular_janela_grid(CalendarioDiasUteis(), _today_str())
+    return referencia_do_arquivo < data_referencia_hoje
+
+
 VALID_SEVERITIES = ("green", "yellow", "red")
 VALID_TARGET_TYPES = ("wallet", "grouping")
 
@@ -705,10 +742,18 @@ def static_files(filename):
          antes de chegar aqui; isto é só o fallback para quando aquela
          tentativa falhar (ex.: sem token da API Beehus, o caso normal numa
          máquina que nunca abriu a tela).
+      2b. [2026-09-11, relato do usuário: "às vezes fica em data antiga ou
+         no dia 03/08"] Um arquivo VELHO (meta.referenceDate anterior à
+         referência de hoje) cai no MESMO caminho do arquivo ausente —
+         ver _snapshot_json_esta_desatualizado(). A tela nasce vazia mas
+         interativa e o refresh automático do init() a preenche com a data
+         certa, em vez de pintar a matriz inteira numa data congelada de
+         semanas atrás.
       3. Caso contrário, serve o arquivo real da raiz do protótipo. """
     if filename not in _ALLOWED_STATIC_FILES:
         return jsonify({"error": "not found"}), 404
-    if filename == "snapshot.json" and not (HERE / filename).exists():
+    if filename == "snapshot.json" and (not (HERE / filename).exists()
+                                        or _snapshot_json_esta_desatualizado()):
         return jsonify(_montar_snapshot_vazio())
     return send_from_directory(HERE, filename)
 

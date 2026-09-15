@@ -144,6 +144,7 @@ def montar_registry_validado(linhas, carteiras_por_id, entidades_por_nome_ci,
         modelo_carga = (linha["modeloCarga"] or "").strip()
         grouping_ids = [g for g in _interpretar_agrupamentos(linha["agrupamentos"])
                          if g in agrupamentos_por_id]
+        membro_1o_agrupamento = _membro_no_1o_agrupamento(grouping_ids, agrupamentos_por_id, wallet_id) or {}
         registry.append({
             "walletId": wallet_id,
             "name": linha["nome"],
@@ -180,5 +181,45 @@ def montar_registry_validado(linhas, carteiras_por_id, entidades_por_nome_ci,
             "explodedWalletIds": doc_carteira.get("explodedWalletIds") or [],
             "startDateConsolidation": doc_carteira.get("startDateConsolidation"),
             "accountCode": doc_carteira.get("accountCode"),
+            # initialDateOnGrouping/finalDateOnGrouping — [NOVO 2026-09-03,
+            # pedido do usuário: "tratar data inicial para não aparecer
+            # vazio... e na cor verde se a carteira não iniciou ou se já
+            # encerrou"] par de datas do vínculo (carteira, agrupamento) —
+            # existe por MEMBRO de agrupamento, não no cadastro da carteira
+            # em si (Beehus não tem campo de encerramento na wallet). Decisão
+            # do usuário: usar o par do 1º agrupamento vinculado no Template
+            # ("Agrupamentos Indexados") como fonte de "não iniciou"/"já
+            # encerrou" pra própria carteira — ver snapshot_builder.
+            # wallet_fora_do_periodo(). Carteira sem nenhum agrupamento
+            # vinculado fica com os 2 campos None (só startDateConsolidation
+            # acima vale pra ela, sem noção de "encerrou").
+            "initialDateOnGrouping": membro_1o_agrupamento.get("initialDateOnGrouping"),
+            "finalDateOnGrouping": membro_1o_agrupamento.get("finalDateOnGrouping"),
         })
     return registry, orfas
+
+
+def _membro_no_1o_agrupamento(grouping_ids, agrupamentos_por_id, wallet_id):
+    """Contexto:
+    Acha o dict de membro (`{walletId, initialDateOnGrouping,
+    finalDateOnGrouping}`) desta carteira dentro do PRIMEIRO agrupamento da
+    sua lista `grouping_ids` (ordem da coluna "Agrupamentos Indexados" do
+    Template) — [2026-09-03, pedido do usuário] fonte de "não iniciou"/"já
+    encerrou" pra própria carteira, ver montar_registry_validado() acima e
+    snapshot_builder.wallet_fora_do_periodo(). Chamada 2x por carteira (só
+    leitura, sem efeito colateral). Retorna dict ou None (sem agrupamento
+    vinculado, ou a carteira não aparece nos membros do 1º agrupamento —
+    defensivo, não deveria ocorrer já que grouping_ids só guarda ids
+    confirmados no cadastro).
+
+    Pseudocódigo:
+      1. Sem nenhum agrupamento vinculado -> None.
+      2. Resolve o 1º agrupamento (grouping_ids[0]) em agrupamentos_por_id.
+      3. Acha, entre os membros dele, o que tem este walletId -> devolve (ou
+         None se não achar). """
+    if not grouping_ids:
+        return None
+    primeiro_agrupamento = agrupamentos_por_id.get(grouping_ids[0]) or {}
+    return next(
+        (m for m in (primeiro_agrupamento.get("wallets") or []) if m.get("walletId") == wallet_id),
+        None)

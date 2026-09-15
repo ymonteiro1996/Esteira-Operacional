@@ -43,6 +43,13 @@
   --state-r2-bg:#fecaca;  --state-r2-fg:#7f1d1d;
   --state-g1-bg:#f3f4f6;  --state-g1-fg:#9ca3af;
   --state-g2-bg:#f9fafb;  --state-g2-fg:#d1d5db;
+  /* [NOVO 2026-09-03, pedido do usuário: "...na cor verde se a carteira não
+     iniciou ou se já encerrou"] mockkey "fp" (fora do período ativo da
+     carteira, snapshot_builder.wallet_fora_do_periodo()) — verde bem pálido
+     de propósito (célula "em branco", não um estágio concluído): canal
+     PRÓPRIO, distinto de --state-p-bg/--state-pro-bg (que sinalizam
+     progresso real na esteira) e de --state-g1/g2 (cinza, "não cobrado"). */
+  --state-fp-bg:#ecfdf5;  --state-fp-fg:#6ee7b7;
   /* Tier "Atenção" (chips/stats) — desacoplado dos fundos de célula desde a
      rodada 7 (os antigos --state-a1-* morreram junto com os fundos de atraso). */
   --tier-att-bg:#fef3c7;  --tier-att-fg:#92400e;
@@ -100,6 +107,7 @@
     --state-r2-bg:#4a1818;  --state-r2-fg:#fca5a5;
     --state-g1-bg:#22262a;  --state-g1-fg:#7d8790;
     --state-g2-bg:#191c1f;  --state-g2-fg:#4b5158;
+    --state-fp-bg:#0f2318;  --state-fp-fg:#2f6b4f;
     --tier-att-bg:#3a2a06;  --tier-att-fg:#f0b642;
     /* rodada 6: badge Rent amarelo (leve) / vermelho (elevado); anel de
        sequência vermelho-claro (#f87171 = 5.3-5.9:1 sobre as células
@@ -123,6 +131,7 @@
   --state-r2-bg:#4a1818;  --state-r2-fg:#fca5a5;
   --state-g1-bg:#22262a;  --state-g1-fg:#7d8790;
   --state-g2-bg:#191c1f;  --state-g2-fg:#4b5158;
+  --state-fp-bg:#0f2318;  --state-fp-fg:#2f6b4f;
   --tier-att-bg:#3a2a06;  --tier-att-fg:#f0b642;
   /* rodada 6: espelho exato do bloco @media dark acima — manter em sincronia. */
   --overlay-div:#facc15; --overlay-div-strong:#f87171; --overlay-div-ink:#451a03; --overlay-div-strong-ink:#450a0a; --overlay-seq:#f87171; --overlay-issue:#94a3b8;
@@ -140,6 +149,7 @@
   --state-r2-bg:#fecaca;  --state-r2-fg:#7f1d1d;
   --state-g1-bg:#f3f4f6;  --state-g1-fg:#9ca3af;
   --state-g2-bg:#f9fafb;  --state-g2-fg:#d1d5db;
+  --state-fp-bg:#ecfdf5;  --state-fp-fg:#6ee7b7;
   --tier-att-bg:#fef3c7;  --tier-att-fg:#92400e;
   /* rodada 6: espelho exato do :root claro acima — manter em sincronia. */
   --overlay-div:#eab308; --overlay-div-strong:#dc2626; --overlay-div-ink:#451a03; --overlay-div-strong-ink:#ffffff; --overlay-seq:#991b1b; --overlay-issue:#475569;
@@ -339,6 +349,7 @@ td.col-companyname, th.hdr-companyname{
 .s-r2  { background:var(--state-r2-bg);  color:var(--state-r2-fg);  }
 .s-g1  { background:var(--state-g1-bg);  color:var(--state-g1-fg);  }
 .s-g2  { background:var(--state-g2-bg);  color:var(--state-g2-fg);  }
+.s-fp  { background:var(--state-fp-bg);  color:var(--state-fp-fg);  }
 
 /* aba Company — célula = % publicadas, MESMAS 3 faixas de status (e mesmos
    tokens de cor) do painel "Carteiras/Agrupamentos Publicados" (100% ok /

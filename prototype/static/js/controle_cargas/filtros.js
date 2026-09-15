@@ -28,9 +28,21 @@ Object.assign(ControleCargas, {
 // especial: cada linha pode contribuir com MAIS de 1 tag (o nome do estado
 // na data de referência, e também "Problema Rent" quando há divergência
 // >2bp nessa data) — ver tagsColunaParaLinha() em filtro_cabecalho.js.
+// [2026-09-11, relato do usuário: "às vezes fica em data antiga"]
+// sequenciaAtualizacao / sincronizacaoDataInicial são estado de CONCORRÊNCIA do
+// botão Atualizar (atualizar.js): a tela dispara /api/atualizar de 4 lugares
+// (refresh automático do init(), clique no botão, Enter nos campos, e logo
+// depois de colar o token Beehus) e cada chamada leva 30-100s, então 2 podem
+// ficar no ar ao mesmo tempo. sequenciaAtualizacao numera cada pedido pra só a
+// resposta do ÚLTIMO ser aplicada (sem isso, uma resposta lenta da janela
+// ANTIGA chegava depois e sobrescrevia a matriz nova);
+// sincronizacaoDataInicial guarda o fetch pendente que recalcula o campo "de"
+// a cada troca do "até", pra um Atualizar disparado rápido demais não enviar a
+// janela desatualizada (400 "janela maior que o teto").
 state: { view:'wallets', sort:'priority', sortDir:1, frozen:null, company:null,
               filtroValoresColuna: {responsavel:null, comentarioAtuacao:null, institution:null, loadModel:null, statusRef:null},
-              search:'', showBloco3:false, focusDate:null },
+              search:'', showBloco3:false, focusDate:null,
+              sequenciaAtualizacao:0, sincronizacaoDataInicial:null },
 
 // ─────────────────────────────────────────────────────────────────────────
 // Filtros

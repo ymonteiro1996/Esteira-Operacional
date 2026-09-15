@@ -139,9 +139,17 @@ MOCKKEY_TO_STATE = {
     "p": "done", "cD": "done", "wu": "wip_ok", "wc": "wip_ok",
     "miss": "miss_late",  # refinado por state_from_cell() quando precisa da severidade real (miss_late vs miss_very_late)
     "wait": "pending", "notcov": "not_due",
+    # "fp" [NOVO 2026-09-03, pedido do usuário] — mesmo "estado-base" de
+    # notcov (not_due — "não esperado neste dia", RANKING_SEVERIDADE mais
+    # baixo, igual a "done") mas com mockkey/cor PRÓPRIOS: notcov continua
+    # exclusivo de Agrupamento sem membro ativo (ver nota 2026-07-25 no topo
+    # do arquivo); "fp" é o único mockkey que compute_cell() pode produzir
+    # pra CARTEIRA fora do seu próprio período (ver wallet_fora_do_periodo()).
+    "fp": "not_due",
 }
 MOCKKEY_LETTER = {"p": "Pub", "cD": "Pro", "wu": "Unp", "wc": "Pro",
-                  "miss": "∅", "wait": "Agd", "notcov": "—"}
+                  "miss": "∅", "wait": "Agd", "notcov": "—",
+                  "fp": ""}  # célula em branco de propósito — "sem nada" (pedido do usuário)
 
 
 def state_from_cell(cell):
@@ -201,6 +209,9 @@ def state_from_cell(cell):
 # ─────────────────────────────────────────────────────────────────────────
 MOCKKEY_PRIORITY_RANK = {
     "miss": 0, "wait": 1, "notcov": 2, "wu": 3, "wc": 4, "cD": 5, "p": 6,
+    # "fp" [NOVO 2026-09-03] fora do período ativo da carteira — nada a
+    # resolver, menos urgente até que "p" (Publicada): fica por último.
+    "fp": 7,
 }
 
 
@@ -301,6 +312,54 @@ def div_overlay_kind(retorno_contribuicao, retorno_nav_por_cota, nav=None):
 # ─────────────────────────────────────────────────────────────────────────
 # Estágio + severidade da célula (carteira, dia) — coração do semáforo
 # ─────────────────────────────────────────────────────────────────────────
+
+def wallet_fora_do_periodo(wallet, data):
+    """Contexto:
+    [NOVO 2026-09-03, pedido do usuário: "tratar data inicial para não
+    aparecer vazio, deixar a matriz em branco (sem nada) e na cor verde se a
+    carteira não iniciou ou se já encerrou"] Decide se `data` cai fora do
+    período ativo da carteira — reintroduz (de forma mais estreita) o gate
+    de onboarding que tinha saído de compute_cell() em 2026-07-25 (ver nota
+    no topo do arquivo): daquela vez o processo operacional prometia só
+    cadastrar a carteira no Template quando ela já tivesse começado, mas na
+    prática isso nem sempre se confirmou, e não existe hoje NENHUM sinal de
+    encerramento na própria carteira (Beehus `wallets` não tem campo de
+    data de encerramento — confirmado inspecionando o payload real de
+    `/partner/wallets`). Chamada por compute_wallet_row() célula a célula,
+    ANTES de compute_cell() — quando True, a célula fica em branco (mockkey
+    "fp"), sem estágio/atraso/overlay/tooltip algum. Retorna bool.
+
+    Fonte da janela ativa [decisão do usuário, 2 casos]:
+      - Carteira com agrupamento vinculado no Template ("Agrupamentos
+        Indexados"): usa o par (initialDateOnGrouping..finalDateOnGrouping)
+        do PRIMEIRO agrupamento da lista (registry.py::
+        _membro_no_1o_agrupamento) — cobre início E fim. Limitação aceita:
+        esse par é a data de ENTRADA/SAÍDA NAQUELE agrupamento, não
+        necessariamente a mesma data em que a carteira começou a ser
+        consolidada de fato (podem divergir se ela só foi agrupada bem
+        depois de já estar sendo consolidada).
+      - Carteira sem nenhum agrupamento vinculado: só `startDateConsolidation`
+        (não iniciou); sem noção de "encerrou" pra ela (não existe fonte de
+        dado pra isso ainda).
+
+    Pseudocódigo:
+      1. Tem par vindo de agrupamento (`initialDateOnGrouping` ou
+         `finalDateOnGrouping` presente) -> esse par é a fonte da verdade:
+         `data` antes do início OU depois do fim -> fora.
+      2. Sem esse par -> cai no fallback: só `startDateConsolidation` (sem
+         checagem de fim).
+    """
+    inicio_grouping = wallet.get("initialDateOnGrouping")
+    fim_grouping = wallet.get("finalDateOnGrouping")
+    if inicio_grouping or fim_grouping:
+        if inicio_grouping and data < inicio_grouping:
+            return True
+        if fim_grouping and data > fim_grouping:
+            return True
+        return False
+    inicio = wallet.get("startDateConsolidation")
+    return bool(inicio and data < inicio)
+
 
 def compute_cell(wallet, data, doc_unprocessed, doc_processed, doc_nav, calendario, data_hoje):
     """Contexto:
@@ -693,6 +752,15 @@ def compute_wallet_row(wallet, janela, calendario, data_hoje, unp_map, pro_map, 
     celulas = []
 
     for data in janela:
+        # [NOVO 2026-09-03, pedido do usuário] Fora do período ativo da
+        # carteira (ainda não iniciou / já saiu do agrupamento vinculado) ->
+        # célula em branco (mockkey "fp"), sem estágio/atraso/overlay/
+        # horário/SLA algum — nem chama compute_cell() pra esse dia. Ver
+        # wallet_fora_do_periodo().
+        if wallet_fora_do_periodo(wallet, data):
+            celulas.append({"s": "fp", "d": data})
+            continue
+
         doc_unp = unp_map.get((wallet_id, data))
         doc_pro = pro_map.get((wallet_id, data))
         doc_nav = nav_map.get((wallet_id, data))
@@ -726,7 +794,10 @@ def compute_wallet_row(wallet, janela, calendario, data_hoje, unp_map, pro_map, 
     # pendência pra este alerta específico, mesmo não contando pras outras
     # checagens de pendência do app (issuesDetail, filtro "só pendência" etc,
     # que continuam usando not in ("p","cD") sem mudança).
-    ainda_nao_publicada = celulas[-1]["s"] != "p"
+    # [AMPLIADO 2026-09-03, pedido do usuário] "fp" (fora do período) some
+    # do check junto com "p" — carteira fora do próprio período não deveria
+    # furar fila de ninguém (não há nada a resolver nela nesse dia).
+    ainda_nao_publicada = celulas[-1]["s"] not in ("p", "fp")
     aguardando_explosao = bool(comprada_por_nomes) and ainda_nao_publicada
 
     chave_ordenacao = compute_sort_key(celulas, wallet["name"], aguardando_explosao)
@@ -800,9 +871,10 @@ def classificar_grouping_em_bloco(g, registry_por_id, linhas_carteiras_por_id, i
       2. Dentre esses, filtra os que intersectam a janela (rastreados).
       3. Conta quantos membros brutos ficaram de fora do registry.
       4. Sem membro rastreado -> bloco 3. Com rastreado e alguma carteira
-         com mockkey ∉ {"p","cD"} na data de referência (= "tem pendência",
-         [REVISADO 2026-07-24, pedido do usuário] antes era "tier ≤ 2") ->
-         bloco 1. Senão -> bloco 2.
+         com mockkey ∉ {"p","cD","fp"} na data de referência (= "tem
+         pendência", [REVISADO 2026-07-24, pedido do usuário] antes era
+         "tier ≤ 2"; "fp" saiu do check em 2026-09-03 — carteira fora do
+         próprio período não é pendência) -> bloco 1. Senão -> bloco 2.
     """
     todos_membros = g.get("wallets") or []
     membros_no_registry = [m for m in todos_membros if m.get("walletId") in registry_por_id]
@@ -813,7 +885,10 @@ def classificar_grouping_em_bloco(g, registry_por_id, linhas_carteiras_por_id, i
     if not membros_rastreados:
         bloco = 3
     else:
-        tem_pendencia = any(linhas_carteiras_por_id[m["walletId"]]["cells"][-1]["s"] not in ("p", "cD")
+        # [AMPLIADO 2026-09-03, pedido do usuário] "fp" (carteira fora do
+        # próprio período) some do check junto com "p"/"cD" — não é uma
+        # pendência, é uma carteira sem obrigação nesse dia.
+        tem_pendencia = any(linhas_carteiras_por_id[m["walletId"]]["cells"][-1]["s"] not in ("p", "cD", "fp")
                              for m in membros_rastreados)
         bloco = 1 if tem_pendencia else 2
     return todos_membros, membros_no_registry, membros_rastreados, n_nao_rastreados_bruto, bloco
@@ -933,8 +1008,8 @@ def montar_tooltip_celula_grouping(ativos, data, lookup_celulas):
     Monta o tooltip da célula do grouping: total de membros ativos no dia +
     contagem de quantos estão em cada mockkey (usado pelo tooltip/painel pra
     mostrar "3/5 publicadas" etc.) + a lista de walletIds "não processadas"
-    nesse dia (mockkey ∉ {"p","cD"}) — [2026-07-24, pedido do usuário: "ao
-    passar o mouse deve se mostrar as carteiras não processadas desse
+    nesse dia (mockkey ∉ {"p","cD","fp"}) — [2026-07-24, pedido do usuário:
+    "ao passar o mouse deve se mostrar as carteiras não processadas desse
     agrupamento"]. Chamada 1x por dia da janela por
     montar_celula_grouping_dia(), quando há uma pior célula encontrada.
     Retorna dict {"n": total, "counts": {mockkey: quantidade},
@@ -943,8 +1018,10 @@ def montar_tooltip_celula_grouping(ativos, data, lookup_celulas):
     Pseudocódigo:
       1. Para cada carteira ativa, busca sua célula do dia; sem dado, pula
          (mesma regra que já valia pra "counts").
-      2. Conta 1 no mockkey da célula; se o mockkey não é "p"/"cD", também
-         acumula o walletId na lista de não processadas.
+      2. Conta 1 no mockkey da célula; se o mockkey não é "p"/"cD"/"fp"
+         ([AMPLIADO 2026-09-03] carteira fora do próprio período não é
+         "não processada"), também acumula o walletId na lista de não
+         processadas.
       3. Devolve o total de ativos + as contagens por mockkey + a lista de
          walletIds não processados.
     """
@@ -955,7 +1032,7 @@ def montar_tooltip_celula_grouping(ativos, data, lookup_celulas):
         if not c2:
             continue
         contagens[c2["s"]] += 1
-        if c2["s"] not in ("p", "cD"):
+        if c2["s"] not in ("p", "cD", "fp"):
             nao_processadas.append(wallet_id)
     return {"n": len(ativos), "counts": dict(contagens), "unprocessedIds": nao_processadas}
 
