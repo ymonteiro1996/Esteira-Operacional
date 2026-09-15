@@ -103,6 +103,7 @@ from beehus_api import (
     partner_wallets,
 )
 from cache import cache_esteira_por_data, cache_ttl_colecoes
+import progresso_atualizacao
 
 # Nº de empresas buscadas em paralelo nos fan-outs "por empresa" deste módulo
 # (colecoes_pequenas: até ~19 empresas visíveis ao token) — mesma ordem de
@@ -640,10 +641,19 @@ def _buscar_datas_faltantes_via_api(datas_faltantes, wallet_ids, grouping_ids, t
 
     def _executar_tarefa_com_sessao(tarefa, sid):
         bind_session_id(sid)
-        return _executar_tarefa(tarefa)
+        try:
+            return _executar_tarefa(tarefa)
+        finally:
+            # [2026-09-15] Sinal de vida pra tela (ver progresso_atualizacao.py):
+            # esta fila é a parte LONGA do build (minutos), e o bind_session_id()
+            # acima é justamente o que faz o contador cair na sessão certa. No
+            # `finally` porque uma tarefa que falhou também já não está mais
+            # pendente — o contador mede andamento, não sucesso.
+            progresso_atualizacao.passo_concluido()
 
     t0 = time.monotonic()
     resultados_por_tarefa = {}
+    progresso_atualizacao.definir_total_passos(len(tarefas))
     if tarefas:
         # [2026-08-06] Mesma propagação de sid por VALOR (não por Context
         # compartilhado) do fan-out acima (_fan_out_por_empresa) — ver

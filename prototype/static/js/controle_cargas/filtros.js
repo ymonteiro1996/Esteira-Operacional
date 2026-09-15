@@ -39,10 +39,14 @@ Object.assign(ControleCargas, {
 // sincronizacaoDataInicial guarda o fetch pendente que recalcula o campo "de"
 // a cada troca do "até", pra um Atualizar disparado rápido demais não enviar a
 // janela desatualizada (400 "janela maior que o teto").
+// [2026-09-15] timerProgresso é o setInterval que consulta
+// /api/atualizar/progresso enquanto o Atualizar está no ar (progresso.js) —
+// fica no state só pra nunca existir mais de um timer de pé ao mesmo tempo.
 state: { view:'wallets', sort:'priority', sortDir:1, frozen:null, company:null,
               filtroValoresColuna: {responsavel:null, comentarioAtuacao:null, institution:null, loadModel:null, statusRef:null},
               search:'', showBloco3:false, focusDate:null,
-              sequenciaAtualizacao:0, sincronizacaoDataInicial:null },
+              sequenciaAtualizacao:0, sincronizacaoDataInicial:null,
+              timerProgresso:null },
 
 // ─────────────────────────────────────────────────────────────────────────
 // Filtros

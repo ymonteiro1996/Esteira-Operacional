@@ -319,6 +319,9 @@ enviarAtualizacao(){
   btn.disabled = true;
   btn.textContent = 'Atualizando...';
   if(msgEl) msgEl.textContent = '';
+  // [2026-09-15] Sinal de vida enquanto o pedido roda (~9min hoje) — ver
+  // progresso.js. Só escreve em .atualizar-msg; não interfere no fetch.
+  ControleCargas.acompanharProgresso(estaObsoleto);
 
   const campoPct = document.getElementById('limiar-divergencia-pct');
   const campoReais = document.getElementById('limiar-divergencia-reais');
@@ -360,6 +363,7 @@ enviarAtualizacao(){
     })
     .finally(()=>{
       if(estaObsoleto()) return;   // quem reabilita o botão é o pedido mais novo, ainda no ar
+      ControleCargas.pararAcompanhamentoProgresso();
       btn.disabled = false;
       btn.textContent = '↻ Atualizar';
     });

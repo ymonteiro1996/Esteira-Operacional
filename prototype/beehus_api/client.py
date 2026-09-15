@@ -36,6 +36,7 @@ import contextvars
 import json
 import logging
 import os
+import random
 import threading
 import time
 from pathlib import Path
@@ -424,6 +425,88 @@ def _headers(*, json_body: bool = True) -> dict:
     return h
 
 
+# ── Freio compartilhado de rate limit (429) ──────────────────────────────────
+# [2026-09-15, relato do usuário: "estou mudando a data, dando um atualizar e
+# não está mudando"] O commit de 2026-09-11 já tinha baixado o fan-out e
+# ampliado o retry, mas o backoff continuava PRIVADO de cada thread e SEM
+# jitter: as 6 threads do fan-out (db._FAN_OUT_WORKERS_ESTEIRA) tomavam 429
+# quase juntas, dormiam o MESMO tempo e voltavam a disparar juntas — efeito
+# manada, que rende outra rodada de 429 em vez de uma fila que escoa. Medido
+# nesta máquina com enable_timing(), num único /api/atualizar: 683 chamadas,
+# 126 delas 429 (18%), e cada esgotamento das tentativas derruba o build
+# inteiro num 500.
+# As 2 funções abaixo trocam isso por um freio ÚNICO do processo: quem toma
+# 429 publica até quando ninguém deve tentar de novo (`_rate_limit_pausa_ate`),
+# e TODA chamada respeita essa pausa antes de sair — inclusive as threads que
+# ainda nem tinham tomado 429. O `Retry-After` continua tendo prioridade
+# quando o servidor manda um (hoje o 429 vem como página HTML, sem
+# Retry-After nem X-RateLimit-*; vale insistir com o time do backend).
+_rate_limit_lock = threading.Lock()
+_rate_limit_pausa_ate = 0.0        # instante (time.monotonic) até quando todos esperam
+_RATE_LIMIT_TENTATIVAS_MAX = 8
+_RATE_LIMIT_ESPERA_MAX = 30.0      # teto do backoff exponencial, em segundos
+
+
+def _esperar_pausa_global() -> None:
+    """Contexto:
+    Segura a thread atual enquanto houver uma pausa por rate limit em curso —
+    chamada no topo de CADA tentativa de request(), inclusive a primeira. É o
+    que faz o 429 tomado por uma thread frear as outras 5 antes de elas
+    gastarem mais uma chamada que já nasceria 429. Não retorna nada.
+
+    Dorme em fatias curtas (e não de uma vez até o fim da pausa) porque outra
+    thread pode ESTENDER a pausa no meio do caminho; a cada fatia o alvo é
+    relido.
+
+    Pseudocódigo:
+      1. Lê quanto falta para o fim da pausa global.
+      2. Se não falta nada, volta na hora.
+      3. Senão dorme no máximo meio segundo e recomeça do passo 1.
+    """
+    while True:
+        with _rate_limit_lock:
+            falta = _rate_limit_pausa_ate - time.monotonic()
+        if falta <= 0:
+            return
+        time.sleep(min(falta, 0.5))
+
+
+def _pausa_global_por_rate_limit(tentativa: int, retry_after: str | None) -> float:
+    """Contexto:
+    Registra um 429: calcula o backoff desta tentativa, publica a pausa
+    global que TODAS as threads vão respeitar (ver _esperar_pausa_global) e
+    devolve quantos segundos esta thread em particular deve dormir antes de
+    tentar de novo. Chamada só de dentro do laço de retry de request().
+    Retorna float (segundos).
+
+    A espera devolvida é a base com jitter (±50%) de propósito: a pausa
+    global alinha todo mundo no mesmo instante, e o jitter desalinha de novo
+    na saída — sem ele, as threads voltariam a bater no servidor todas no
+    mesmo milissegundo, que é exatamente o efeito manada que se quer evitar.
+    A pausa global nunca é ENCURTADA por uma thread que chegou depois com um
+    backoff menor (usa `max`), e por isso também não se acumula: 6 threads
+    tomando 429 na mesma rodada convergem para uma pausa só, não seis.
+
+    Pseudocódigo:
+      1. Base = `Retry-After` do servidor, quando vier um número válido.
+      2. Sem Retry-After, base = backoff exponencial da tentativa, com teto
+         de _RATE_LIMIT_ESPERA_MAX.
+      3. Publica a pausa global em `agora + base`, nunca reduzindo uma pausa
+         mais longa já publicada por outra thread.
+      4. Devolve a base com jitter de ±50% para esta thread.
+    """
+    base = min(0.5 * (2 ** tentativa), _RATE_LIMIT_ESPERA_MAX)
+    if retry_after:
+        try:
+            base = float(retry_after)
+        except (TypeError, ValueError):
+            pass
+    with _rate_limit_lock:
+        global _rate_limit_pausa_ate
+        _rate_limit_pausa_ate = max(_rate_limit_pausa_ate, time.monotonic() + base)
+    return base * (0.5 + random.random())
+
+
 def request(method: str, path: str, *, json=None, params=None, timeout: int | None = None):
     """Send a request to the Beehus API and return the parsed JSON body.
 
@@ -433,9 +516,12 @@ def request(method: str, path: str, *, json=None, params=None, timeout: int | No
     # Retry on 429 (rate limit) with backoff — the bulk warm of the navPackages
     # cache fires hundreds of calls and can trip the upstream rate limiter.
     # Honour `Retry-After` when present; otherwise exponential backoff capped.
+    # [2026-09-15] O backoff agora é COMPARTILHADO entre as threads e com
+    # jitter — ver _pausa_global_por_rate_limit()/_esperar_pausa_global().
     attempt = 0
     while True:
         attempt += 1
+        _esperar_pausa_global()
         _t0 = time.monotonic() if _timing_on else None
         try:
             r = _session.request(
@@ -454,13 +540,8 @@ def request(method: str, path: str, *, json=None, params=None, timeout: int | No
         if _timing_on:
             _record_timing(method, path, params, r.status_code,
                            (time.monotonic() - _t0) * 1000.0)
-        if r.status_code == 429 and attempt <= 8:
-            ra = r.headers.get("Retry-After")
-            try:
-                delay = float(ra) if ra else min(0.5 * (2 ** attempt), 30.0)
-            except (TypeError, ValueError):
-                delay = min(0.5 * (2 ** attempt), 30.0)
-            time.sleep(delay)
+        if r.status_code == 429 and attempt <= _RATE_LIMIT_TENTATIVAS_MAX:
+            time.sleep(_pausa_global_por_rate_limit(attempt, r.headers.get("Retry-After")))
             continue
         break
 

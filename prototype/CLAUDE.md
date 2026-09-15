@@ -1025,6 +1025,89 @@ Complementa a divisão de código da seção 4 — juntas atacam a causa dos con
     (`/db.py` continua 404). O caminho com API real depende de token/rede e
     só pode ser confirmado pelo usuário na própria máquina.
 
+- **[2026-09-15, relato do usuário: "estou mudando a data, dando um atualizar
+  e não está mudando" / "ficou atualizando e não foi para o dia 09/09"]
+  ATUALIZAR DEMORANDO ~9 MINUTOS E ÀS VEZES FALHANDO COM 500 — não era a data.**
+  Diagnosticado pelo log do servidor: a data pedida SEMPRE chegou certa
+  (`/api/atualizar?...data_final=2026-09-09`); o que acontecia era o pedido
+  demorar 542s ou morrer em 500, e `atualizar.js` mantém o SNAPSHOT antigo na
+  tela quando falha (comportamento deliberado desde 2026-07-30 — nunca deixar
+  a matriz em branco), então a coluna REF continuava no dia anterior e parecia
+  que o clique não tinha feito nada. Medido com `beehus_api.client.
+  enable_timing()` num clique real: **683 chamadas à API Beehus, 126 delas 429
+  (18%)**. Três correções independentes:
+  1. **Cache de coleções expirando no meio da própria execução**
+     (`cache.py::CacheTTL.congelado()`, novo + `build_snapshot.montar_snapshot()`).
+     O TTL de 120s pressupunha que quem usa o cache termina em bem menos que
+     isso — deixou de ser verdade quando a API passou a aplicar rate limit
+     (commit de 2026-09-11) e o build foi de ~90s para ~9min. O cache vencia
+     ANTES do fim da execução que o tinha populado, e o registry inteiro era
+     buscado de novo: no log de instrumentação, TODA chamada
+     `/beehus/securities/<id>` (1 por ativo de explosão, `db.py::_resolver_
+     explosao`) aparecia exatamente **2x** num único clique. `congelado()` é
+     um context manager reentrante e thread-safe que suspende a expiração — de
+     propósito, SÓ para o que foi guardado DEPOIS do congelamento começar: a
+     1ª leitura de cada execução continua buscando dado fresco (não serve um
+     valor de horas atrás só porque alguém congelou agora) e a partir daí ela
+     reaproveita o que ela mesma buscou.
+  2. **Backoff de 429 privado de cada thread e sem jitter**
+     (`beehus_api/client.py::_esperar_pausa_global()`/
+     `_pausa_global_por_rate_limit()`, novos). O commit de 2026-09-11 já tinha
+     baixado o fan-out (40→6) e ampliado o retry (5→8 tentativas), mas cada
+     thread continuava fazendo backoff sozinha: as 6 tomavam 429 quase juntas,
+     dormiam o MESMO tempo e voltavam a disparar juntas — efeito manada, que
+     rende outra rodada de 429 em vez de uma fila que escoa. Agora o freio é
+     ÚNICO do processo: quem toma 429 publica até quando ninguém deve tentar
+     (`_rate_limit_pausa_ate`) e TODA chamada respeita essa pausa antes de
+     sair, inclusive as threads que ainda nem tinham tomado 429; a espera de
+     cada thread sai com jitter de ±50% pra elas não voltarem a bater no
+     servidor no mesmo milissegundo. A pausa usa `max()`, então 6 threads na
+     mesma rodada convergem para uma pausa só, não seis. `Retry-After`
+     continua com prioridade quando vier (hoje o 429 vem como página HTML, sem
+     `Retry-After` nem `X-RateLimit-*` — **vale insistir com o time do backend
+     por esses headers**, é o que permitiria o cliente se auto-regular de
+     verdade em vez de adivinhar).
+  3. **Nenhum sinal de vida durante 9 minutos** (`progresso_atualizacao.py` e
+     `static/js/controle_cargas/progresso.js`, novos + rota
+     `GET /api/atualizar/progresso`). O botão ficava o tempo todo em
+     "Atualizando..." sem nada mudar na tela, indistinguível de travado — e o
+     efeito colateral era o pior: quem achava que travou clicava de novo, e o
+     2º pedido DOBRAVA a carga em cima do mesmo rate limit que causava a
+     lentidão. Agora `montar_snapshot()` publica a etapa corrente (os mesmos
+     6 rótulos "[n/6]" que ela já imprimia no console) e o fan-out de `db.py`
+     publica quantas das N consultas já terminaram; a tela lê de 2 em 2s e
+     mostra `Atualizando… [3/6] buscando dados da esteira — 37/90 consultas ·
+     há 4min 12s`. O progresso é por SESSÃO (mesmo sid opaco do token, que já
+     é propagado pros workers do fan-out via `bind_session_id()`), porque duas
+     pessoas atualizando ao mesmo tempo têm andamentos diferentes. É 100%
+     enfeite: sem sid (CLI/boot) vira no-op, e nenhum erro daqui pode derrubar
+     um build.
+  - **`montar_snapshot()` virou wrapper fino** (CLAUDE.md §3) que só abre os 2
+    contextos da execução inteira (cache congelado + progresso) e delega pra
+    `_montar_snapshot()`, que é o corpo de sempre, inalterado — mesmo padrão
+    do split `executarAtualizacao()`/`enviarAtualizacao()` de 11/09.
+  - **Achado colateral, NÃO corrigido aqui** (fora do escopo desta tarefa,
+    precisa de decisão do time): esta máquina roda 3 apps ao mesmo tempo
+    (5050 ControleCargas, 5001 Conciliação, 5000 beehus-swat) e os 3
+    compartilham o MESMO `~/.swat/beehus.token` e a MESMA cota de rate limit
+    da API. O arquivo de token estava inclusive no formato ANTIGO (`{token,
+    set_at}` na raiz, pré-multi-sessão) — um app-irmão sobrescreveu o formato
+    multi-sessão que este app grava. Além disso os apps-irmãos ainda não têm
+    o freio compartilhado de 429 nem o `BASE_URL` novo (ver nota de
+    2026-09-11), então continuam gastando a cota sem se auto-regular.
+  - **Verificado**: `cache.CacheTTL.congelado()` (valor guardado antes do
+    congelamento continua expirando pelo TTL; guardado dentro não expira;
+    reentrante; exceção no meio não deixa congelado pra sempre);
+    `progresso_atualizacao` (no-op sem sid e fora de execução, contador nunca
+    passa do total, entrada limpa ao sair inclusive por exceção); freio de 429
+    (6 threads convergem numa pausa só em vez de somar 6, jitter de ±50%,
+    `Retry-After` válido tem prioridade e inválido não explode,
+    `_esperar_pausa_global()` custa zero sem pausa e segura de verdade com
+    pausa); `GET /api/atualizar/progresso` via `app.test_client()` (200 com
+    `{"emAndamento": false}`, rotas vizinhas e allowlist de estáticos
+    intactas); e um build COMPLETO contra a API real (janela 01/09..09/09) —
+    ver a mensagem do commit para os números medidos.
+
 ---
 
 ## Checklist rápido (antes de considerar uma tarefa pronta)

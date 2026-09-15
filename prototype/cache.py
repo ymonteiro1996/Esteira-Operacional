@@ -49,6 +49,8 @@ JSON — mas fica FORA de escopo desta tarefa (ver CLAUDE.md §7 — mudança de
 padrão de persistência exigiria confirmar antes).
 """
 
+import contextlib
+import threading
 import time
 
 
@@ -150,11 +152,63 @@ class CacheTTL:
       2. Se vier None (nunca guardado, ou TTL vencido), recalcula/rebusca e
          chama `guardar(chave, valor)`.
       3. Se vier um valor, usa direto — zero custo de recálculo.
+
+    [2026-09-15, relato do usuário: "estou mudando a data, dando um atualizar
+    e não está mudando"] Ganhou `congelado()` — um TTL de 120s pressupunha
+    que quem usa o cache termina em bem menos que isso, e isso deixou de ser
+    verdade: desde que a API Beehus passou a aplicar rate limit (ver commit
+    de 2026-09-11), um `/api/atualizar` leva ~9 min, então o TTL vencia NO
+    MEIO da própria execução que tinha acabado de popular o cache e tudo era
+    buscado de novo — medido com `beehus_api.client.enable_timing()`: TODA
+    chamada `/beehus/securities/<id>` aparecia exatamente 2x num único
+    clique. Ver `congelado()` para a regra.
     """
 
     def __init__(self, ttl_segundos=120):
         self._ttl = ttl_segundos
         self._valores = {}   # chave -> (valor, guardado_em_monotonic)
+        self._lock = threading.Lock()
+        self._congelado_desde = None   # monotonic do congelamento mais ANTIGO em curso
+        self._congelamentos = 0        # nº de execuções congeladas ao mesmo tempo
+
+    @contextlib.contextmanager
+    def congelado(self):
+        """Contexto:
+        Suspende a expiração por TTL enquanto o bloco `with` roda — usado por
+        `build_snapshot.montar_snapshot()` para que uma execução longa (hoje
+        ~9 min por causa do backoff de 429 da API Beehus) não veja o próprio
+        cache expirar no meio e refaça o trabalho que acabou de fazer.
+
+        A regra é estreita de propósito: só NÃO expira o que foi guardado
+        DEPOIS do congelamento começar. Um valor que já estava no cache antes
+        continua obedecendo o TTL normal — ou seja, a primeira leitura de uma
+        execução continua buscando dado fresco (não serve um valor de horas
+        atrás só porque alguém congelou agora), e a partir daí ela reaproveita
+        o que ela mesma buscou até terminar. Reentrante e seguro entre threads
+        (2 navegadores podem estar atualizando ao mesmo tempo): conta os
+        congelamentos em curso e só descongela quando o último sai, sempre por
+        `finally` (uma exceção no meio nunca deixa o cache congelado pra
+        sempre). Não retorna nada de útil.
+
+        Pseudocódigo:
+          1. Ao entrar: incrementa o contador e, se for o primeiro, marca o
+             instante do congelamento.
+          2. Entrega o controle ao bloco `with`.
+          3. Ao sair (sempre, mesmo com exceção): decrementa e, se foi o
+             último, limpa a marca — o TTL volta a valer normalmente.
+        """
+        with self._lock:
+            if self._congelamentos == 0:
+                self._congelado_desde = time.monotonic()
+            self._congelamentos += 1
+        try:
+            yield
+        finally:
+            with self._lock:
+                self._congelamentos -= 1
+                if self._congelamentos <= 0:
+                    self._congelamentos = 0
+                    self._congelado_desde = None
 
     def obter(self, chave):
         """Contexto: devolve o valor cacheado de `chave` se ainda dentro do
@@ -163,14 +217,19 @@ class CacheTTL:
 
         Pseudocódigo:
           1. Se a chave nunca foi guardada, devolve None.
-          2. Se já passou do TTL desde que foi guardada, devolve None
+          2. Se há um congelamento em curso (ver `congelado()`) e o valor foi
+             guardado DEPOIS que ele começou, devolve o valor sem olhar o TTL.
+          3. Se já passou do TTL desde que foi guardada, devolve None
              (expirado — força quem chamou a recalcular).
-          3. Senão, devolve o valor guardado.
+          4. Senão, devolve o valor guardado.
         """
         item = self._valores.get(chave)
         if item is None:
             return None
         valor, guardado_em = item
+        congelado_desde = self._congelado_desde
+        if congelado_desde is not None and guardado_em >= congelado_desde:
+            return valor
         if time.monotonic() - guardado_em > self._ttl:
             return None
         return valor

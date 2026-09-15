@@ -42,6 +42,8 @@ import datetime as dt
 from collections import defaultdict
 
 import db
+import progresso_atualizacao
+from cache import cache_ttl_colecoes
 from registry import ler_linhas_do_template, montar_registry_validado
 from snapshot_builder import (
     compute_wallet_row, compute_groupings_rows, definir_limiares_divergencia,
@@ -137,6 +139,37 @@ def _ler_controle_upload_custodiantes():
 def montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=False,
                      limiar_divergencia_pct=None, limiar_divergencia_reais=None):
     """Contexto:
+    Ponto de entrada público do build — fino de propósito (CLAUDE.md §3): só
+    embrulha `_montar_snapshot()` nos dois contextos que valem para a
+    execução INTEIRA, e delega todo o resto. Mesmos argumentos e mesmo
+    retorno de sempre (o dict do snapshot) — nenhum chamador precisou mudar.
+
+    Os dois contextos [2026-09-15, relato do usuário: "estou mudando a data,
+    dando um atualizar e não está mudando"]:
+      - `cache_ttl_colecoes.congelado()` — o TTL de 120s das coleções
+        pequenas vencia no meio desta execução (que hoje leva ~9 min) e
+        fazia o registry inteiro, incluindo 1 `get_security()` por ativo de
+        explosão, ser buscado 2x no mesmo clique.
+      - `progresso_atualizacao.execucao()` — publica o andamento por etapa
+        pra tela poder mostrar "Atualizando… [3/6] ..." em vez de ficar 9
+        minutos muda (ver GET /api/atualizar/progresso em app.py).
+
+    Pseudocódigo:
+      1. Abre os dois contextos (cache congelado + publicação de progresso).
+      2. Chama _montar_snapshot() com os mesmos argumentos e devolve o que
+         ela devolver.
+    """
+    with cache_ttl_colecoes.congelado(), progresso_atualizacao.execucao():
+        return _montar_snapshot(
+            data_inicial=data_inicial, data_final=data_final,
+            forcar_atualizacao=forcar_atualizacao,
+            limiar_divergencia_pct=limiar_divergencia_pct,
+            limiar_divergencia_reais=limiar_divergencia_reais)
+
+
+def _montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=False,
+                     limiar_divergencia_pct=None, limiar_divergencia_reais=None):
+    """Contexto:
     Ponto de entrada principal — monta o snapshot completo (mesma estrutura
     de sempre: meta/wallets/groupings/custodianUpload). Se `data_inicial`/
     `data_final` não forem passados, usa a janela DEFAULT enxuta (5 dias
@@ -186,11 +219,13 @@ def montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=False
     t_total0 = time.monotonic()
     hoje = dt.date.today().isoformat()
 
+    progresso_atualizacao.iniciar_etapa(1, "lendo cadastro e coleções")
     print(f"[1/6] Lendo cadastro + coleções pequenas da API Beehus...")
     registry, registry_por_id, wallet_ids, empresas_por_id, agrupamentos_por_id, orfas = \
         _carregar_registry(timings)
     print(f"      {len(registry)} carteiras casadas com `wallets`; {len(orfas)} órfãs.")
 
+    progresso_atualizacao.iniciar_etapa(2, "calendário e janela")
     print("[2/6] Calendário ANBIMA + janela do grid...")
     calendario = CalendarioDiasUteis()
     print(f"      fonte do calendário: {calendario.fonte}")
@@ -203,8 +238,12 @@ def montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=False
         print(f"      janela DEFAULT (5du/D-3): {janela[0]}..{janela[-1]} ({len(janela)} du)")
     data_extra_gate_sequencia = calendario.deslocar(janela[0], -1)  # 1du a mais p/ checar gate de sequência do 1º dia visível
 
-    print("[3/6] Buscando dados da esteira (cache-aware por data)...")
     todas_datas_pedidas = [data_extra_gate_sequencia] + janela
+    # Sem `passos_total` aqui de propósito: quem sabe quantas consultas esta
+    # etapa vai fazer é o fan-out de db.py (data × empresa × tipo), que
+    # declara o total com definir_total_passos() assim que monta a fila.
+    progresso_atualizacao.iniciar_etapa(3, "buscando dados da esteira")
+    print("[3/6] Buscando dados da esteira (cache-aware por data)...")
     if forcar_atualizacao:
         db.invalidar_cache_esteira(todas_datas_pedidas)
         print(f"      forçando atualização — cache invalidado pra {len(todas_datas_pedidas)} data(s)")
@@ -218,6 +257,7 @@ def montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=False
         if isinstance(v, float):
             print(f"        - {k}: {v:.3f}s")
 
+    progresso_atualizacao.iniciar_etapa(4, "calculando células e agrupamentos")
     print("[4/6] Calculando células, prioridade e agrupamentos...")
     datas_processadas_por_carteira = defaultdict(set)
     for (wallet_id, data) in pro_map.keys():
@@ -259,11 +299,13 @@ def montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=False
     for r in linhas_agrupamentos:
         contagem_blocos[r["bloco"]] += 1
 
+    progresso_atualizacao.iniciar_etapa(5, "lendo ControleUpload.xlsx")
     print("[5/6] Lendo ControleUpload.xlsx (aba Controle de Cargas — custodiantes)...")
     t0 = time.monotonic()
     custodian_upload = _ler_controle_upload_custodiantes()
     timings["controle_upload_xlsx"] = time.monotonic() - t0
 
+    progresso_atualizacao.iniciar_etapa(6, "montando snapshot final")
     print("[6/6] Montando snapshot final...")
     timings["total"] = time.monotonic() - t_total0
 

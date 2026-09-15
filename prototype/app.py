@@ -99,6 +99,7 @@ from flask import Flask, jsonify, request, send_from_directory, session
 
 from beehus_api import BeehusAPIError, BeehusAuthError, bind_session_id, clear_token, set_token, token_status, verify_token
 from build_snapshot import montar_snapshot, escrever_snapshot_json
+import progresso_atualizacao
 from pages.controle_demandas import bp as controle_demandas_bp
 from pages.anomalias import bp as anomalias_bp
 from snapshot_builder import LIMIAR_DIVERGENCIA_PADRAO, LIMIAR_DIVERGENCIA_REAIS_PADRAO
@@ -1205,6 +1206,27 @@ def atualizar_snapshot():
         return jsonify({"error": _mensagem_amigavel_erro_atualizacao(exc)}), 500
 
     return jsonify(snapshot)
+
+
+@app.route("/api/atualizar/progresso", methods=["GET"])
+def atualizar_progresso():
+    """Contexto:
+    Andamento do `/api/atualizar` que ESTA sessão de navegador tem em curso —
+    consultada de 2 em 2 segundos pela tela (ControleCargas.acompanharProgresso,
+    static/js/controle_cargas/progresso.js) enquanto o fetch do Atualizar não
+    voltou. Devolve o dict de progresso_atualizacao.status(), sempre 200:
+    `{"emAndamento": false}` quando não há nada rodando.
+
+    [2026-09-15, relato do usuário: "tentei novamente, ficou atualizando e não
+    foi para o dia 09/09"] Existe porque um Atualizar leva ~9 min (rate limit
+    da API Beehus, ver beehus_api/client.py) e o botão ficava esse tempo todo
+    em "Atualizando..." sem nenhum sinal de vida — indistinguível de travado,
+    o que levava a clicar de novo e dobrar a carga em cima do mesmo limite.
+
+    Pseudocódigo:
+      1. Delega direto pra progresso_atualizacao.status() (que lê o sid da
+         sessão amarrado pelo before_request, igual ao token). """
+    return jsonify(progresso_atualizacao.status())
 
 
 def atualizar_snapshot_no_boot():
