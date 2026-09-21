@@ -60,6 +60,19 @@
     <button type="button" class="alert-banner-close" id="alerta-atualizacao-fechar" title="Fechar">×</button>
   </div>
 
+  <!-- [2026-09-21, decisão do usuário: "esses dados ... precisam estar na rede,
+       nós editamos isso em várias pessoas"] Faixa informativa (azul-esverdeada,
+       não vermelha como a de erro acima) que avisa quando comentários/anotações
+       gravados por OUTRA pessoa chegaram pela pasta compartilhada. O botão
+       "Aplicar" só aparece quando não dava pra repintar sozinho (modal aberto
+       ou alguém digitando). Ver static/js/controle_cargas/sincronizacao.js. -->
+  <div class="alert-banner info" id="alerta-sincronizacao" style="display:none;">
+    <span class="alert-banner-icon">↻</span>
+    <span class="alert-banner-text" id="alerta-sincronizacao-texto"></span>
+    <button type="button" class="alert-banner-acao" id="alerta-sincronizacao-aplicar" style="display:none;">Aplicar</button>
+    <button type="button" class="alert-banner-close" id="alerta-sincronizacao-fechar" title="Fechar">×</button>
+  </div>
+
   <div class="kpi-row" id="kpi-row">
     <div class="publish-card" id="publish-card"></div>
     <div class="publish-card" id="grouping-publish-card" style="display:none;"></div>
@@ -548,6 +561,7 @@
 <script src="/static/js/controle_cargas/exportar.js"></script>
 <script src="/static/js/controle_cargas/progresso.js"></script>
 <script src="/static/js/controle_cargas/atualizar.js"></script>
+<script src="/static/js/controle_cargas/sincronizacao.js"></script>
 <script src="/static/js/controle_cargas/beehus_token.js"></script>
 <script src="/static/js/controle_cargas/index.js"></script>
 

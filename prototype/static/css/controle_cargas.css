@@ -755,3 +755,21 @@ td.col-cust, th.hdr-cust{
   padding:0 4px; flex:none; opacity:.7;
 }
 .alert-banner-close:hover{opacity:1;}
+
+/* [2026-09-21, decisão do usuário: "esses dados ... precisam estar na rede,
+   nós editamos isso em várias pessoas"] Variante INFORMATIVA da faixa acima,
+   para a chegada de comentários/anotações gravados por outra pessoa na pasta
+   compartilhada (#alerta-sincronizacao). Reusa toda a caixa do .alert-banner
+   e troca só a paleta — vermelho é o alerta de FALHA e não pode ser
+   canibalizado por uma notificação de rotina, que aparece várias vezes por
+   dia. Os tokens --state-pro-* já existem nos 3 blocos de tema (claro,
+   escuro e automático), então a faixa acompanha o tema sem regra nova. */
+.alert-banner.info{
+  background:var(--state-pro-bg); color:var(--state-pro-fg); border-color:var(--state-pro-fg);
+}
+.alert-banner-acao{
+  background:var(--state-pro-fg); color:var(--state-pro-bg); border:none;
+  border-radius:6px; padding:4px 12px; font-size:12px; font-weight:700; cursor:pointer;
+  flex:none;
+}
+.alert-banner-acao:hover{opacity:.85;}
