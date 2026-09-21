@@ -101,6 +101,38 @@ em 21/09/2026), então comentários do dia aparecem de qualquer jeito — mas os
 
 ---
 
+## Trabalhando em várias pessoas ao mesmo tempo
+
+Comentário com período de vigência, Responsável, comentário de atuação, demandas e
+plano de ação das anomalias ficam **todos na pasta compartilhada do OneDrive** — são
+os quatro arquivos `alert_comments.json`, `wallet_annotations.json`,
+`controle_demandas.json` e `anomalias.json`. Não existe cópia sua: o que você salva
+vai para o arquivo do time.
+
+**O que acontece quando o colega salva algo:**
+
+1. O OneDrive sincroniza o arquivo (segundos a minutos).
+2. A sua tela consulta o servidor **a cada 60 segundos**, e também **sempre que você
+   volta para a aba**.
+3. Chegando novidade, aparece a faixa azul-esverdeada `↻ N comentário(s) novo(s)...`
+   e a matriz se atualiza sozinha.
+
+Se você estiver com um modal aberto ou digitando numa célula, a tela **não** se repinta
+no meio da sua ação — a faixa mostra o botão **Aplicar** e você decide a hora.
+
+**Suas edições não salvas nunca são apagadas** por essa atualização automática: o que
+está no `Salvar (N)` continua valendo por cima do que chegou.
+
+**O único caso que ainda perde:** duas pessoas editando a **mesma linha, na mesma data
+de referência**, antes de o OneDrive sincronizar. Aí vale quem salvou por último. A tela
+avisa quando isso está prestes a acontecer — a faixa acrescenta *"N linha(s) que você
+editou e ainda não salvou também foram alteradas por outra pessoa"*. Se aparecer, vale
+combinar no chat antes de salvar.
+
+**Cópia de conflito do OneDrive** (`wallet_annotations-SUAMAQUINA.json` e afins): o app
+detecta, incorpora o conteúdo e arquiva o arquivo em `data/_conflitos_resolvidos/`
+sozinho — **nunca apague essas cópias na mão**, deixe o app processar.
+
 ## Problemas comuns
 
 | Sintoma | Causa provável | O que fazer |

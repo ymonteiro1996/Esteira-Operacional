@@ -1520,6 +1520,22 @@ Análise original (mantida como registro do trade-off, para retomar se a decisã
 
 **Mitigação do risco de escrita concorrente (aceito, não bloqueador):** o arquivo é pequeno (comentários, não milhares de linhas), a leitura sempre recarrega do disco antes de escrever (last-write-wins simples, sem merge), e o app roda hoje para poucos analistas simultâneos. Se o time crescer ou a colisão virar problema real observado em produção, a mesma trilha de decisão desta seção (tabela acima) já está pronta para justificar a migração para uma collection Mongo — é uma troca de `comments.py` internamente, sem mudar o contrato da API (`GET`/`POST /api/comments`) nem o schema dos campos.
 
+### Decisão REVISITADA (2026-09-21): continua em JSON no OneDrive, agora com propagação automática
+
+**[decisão do usuário: "esses dados que manipulamos, como comentário em período de datas, responsável, plano de ação, precisam estar na rede, nós editamos isso em várias pessoas" + "vamos hospedar no one drive mesmo"]** O gatilho previsto acima ("se a colisão virar problema real observado em produção") foi atingido — `data/_conflitos_resolvidos/` acumulou cópias de conflito reais de `wallet_annotations.json` de duas máquinas (`DESKTOP-SOBM6K9` em 03/09, `OWSAO042` em 08/09). As alternativas foram colocadas na mesa (servidor central do app, pasta de rede SMB, collection dedicada) e **o usuário decidiu manter os quatro arquivos JSON na pasta do OneDrive**, que segue sendo a fonte compartilhada do time.
+
+O que a revisão mudou, sem trocar o meio de persistência:
+
+| Lacuna | Situação antes | Agora |
+|---|---|---|
+| Escrita concorrente no mesmo processo | `RLock` por arquivo + escrita atômica (`os.replace`) | inalterado — coberto e testado (8 POSTs simultâneos, nenhum comentário perdido) |
+| Cópia de conflito do OneDrive | auto-mesclada, mas só quando alguém recarregava a página | `_load_*()` é chamada de minuto em minuto pela sincronização da tela, então a auto-cura roda sozinha |
+| Ver o que o colega gravou | só no bootstrap ou depois de um "Atualizar" manual | `sincronizacao.js` consulta a cada 60s e quando a aba volta a ficar visível |
+| Edição da MESMA chave por 2 pessoas | last-writer-wins silencioso, desempatado por `updatedAt` | continua last-writer-wins (**limite aceito**), mas a tela agora avisa quando a alteração que chegou colide com uma linha sua ainda não salva |
+
+**Limite que permanece aceito, explicitamente:** isto não é lock distribuído. Duas pessoas editando a MESMA anotação (mesma carteira, mesma data de referência) dentro da janela de sincronização continuam resolvendo por `updatedAt` — uma versão vence e a outra é descartada. O que deixou de existir é a perda *invisível*: quem estava com a tela aberta passa a ver a alteração chegar.
+
+
 ### Schema
 
 ```js
