@@ -1,3 +1,10 @@
 Flask==2.3.3
 requests==2.32.3
 openpyxl==3.0.10
+# [2026-09-21] bizdays JÁ era usado pelo código (utils/datas.py —
+# CalendarioDiasUteis), só não estava declarado aqui. Sem ele o import cai
+# num fallback "seg-sex sem feriados", e a janela do grid de quem acabou de
+# clonar o projeto fica DIFERENTE da de quem tem o pacote instalado toda vez
+# que a semana tem feriado. Declarar não muda o comportamento de quem já
+# rodava — só faz uma máquina nova nascer igual às outras.
+bizdays==1.0.19

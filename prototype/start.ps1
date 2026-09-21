@@ -38,6 +38,25 @@ if ($existing) {
     }
 }
 
+# [2026-09-21] Garante as dependencias ANTES de subir. Quem acabou de dar
+# `git clone`/`git pull` numa maquina nova nao tem Flask/requests/openpyxl/
+# bizdays instalados, e o app.py morria no import com a janela oculta
+# (-WindowStyle Hidden), sem deixar pista nenhuma na tela. O teste e 1 import
+# por pacote (barato, ~0,3s); o pip so roda quando realmente falta algo.
+$checagemDeDependencias = "import flask, requests, openpyxl, bizdays"
+python -c $checagemDeDependencias 2>$null
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[ControleCargas] Instalando dependencias de requirements.txt (primeira execucao nesta maquina)..."
+    python -m pip install -r (Join-Path $scriptDir "requirements.txt")
+    python -c $checagemDeDependencias 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ControleCargas] Nao foi possivel instalar as dependencias." -ForegroundColor Red
+        Write-Host "[ControleCargas] Rode manualmente: python -m pip install -r requirements.txt" -ForegroundColor Yellow
+        Read-Host "Pressione Enter para fechar"
+        exit 1
+    }
+}
+
 # stdout/stderr capturados em arquivo — um crash em tempo de import (ex.:
 # dependência faltando) fica visível em vez de a janela oculta sumir sem
 # pista nenhuma.
