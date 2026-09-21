@@ -58,24 +58,68 @@ atualizarBotaoTokenBeehus(){
    Pseudocódigo:
      1. Monta o HTML (explicação + campo + mensagem de status + botão).
      2. Abre o modal genérico.
-     3. Liga o clique do botão "Validar e salvar" e o Enter no campo. */
+     3. Liga o clique do botão "Validar e salvar", o Enter no campo e o
+        botão "mostrar/ocultar".
+
+   [2026-09-21, relato do usuário: "não está conseguindo colar o token"] O
+   campo continua `type="password"` por ser uma credencial, mas ganhou (a) o
+   botão 👁 pra conferir o que foi colado e (b) o contador de caracteres, que
+   é o sinal mais direto de que o Ctrl+V pegou — antes, num campo mascarado
+   e sem retorno nenhum, não dava pra distinguir "não colou" de "colou
+   errado". O aviso sobre `Bearer `/aspas é o par visível da limpeza que o
+   backend faz (beehus_api/client.py::normalizar_token_colado). */
 abrirModalTokenBeehus(){
   const html = `
     <h2>Token da API Beehus</h2>
     <p>Cole o token de hoje (válido por 1 dia — a Beehus renova todo dia). Ele fica
     só na memória deste servidor (nunca sincroniza no OneDrive) e é perdido a cada
     restart — é preciso colar de novo quando isso acontecer ou quando expirar.</p>
-    <input type="password" id="input-beehus-token" style="width:100%;box-sizing:border-box;padding:8px;font-family:monospace;font-size:12.5px;"
-      placeholder="eyJ...">
+    <div style="display:flex;gap:6px;align-items:stretch;">
+      <input type="password" id="input-beehus-token" style="flex:1;min-width:0;box-sizing:border-box;padding:8px;font-family:monospace;font-size:12.5px;"
+        placeholder="eyJ...">
+      <button class="btn" type="button" id="btn-ver-beehus-token" title="Mostrar/ocultar o token digitado">👁</button>
+    </div>
+    <p class="psub" id="beehus-token-contagem">Nada colado ainda.</p>
+    <p class="psub">Pode colar com o prefixo <code>Bearer</code> ou entre aspas, e mesmo
+    quebrado em várias linhas — o app limpa antes de usar.</p>
     <p class="modal-status-msg" id="beehus-token-msg"></p>
     <div style="margin-top:8px;">
       <button class="btn" id="btn-salvar-beehus-token">Validar e salvar</button>
     </div>`;
   ControleCargas.openModal(html);
+  const input = document.getElementById('input-beehus-token');
   document.getElementById('btn-salvar-beehus-token').addEventListener('click', ControleCargas.salvarTokenBeehus);
-  document.getElementById('input-beehus-token').addEventListener('keydown', (e)=>{
+  document.getElementById('btn-ver-beehus-token').addEventListener('click', ()=>{
+    input.type = (input.type === 'password') ? 'text' : 'password';
+    input.focus();
+  });
+  input.addEventListener('input', ControleCargas.atualizarContagemTokenBeehus);
+  input.addEventListener('keydown', (e)=>{
     if(e.key==='Enter') ControleCargas.salvarTokenBeehus();
   });
+  input.focus();
+},
+
+/* Contexto:
+   Escreve embaixo do campo quantos caracteres já foram colados — ligada ao
+   evento `input` do campo em abrirModalTokenBeehus(). É o retorno visual que
+   faltava pra pessoa saber que o Ctrl+V funcionou num campo mascarado
+   [2026-09-21, relato do usuário: "não está conseguindo colar o token"].
+   Não retorna nada.
+
+   Pseudocódigo:
+     1. Campo vazio -> frase neutra "Nada colado ainda.".
+     2. Senão, mostra a contagem de caracteres e um alerta quando o valor
+        não parece um JWT (um JWT tem 3 partes separadas por ponto). */
+atualizarContagemTokenBeehus(){
+  const campoContagem = document.getElementById('beehus-token-contagem');
+  const input = document.getElementById('input-beehus-token');
+  if(!campoContagem || !input) return;   // modal já fechado — nada a escrever
+  const valor = (input.value || '').trim();
+  if(!valor){ campoContagem.textContent = 'Nada colado ainda.'; return; }
+  const pareceJwt = valor.replace(/^["']|["']$/g, '').replace(/^\s*bearer\s+/i, '').split('.').length === 3;
+  campoContagem.textContent = `${valor.length} caracteres colados`
+    + (pareceJwt ? ' — formato de token OK.' : ' — não parece um token (esperado: 3 partes separadas por ponto).');
 },
 
 /* Contexto:
@@ -89,10 +133,17 @@ abrirModalTokenBeehus(){
      1. Campo vazio -> mensagem de erro, sem chamar o backend.
      2. Chama POST /api/beehus-token; {error:...} (401/400) -> mostra a
         mensagem em vermelho; {warning:...} (token salvo mas não validado
-        agora, ex. API fora do ar) -> mensagem neutra, ainda fecha o modal.
+        agora, ex. API fora do ar) -> mensagem neutra e o modal FICA ABERTO.
      3. Sucesso -> mensagem verde, atualiza o botão da masthead, fecha o
         modal e dispara executarAtualizacao() (atualizar.js) pra já carregar
-        dado fresco com o token recém-colado. */
+        dado fresco com o token recém-colado.
+
+   [2026-09-21, relato do usuário: "não está conseguindo colar o token"] O
+   caso `warning` ANTES também fechava o modal, logo depois de escrever a
+   mensagem — ou seja, a pessoa colava, a janela sumia, nada carregava e não
+   restava nenhum aviso na tela de que a API não tinha respondido. Agora o
+   modal só fecha quando a API confirmou o token de verdade; o aviso fica
+   visível, com o botão disponível pra tentar de novo. */
 salvarTokenBeehus(){
   const input = document.getElementById('input-beehus-token');
   const msg = document.getElementById('beehus-token-msg');
@@ -109,8 +160,13 @@ salvarTokenBeehus(){
       if(!ok){ msg.textContent = data.error || 'Falha ao validar o token.'; msg.classList.add('err'); return; }
       ControleCargas.state.tokenBeehusOk = true;
       ControleCargas.atualizarBotaoTokenBeehus();
-      msg.textContent = data.warning ? `Token salvo (${data.warning})` : 'Token válido — salvo com sucesso.';
-      msg.classList.add(data.warning ? '' : 'ok');
+      if(data.warning){
+        msg.textContent = `Token salvo, mas a API não respondeu para validar (${data.warning}). `
+          + 'Clique em "Validar e salvar" de novo para tentar outra vez, ou feche e use o botão Atualizar.';
+        return;   // modal fica aberto de propósito — ver docstring acima
+      }
+      msg.textContent = 'Token válido — salvo com sucesso.';
+      msg.classList.add('ok');
       ControleCargas.closeModal();
       ControleCargas.executarAtualizacao();
     })

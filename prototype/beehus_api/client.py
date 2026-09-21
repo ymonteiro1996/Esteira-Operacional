@@ -305,16 +305,53 @@ def _load_persisted_sessions() -> None:
         pass
 
 
+def normalizar_token_colado(token: str) -> str:
+    """Contexto:
+    Limpa o que vem junto do token quando a pessoa COPIA de outro lugar, pra
+    que só o JWT puro chegue ao cabeçalho `Authorization` — chamada por
+    set_token() antes de guardar. Retorna string (pode ser vazia; quem chama
+    decide o que fazer com isso).
+
+    [2026-09-21, relato do usuário: "não está conseguindo colar o token"] A
+    forma mais comum de pegar o token é o DevTools do navegador, e os dois
+    caminhos usuais devolvem lixo colado no JWT: "Copy value" do cabeçalho
+    Authorization traz o prefixo `Bearer `, e copiar de um JSON/log traz as
+    aspas em volta. Sem esta limpeza o app montava `Authorization: Bearer
+    Bearer eyJ...` (ou com aspas), a API respondia 401 e a tela só dizia
+    "Token rejeitado pela API" — a pessoa colava o token CERTO várias vezes
+    e era recusada, sem nenhuma pista do motivo. Quebras de linha e espaços
+    no meio (colagem de um token quebrado em várias linhas na tela) tinham
+    o mesmo efeito.
+
+    Pseudocódigo:
+      1. Tira espaços/quebras das pontas.
+      2. Tira aspas simples ou duplas que envolvam o valor inteiro.
+      3. Quebra por espaço em branco e descarta os pedaços iniciais que
+         sejam a palavra "Bearer" (em qualquer caixa) — repetido de
+         propósito, porque colagem dupla acontece.
+      4. Junta o que sobrou sem separador nenhum: um JWT nunca tem espaço
+         no meio, então o que restar de quebra de linha é lixo da colagem.
+    """
+    texto = (token or "").strip()
+    for aspas in ('"', "'"):
+        if len(texto) >= 2 and texto.startswith(aspas) and texto.endswith(aspas):
+            texto = texto[1:-1].strip()
+    pedacos = texto.split()
+    while pedacos and pedacos[0].lower() == "bearer":
+        pedacos.pop(0)
+    return "".join(pedacos)
+
+
 def set_token(token: str) -> None:
     """Contexto:
     Guarda o token bearer na sessão AMARRADA NESTA THREAD (bind_session_id())
     e persiste todas as sessões a disco — chamada pela rota POST
-    /api/beehus-token (app.py), 1x por dia por pessoa. Espaços em branco são
-    removidos; vazio é rejeitado. Levanta RuntimeError se chamada sem sessão
-    amarrada (só pode acontecer fora de uma requisição Flask — nunca deveria
-    ocorrer nas rotas reais). É o ÚNICO lugar que CRIA uma entrada nova em
-    `_sessions` (ver _sessao_atual() sobre por que as leituras nunca criam).
-    Não retorna nada.
+    /api/beehus-token (app.py), 1x por dia por pessoa. O valor colado passa
+    por normalizar_token_colado() antes de ser guardado; vazio é rejeitado.
+    Levanta RuntimeError se chamada sem sessão amarrada (só pode acontecer
+    fora de uma requisição Flask — nunca deveria ocorrer nas rotas reais). É
+    o ÚNICO lugar que CRIA uma entrada nova em `_sessions` (ver
+    _sessao_atual() sobre por que as leituras nunca criam). Não retorna nada.
 
     Pseudocódigo:
       1. Normaliza e valida o token (não vazio).
@@ -322,7 +359,7 @@ def set_token(token: str) -> None:
       3. Cria/acha o estado da sessão atual, grava token/set_at, zera
          `rejected` (token novo, ainda não provado ruim) e persiste todas as
          sessões a disco. """
-    t = (token or "").strip()
+    t = normalizar_token_colado(token)
     if not t:
         raise ValueError("token is empty")
     with _lock:
