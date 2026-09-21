@@ -51,7 +51,7 @@ from snapshot_builder import (
     LIMIAR_DIVERGENCIA_PADRAO, LIMIAR_DIVERGENCIA_REAIS_PADRAO,
 )
 from utils.datas import CalendarioDiasUteis, calcular_janela_grid, GRID_REFERENCE_LAG_DU
-from utils.caminhos import resolver_data_dir
+from utils.caminhos import diagnosticar_data_dir, resolver_data_dir
 from excel_report import write_excel_report
 
 # Ingestão do ControleUpload.xlsx (aba "Controle de Cargas" — custodiantes).
@@ -390,6 +390,9 @@ def escrever_snapshot_json(snapshot):
 
 
 if __name__ == "__main__":
+    # [2026-09-21] Mesma 1ª linha de log do app.py: de qual pasta vem o
+    # TemplateCarteiras.xlsx — ver diagnosticar_data_dir() em utils/caminhos.py.
+    print(diagnosticar_data_dir(HERE)[1])
     snap = montar_snapshot()
     escrever_snapshot_json(snap)
 

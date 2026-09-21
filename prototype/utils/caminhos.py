@@ -48,3 +48,40 @@ def resolver_data_dir(raiz_projeto):
     if _CAMINHO_ONEDRIVE_DATA.is_dir():
         return str(_CAMINHO_ONEDRIVE_DATA)
     return os.path.join(raiz_projeto, "data")
+
+
+def diagnosticar_data_dir(raiz_projeto):
+    """Contexto:
+    Explica, em uma frase, DE ONDE veio o DATA_DIR que resolver_data_dir()
+    escolheu e se essa origem é a pasta COMPARTILHADA do time ou uma cópia
+    local isolada. Chamada no boot por app.py e build_snapshot.py só pra
+    imprimir. Retorna (caminho, mensagem) — a mensagem já vem pronta para
+    print(), com "AVISO:" na frente quando o app caiu na pasta local.
+
+    [2026-09-21, achado do usuário: "não está aparecendo os comentários do
+    dia para um colega de time"] O fallback da etapa 3 de resolver_data_dir()
+    era SILENCIOSO: numa máquina sem o OneDrive corporativo sincronizado (ou
+    com a biblioteca do SWAT em outro caminho), o app subia normalmente e
+    passava a ler/gravar `prototype/data/` do próprio clone — uma ilha, sem
+    os comentários, anotações e o TemplateCarteiras.xlsx do time. Pra quem
+    estava do lado de fora, o sintoma era exatamente "os comentários não
+    aparecem", sem nenhum erro na tela nem no log.
+
+    Pseudocódigo:
+      1. Resolve o caminho (mesma função de sempre — nenhuma regra nova).
+      2. Identifica qual das 3 origens venceu: variável de ambiente, OneDrive
+         corporativo ou fallback local.
+      3. Monta a frase correspondente (a do fallback vira AVISO).
+    """
+    caminho = resolver_data_dir(raiz_projeto)
+    if os.environ.get("CONTROLECARGAS_DATA_DIR"):
+        return caminho, f"[ControleCargas] DATA_DIR (via CONTROLECARGAS_DATA_DIR): {caminho}"
+    if _CAMINHO_ONEDRIVE_DATA.is_dir():
+        return caminho, f"[ControleCargas] DATA_DIR (OneDrive compartilhado do time): {caminho}"
+    return caminho, (
+        f"AVISO: a pasta compartilhada do time NAO foi encontrada em {_CAMINHO_ONEDRIVE_DATA}.\n"
+        f"       Usando a copia LOCAL {caminho} — comentarios, anotacoes e o\n"
+        "       TemplateCarteiras.xlsx desta maquina ficam ISOLADOS do resto do time.\n"
+        "       Sincronize a biblioteca 'Beehus Tecnologia Ltda - Documentos' no OneDrive\n"
+        "       ou aponte a variavel de ambiente CONTROLECARGAS_DATA_DIR para a pasta certa."
+    )

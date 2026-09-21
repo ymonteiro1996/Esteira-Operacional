@@ -104,7 +104,7 @@ from pages.controle_demandas import bp as controle_demandas_bp
 from pages.anomalias import bp as anomalias_bp
 from snapshot_builder import LIMIAR_DIVERGENCIA_PADRAO, LIMIAR_DIVERGENCIA_REAIS_PADRAO
 from utils.datas import CalendarioDiasUteis, GRID_REFERENCE_LAG_DU, JANELA_INICIAL_DIAS_UTEIS, calcular_janela_grid
-from utils.caminhos import resolver_data_dir
+from utils.caminhos import diagnosticar_data_dir, resolver_data_dir
 
 HERE = Path(__file__).resolve().parent
 # [2026-08-25, decisão do usuário: "consumirmos de um diretório" separado do código
@@ -1258,6 +1258,11 @@ def atualizar_snapshot_no_boot():
 
 
 if __name__ == "__main__":
+    # [2026-09-21] 1ª linha do log de boot: de onde vem o dado compartilhado.
+    # Quando a pasta do time não é encontrada o app continua subindo (como
+    # sempre), mas agora dizendo em voz alta que está numa cópia isolada —
+    # ver diagnosticar_data_dir() em utils/caminhos.py.
+    print(diagnosticar_data_dir(HERE)[1])
     atualizar_snapshot_no_boot()
     # port 5050, use_reloader=False — o reloader do Flask faz spawn de
     # subprocess usando o path completo do arquivo, e o path do OneDrive tem
