@@ -29,6 +29,11 @@
      desenhado — script bloqueante de propósito (sem defer/async), pra não
      haver 1 frame de flash com o tema errado. Ver static/js/utils/tema.js. -->
 <script src="/static/js/utils/tema.js"></script>
+<!-- [2026-09-21] Helper de data do relógio local (aaaa-mm-dd), usado pela
+     vigência dos comentários (comentarios.js). No <head> junto do tema por
+     ser genérico e sem dependência de DOM, garantindo que já exista quando
+     os scripts de tela do fim do <body> rodarem. -->
+<script src="/static/js/utils/datas.js"></script>
 </head>
 <body>
 

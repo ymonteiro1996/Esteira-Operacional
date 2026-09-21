@@ -37,9 +37,17 @@ isVigente(c, todayStr){
    Pseudocódigo:
      1. Filtra COMMENTS pelo alvo pedido.
      2. Separa em vigentes/expirados via isVigente() e ordena cada lista por
-        createdAt decrescente. */
+        createdAt decrescente.
+
+   [CORRIGIDO 2026-09-21, achado do usuário: "não está aparecendo os
+   comentários do dia para um colega de time"] O "hoje" vem de
+   UtilsDatas.hojeISO() (relógio local), NÃO mais de
+   SNAPSHOT.meta.today — aquele é a data em que o snapshot foi MONTADO e
+   fica congelada no passado sempre que o "Atualizar" falha, o que fazia
+   todo comentário do dia cair na lista de expirados. Ver o cabeçalho de
+   static/js/utils/datas.js. */
 commentsForTarget(targetType, targetId){
-  const todayStr = ControleCargas.SNAPSHOT.meta.today;
+  const todayStr = UtilsDatas.hojeISO();
   const all = ControleCargas.COMMENTS.filter(c=> c.targetType===targetType && c.targetId===targetId);
   const vigentes = all.filter(c=> ControleCargas.isVigente(c, todayStr)).sort((a,b)=> b.createdAt.localeCompare(a.createdAt));
   const expirados = all.filter(c=> !ControleCargas.isVigente(c, todayStr)).sort((a,b)=> b.createdAt.localeCompare(a.createdAt));
@@ -235,7 +243,13 @@ commentsSectionHtml(targetType, targetId, cellDate){
   // vigência default: a data da CÉLULA clicada (De=Até=cellDate, já nasce
   // "pontual" nesse dia) — não "hoje" — ver correção 2026-07-27 na
   // docstring acima.
-  const dataVigenciaDefault = cellDate || ControleCargas.SNAPSHOT.meta.today;
+  // [CORRIGIDO 2026-09-21] Quando não há célula (comentário de LINHA), o
+  // default é o hoje do relógio local (UtilsDatas.hojeISO()), não mais
+  // SNAPSHOT.meta.today: com o snapshot congelado, o formulário nascia com
+  // uma data antiga nos campos De/Até e o comentário já era gravado
+  // expirado — foi o que aconteceu com os comentários de 04/09 da pasta do
+  // time, salvos com vigência 31/08 → 02/09.
+  const dataVigenciaDefault = cellDate || UtilsDatas.hojeISO();
   html += `<div class="comment-form" data-target-type="${targetType}" data-target-id="${ControleCargas.escAttr(targetId)}">
     <div class="sevbtns">
       <button type="button" class="sevbtn" data-sev="green">Verde</button>
