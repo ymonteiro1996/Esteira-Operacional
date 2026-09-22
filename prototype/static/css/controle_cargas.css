@@ -718,6 +718,12 @@ td.col-cust, th.hdr-cust{
   font-size:12.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);
   background:var(--surface-raised);color:var(--ink);
 }
+/* Dica no lugar dos chips de empresa enquanto o snapshot está vazio (antes do
+   1º Atualizar) — texto, não chip clicável, pra não parecer um filtro
+   [2026-09-22, relato do usuário: "não aparece mais a company para
+   selecionar"]. */
+.chip-dica{font-size:11px;color:var(--ink-faint);align-self:center;}
+
 /* Rodapé de diagnóstico (diagnostico.js) — sempre visível [2026-09-22,
    decisão do usuário], discreto no estado normal e em faixa de alerta quando
    a pasta de dados NÃO é a compartilhada do time (o caso em que o colega não

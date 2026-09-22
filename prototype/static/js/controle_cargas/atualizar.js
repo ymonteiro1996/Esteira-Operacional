@@ -162,47 +162,112 @@ preencherCamposDataAtualizar(){
 },
 
 /* Contexto:
+   Desenha as opções do seletor "Empresa" a partir da lista devolvida por
+   GET /api/empresas, preservando a escolha que a pessoa já tinha feito.
+   Chamada por preencherSelectEmpresas() quando a consulta dá certo. Não
+   retorna nada.
+
+   Pseudocódigo:
+     1. Limpa e recria "Todas as empresas" (value vazio = sem filtro, que é o
+        que /api/atualizar espera).
+     2. Uma opção por empresa, com value = companyId.
+     3. Restaura a escolha anterior; se ela não existe mais na lista, volta
+        pra "Todas as empresas". */
+desenharOpcoesEmpresas(empresas, escolhaAnterior){
+  const select = document.getElementById('empresa-atualizar');
+  if(!select) return;
+
+  select.innerHTML = '';
+  const todas = document.createElement('option');
+  todas.value = '';
+  todas.textContent = 'Todas as empresas';
+  select.appendChild(todas);
+
+  (empresas || []).forEach(({id, name})=>{
+    const opcao = document.createElement('option');
+    opcao.value = id;
+    opcao.textContent = name || id;
+    select.appendChild(opcao);
+  });
+
+  select.value = escolhaAnterior || '';
+  if(!select.value) select.value = '';
+},
+
+/* Contexto:
+   Diz na PRÓPRIA caixinha por que a lista de empresas não veio — chamada por
+   preencherSelectEmpresas() quando GET /api/empresas falha (401 sem token,
+   rede) ou devolve lista vazia. [2026-09-22, relato do usuário: "não aparece
+   mais a company para selecionar"] Antes o erro era engolido e o seletor
+   ficava só com "Todas as empresas", indistinguível de "esta conta não tem
+   empresa nenhuma" — a pessoa não tinha como saber que faltava colar o
+   token. Não retorna nada.
+
+   Pseudocódigo:
+     1. Sem o seletor no DOM, sai sem erro.
+     2. Mantém "Todas as empresas" (o Atualizar continua funcionando sem
+        filtro) e acrescenta 1 opção desabilitada com o motivo.
+     3. Deixa "Todas as empresas" selecionada. */
+marcarSelectEmpresasIndisponivel(motivo){
+  const select = document.getElementById('empresa-atualizar');
+  if(!select) return;
+
+  select.innerHTML = '';
+  const todas = document.createElement('option');
+  todas.value = '';
+  todas.textContent = 'Todas as empresas';
+  select.appendChild(todas);
+
+  const aviso = document.createElement('option');
+  aviso.value = '';
+  aviso.disabled = true;
+  aviso.textContent = `— ${motivo} —`;
+  select.appendChild(aviso);
+  select.value = '';
+},
+
+/* Contexto:
    Preenche o seletor "Empresa" da toolbar (#empresa-atualizar) com as
    empresas visíveis ao token (GET /api/empresas) [2026-09-22, pedido do
    usuário: "permitir selecionar data e company e depois dar um atualizar
-   clickando no botao"]. Chamada no bootstrap (init(), index.js) e de novo
-   depois que o usuário cola o token (salvarTokenBeehus, beehus_token.js) —
-   no 1º acesso a rota responde 401 (token ainda não colado) e o seletor
-   fica só com "Todas as empresas", então precisa de uma 2ª chance. Sempre
-   devolve uma Promise que resolve mesmo em falha (o seletor é opcional; a
-   tela continua utilizável com "Todas as empresas"). Não altera a escolha
-   do usuário.
+   clickando no botao"]. Chamada no bootstrap (init(), index.js), depois que
+   o usuário cola o token (salvarTokenBeehus, beehus_token.js) e depois de
+   cada Atualizar bem-sucedido — no 1º acesso a rota responde 401 (token
+   ainda não colado), então precisa dessas outras chances. Sempre devolve uma
+   Promise resolvida (o seletor é acessório; a tela continua utilizável com
+   "Todas as empresas"). Não altera a escolha do usuário.
 
    Pseudocódigo:
      1. Sem o seletor no DOM (versão antiga do HTML em cache), sai sem erro.
-     2. Guarda o valor escolhido agora, pra restaurar no fim.
-     3. Busca GET /api/empresas; erro/401 -> mantém o seletor como está.
-     4. Redesenha as opções: "Todas as empresas" + uma por empresa (value =
-        companyId, que é o que /api/atualizar espera).
-     5. Restaura a escolha anterior se ela ainda existir na lista nova. */
+     2. Guarda a escolha atual, pra restaurar depois de redesenhar.
+     3. Busca GET /api/empresas.
+     4. Deu certo e veio empresa -> desenha as opções.
+     5. Deu certo e veio lista vazia, ou falhou -> escreve o motivo DENTRO do
+        seletor (marcarSelectEmpresasIndisponivel), nunca deixa a caixinha
+        vazia em silêncio. */
 preencherSelectEmpresas(){
   const select = document.getElementById('empresa-atualizar');
   if(!select) return Promise.resolve();
-  const escolhaAtual = select.value;
+  const escolhaAnterior = select.value;
 
   return fetch('/api/empresas')
-    .then(r=>{ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
-    .then(({empresas})=>{
-      select.innerHTML = '';
-      const todas = document.createElement('option');
-      todas.value = '';
-      todas.textContent = 'Todas as empresas';
-      select.appendChild(todas);
-      (empresas || []).forEach(({id, name})=>{
-        const opcao = document.createElement('option');
-        opcao.value = id;
-        opcao.textContent = name || id;
-        select.appendChild(opcao);
-      });
-      select.value = escolhaAtual;
-      if(!select.value) select.value = '';
+    .then(r=> r.json().then(dados=> ({ok:r.ok, status:r.status, dados})))
+    .then(({ok, status, dados})=>{
+      if(!ok){
+        throw new Error(status===401
+          ? 'cole o token da API Beehus para listar as empresas'
+          : (dados.error || `falha ao listar empresas (HTTP ${status})`));
+      }
+      const empresas = dados.empresas || [];
+      if(!empresas.length){
+        ControleCargas.marcarSelectEmpresasIndisponivel('nenhuma empresa visível para este token');
+        return;
+      }
+      ControleCargas.desenharOpcoesEmpresas(empresas, escolhaAnterior);
     })
-    .catch(()=>{});
+    .catch(erro=>{
+      ControleCargas.marcarSelectEmpresasIndisponivel(erro.message || 'não foi possível listar as empresas');
+    });
 },
 
 /* Contexto:
@@ -390,6 +455,11 @@ enviarAtualizacao(){
       ControleCargas.esconderAlertaAtualizacao();
       ControleCargas.SNAPSHOT = data;
       ControleCargas.preencherCamposLimiarDivergencia();
+      // [2026-09-22, relato do usuário: "não aparece mais a company para
+      // selecionar"] Um Atualizar que deu certo prova que há token válido —
+      // é a hora de preencher o seletor se ele tiver nascido vazio (401 no
+      // carregamento da página, antes de o token ser colado).
+      ControleCargas.preencherSelectEmpresas();
       ControleCargas.state.frozen = null;
       ControleCargas.state.filtroValoresColuna.statusRef = null;
       ControleCargas.state.filtroValoresColuna.responsavel = null;

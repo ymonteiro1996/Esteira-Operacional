@@ -238,8 +238,13 @@ getGroupingBlocks(){
 
    Pseudocódigo:
      1. Monta o HTML dos chips de empresa (a partir de meta.companies).
-     2. Injeta no container #filters.
-     3. Liga o clique de cada chip: atualiza o filtro, descongela a ordem e
+     2. Snapshot ainda sem empresa nenhuma -> acrescenta uma dica explicando
+        que os chips aparecem depois do 1º Atualizar [2026-09-22, relato do
+        usuário: "não aparece mais a company para selecionar"]. Desde que a
+        tela deixou de consultar sozinha ao carregar (mesma data), o snapshot
+        nasce vazio e esta faixa ficava com um chip só, sem explicação.
+     3. Injeta no container #filters.
+     4. Liga o clique de cada chip: atualiza o filtro, descongela a ordem e
         reconstrói a UI + a matriz. */
 buildFilters(){
   const el = document.getElementById('filters');
@@ -248,6 +253,9 @@ buildFilters(){
   companies.forEach(c=>{
     html += `<span class="chip ${ControleCargas.state.company===c?'on':''}" data-company="${ControleCargas.escAttr(c)}">${ControleCargas.esc(c)}</span>`;
   });
+  if(!companies.length){
+    html += '<span class="chip-dica">as empresas aparecem aqui depois do primeiro ↻ Atualizar</span>';
+  }
   el.innerHTML = html;
 
   el.querySelectorAll('.chip[data-company]').forEach(chip=>{
