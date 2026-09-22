@@ -129,7 +129,10 @@ com os campos prontos, e espera você:
 2. **Empresa** — `Todas as empresas` (padrão) ou uma só. **Escolher uma empresa deixa o
    clique MUITO mais rápido**: a consulta é por empresa × dia, então limitar o escopo
    corta a maior parte das chamadas à API. Não é filtro de tela: é o que vai ser
-   consultado.
+   consultado. Dá para **digitar no campo ao lado** em vez de rolar a lista — parte do
+   nome (acento não importa: `ete` acha `Eté Gestão`) ou o CNPJ; sobrando uma empresa
+   só, ela já fica escolhida. A lista só aparece **depois que o token estiver colado**;
+   sem token, a própria caixinha diz isso.
 3. **↻ Atualizar** — é o que traz dado fresco da API e recalcula a matriz. Enquanto
    roda, o botão mostra o progresso (`Atualizando… [3/6] ...`).
 

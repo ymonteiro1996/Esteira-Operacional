@@ -1146,6 +1146,27 @@ Complementa a divisão de código da seção 4 — juntas atacam a causa dos con
     explosão) — caro demais pra preencher um `<select>` no carregamento da tela.
     O preço dessa escolha é o seletor listar as ~19 empresas que o TOKEN vê, não
     só as ~5 com carteira no cadastro.
+  - **[mesmo dia, 2 relatos seguidos do usuário]** (a) "não aparece mais a
+    company para selecionar": `preencherSelectEmpresas()` roda no
+    carregamento, quando ainda não há token colado (e o token se perde a cada
+    restart do servidor) — o 401 era engolido pelo `.catch()` e a caixinha
+    ficava só com "Todas as empresas", indistinguível de "esta conta não tem
+    empresa". Agora o motivo vai DENTRO do seletor como opção desabilitada
+    ("— cole o token da API Beehus para listar as empresas —", a mensagem do
+    backend, ou "nenhuma empresa visível para este token"), e há 1 chance a
+    mais de preencher: depois de um Atualizar bem-sucedido (prova de que há
+    token). No mesmo lote, os chips de Company da grade ganharam a dica "as
+    empresas aparecem aqui depois do primeiro ↻ Atualizar" quando
+    `meta.companies` está vazio — efeito colateral de a tela não consultar
+    mais sozinha, e a outra leitura possível do mesmo relato. (b) "pode
+    manter do jeito que está, mas também permitir digitar a company e
+    autocompletar": campo `#empresa-busca` AO LADO do `<select>` (que continua
+    sendo a fonte do `company_id`) — filtra por nome sem acento/caixa ou por
+    CNPJ, com `<datalist>` pro autocompletar nativo; sobrando 1 empresa, ela
+    já fica escolhida. A empresa ESCOLHIDA nunca é removida das opções pelo
+    filtro: se sumisse do DOM, o select voltaria pra "Todas as empresas"
+    sozinho e o próximo clique consultaria todas as empresas (9 min) sem
+    ninguém pedir. Enter no campo de busca é neutralizado de propósito.
   - **Limite aceito**: com filtro ativo, `mapear_carteiras_compradas()` enxerga
     só as carteiras daquela empresa — o cruzamento "comprada por carteira de
     OUTRA empresa" (13/08) não é marcado enquanto o filtro estiver ligado; some

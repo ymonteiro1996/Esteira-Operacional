@@ -128,6 +128,16 @@
          partir de GET /api/empresas; sem token colado ainda, fica só com
          "Todas as empresas" e se preenche assim que o token for salvo. -->
     <label class="datefield" title="Escopa a consulta do botão Atualizar a UMA empresa — quanto menor o escopo, mais rápido o clique. Não filtra o que já está na tela.">Empresa
+      <!-- [2026-09-22, pedido do usuário: "pode manter do jeito que está, mas
+           também permitir digitar a company e autocompletar"] Campo de busca
+           AO LADO do seletor (que continua sendo quem vale: é dele que sai o
+           company_id do Atualizar). Digitar filtra as opções do select; com
+           1 resultado só, ele já fica escolhido. O <datalist> dá o
+           autocompletar nativo do navegador enquanto se digita. -->
+      <input type="search" id="empresa-busca" class="empresa-busca" list="lista-empresas"
+             placeholder="digite para filtrar" autocomplete="off"
+             title="Digite parte do nome (ou o CNPJ) da empresa para filtrar a lista ao lado. Acentos não importam.">
+      <datalist id="lista-empresas"></datalist>
       <select id="empresa-atualizar" autocomplete="off">
         <option value="">Todas as empresas</option>
       </select>

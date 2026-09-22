@@ -25,7 +25,9 @@ Object.assign(ControleCargas, {
         ("de" não recebe mais Enter — ficou readonly, ver
         sincronizarDataInicial()).
      4. Troca do campo "até" dispara sincronizarDataInicial(), que
-        recalcula "de" sozinho (data_final − 5 du). */
+        recalcula "de" sozinho (data_final − 5 du).
+     5. Cada tecla no campo de busca de empresa filtra o seletor
+        (filtrarEmpresasDigitadas); Enter ali é neutralizado de propósito. */
 wireAtualizar(){
   const btn = document.getElementById('btn-atualizar');
   if(!btn) return;
@@ -36,6 +38,15 @@ wireAtualizar(){
   });
   const campoAte = document.getElementById('data-final');
   if(campoAte) campoAte.addEventListener('change', ()=> ControleCargas.sincronizarDataInicial());
+  // [2026-09-22, pedido do usuário: "permitir digitar a company e
+  // autocompletar"] Filtra o seletor a cada tecla. Enter aqui NÃO dispara o
+  // Atualizar de propósito: digitar o nome da empresa é escolher escopo, não
+  // pedir uma consulta de 9 minutos.
+  const campoBuscaEmpresa = document.getElementById('empresa-busca');
+  if(campoBuscaEmpresa){
+    campoBuscaEmpresa.addEventListener('input', ControleCargas.filtrarEmpresasDigitadas);
+    campoBuscaEmpresa.addEventListener('keydown', (e)=>{ if(e.key==='Enter') e.preventDefault(); });
+  }
   const fecharBtn = document.getElementById('alerta-atualizacao-fechar');
   if(fecharBtn) fecharBtn.addEventListener('click', ControleCargas.esconderAlertaAtualizacao);
 },
@@ -161,37 +172,124 @@ preencherCamposDataAtualizar(){
     });
 },
 
+// Empresas devolvidas por GET /api/empresas, como vieram — o <select> é
+// redesenhado a partir daqui a cada tecla no campo de busca, então a lista
+// completa precisa sobreviver ao filtro.
+empresasDisponiveis: [],
+
 /* Contexto:
-   Desenha as opções do seletor "Empresa" a partir da lista devolvida por
-   GET /api/empresas, preservando a escolha que a pessoa já tinha feito.
-   Chamada por preencherSelectEmpresas() quando a consulta dá certo. Não
-   retorna nada.
+   Normaliza um texto para comparação de busca — minúsculas e sem acento, pra
+   "ete"/"Eté"/"ETÉ" acharem "Eté Gestão". Usada pelo filtro do seletor de
+   empresa [2026-09-22, pedido do usuário: "permitir digitar a company e
+   autocompletar"]. Retorna string. (Mora aqui, e não em static/js/utils/,
+   porque hoje só esta tela usa — promover se aparecer um 2º uso, CLAUDE.md
+   §5.)
 
    Pseudocódigo:
-     1. Limpa e recria "Todas as empresas" (value vazio = sem filtro, que é o
-        que /api/atualizar espera).
-     2. Uma opção por empresa, com value = companyId.
-     3. Restaura a escolha anterior; se ela não existe mais na lista, volta
-        pra "Todas as empresas". */
-desenharOpcoesEmpresas(empresas, escolhaAnterior){
+     1. Vazio/nulo -> string vazia.
+     2. Decompõe os acentos (NFD), remove os sinais diacríticos e baixa a
+        caixa. */
+normalizarParaBusca(texto){
+  return String(texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+},
+
+/* Contexto:
+   Empresas que casam com o que está digitado no campo de busca
+   (#empresa-busca) — casa por NOME ou por companyId, sem acento e sem caixa.
+   Chamada por desenharOpcoesEmpresas(). Retorna array (a lista inteira
+   quando o campo está vazio).
+
+   Pseudocódigo:
+     1. Lê e normaliza o texto digitado; vazio -> devolve tudo.
+     2. Mantém as empresas cujo nome normalizado contém o texto, ou cujo id
+        começa com ele (digitar CNPJ). */
+empresasQueCasamComBusca(){
+  const campo = document.getElementById('empresa-busca');
+  const procurado = ControleCargas.normalizarParaBusca(campo && campo.value);
+  if(!procurado) return ControleCargas.empresasDisponiveis;
+
+  return ControleCargas.empresasDisponiveis.filter(({id, name})=>
+    ControleCargas.normalizarParaBusca(name).includes(procurado) || String(id || '').startsWith(procurado));
+},
+
+/* Contexto:
+   Desenha as opções do seletor "Empresa" (só as que casam com o filtro
+   digitado) e as sugestões do <datalist> (sempre a lista inteira — o
+   autocompletar nativo tem que sugerir tudo enquanto se digita). Chamada por
+   preencherSelectEmpresas() e a cada tecla no campo de busca. Não retorna
+   nada.
+
+   Pseudocódigo:
+     1. Sem o seletor no DOM, sai sem erro.
+     2. "Todas as empresas" (value vazio = sem filtro, o que /api/atualizar
+        espera) + uma opção por empresa que casou.
+     3. A empresa ESCOLHIDA entra na lista mesmo que não case com o filtro —
+        senão ela sumiria do DOM, o select voltaria pra "Todas as empresas"
+        sozinho e o próximo Atualizar consultaria TODAS as empresas sem
+        ninguém pedir (9 minutos por engano).
+     4. Repõe a escolha; se a empresa escolhida não existe mais na lista
+        vinda do servidor, volta pra "Todas as empresas".
+     5. Reescreve o <datalist> com todos os nomes. */
+desenharOpcoesEmpresas(escolhaDesejada){
   const select = document.getElementById('empresa-atualizar');
   if(!select) return;
+  const escolhida = escolhaDesejada || '';
+
+  const casaram = ControleCargas.empresasQueCasamComBusca();
+  const paraMostrar = casaram.slice();
+  if(escolhida && !paraMostrar.some(e=> e.id === escolhida)){
+    const fixa = ControleCargas.empresasDisponiveis.find(e=> e.id === escolhida);
+    if(fixa) paraMostrar.unshift(fixa);
+  }
 
   select.innerHTML = '';
   const todas = document.createElement('option');
   todas.value = '';
   todas.textContent = 'Todas as empresas';
   select.appendChild(todas);
-
-  (empresas || []).forEach(({id, name})=>{
+  paraMostrar.forEach(({id, name})=>{
     const opcao = document.createElement('option');
     opcao.value = id;
     opcao.textContent = name || id;
     select.appendChild(opcao);
   });
 
-  select.value = escolhaAnterior || '';
+  select.value = escolhida;
   if(!select.value) select.value = '';
+
+  const sugestoes = document.getElementById('lista-empresas');
+  if(sugestoes){
+    sugestoes.innerHTML = '';
+    ControleCargas.empresasDisponiveis.forEach(({name, id})=>{
+      const sugestao = document.createElement('option');
+      sugestao.value = name || id;
+      sugestoes.appendChild(sugestao);
+    });
+  }
+},
+
+/* Contexto:
+   Reage a cada tecla no campo de busca (#empresa-busca): redesenha o seletor
+   só com quem casa e, quando sobra UMA empresa, já a deixa escolhida — é o
+   que faz "digitar e escolher" virar um gesto só [2026-09-22, pedido do
+   usuário]. Ligada por wireAtualizar(). Não retorna nada.
+
+   Pseudocódigo:
+     1. Sem o seletor no DOM, sai sem erro.
+     2. Redesenha as opções mantendo a escolha atual.
+     3. Sobrou exatamente 1 empresa -> escolhe ela.
+     4. Campo de busca vazio -> não mexe na escolha (limpar o filtro não pode
+        desfazer a empresa que a pessoa já tinha escolhido). */
+filtrarEmpresasDigitadas(){
+  const select = document.getElementById('empresa-atualizar');
+  const campo = document.getElementById('empresa-busca');
+  if(!select) return;
+
+  ControleCargas.desenharOpcoesEmpresas(select.value);
+  if(campo && campo.value.trim()){
+    const casaram = ControleCargas.empresasQueCasamComBusca();
+    if(casaram.length === 1) select.value = casaram[0].id;
+  }
 },
 
 /* Contexto:
@@ -211,6 +309,7 @@ desenharOpcoesEmpresas(empresas, escolhaAnterior){
 marcarSelectEmpresasIndisponivel(motivo){
   const select = document.getElementById('empresa-atualizar');
   if(!select) return;
+  ControleCargas.empresasDisponiveis = [];
 
   select.innerHTML = '';
   const todas = document.createElement('option');
@@ -263,7 +362,8 @@ preencherSelectEmpresas(){
         ControleCargas.marcarSelectEmpresasIndisponivel('nenhuma empresa visível para este token');
         return;
       }
-      ControleCargas.desenharOpcoesEmpresas(empresas, escolhaAnterior);
+      ControleCargas.empresasDisponiveis = empresas;
+      ControleCargas.desenharOpcoesEmpresas(escolhaAnterior);
     })
     .catch(erro=>{
       ControleCargas.marcarSelectEmpresasIndisponivel(erro.message || 'não foi possível listar as empresas');

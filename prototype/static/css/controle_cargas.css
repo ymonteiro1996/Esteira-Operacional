@@ -718,6 +718,15 @@ td.col-cust, th.hdr-cust{
   font-size:12.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);
   background:var(--surface-raised);color:var(--ink);
 }
+/* Campo de busca do seletor de empresa — mesma caixinha dos campos de data,
+   só mais estreito, pra ler como "parte do mesmo controle" [2026-09-22,
+   pedido do usuário: digitar e autocompletar]. */
+.empresa-busca{
+  font-size:12.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);
+  background:var(--surface-raised);color:var(--ink);width:120px;
+}
+.empresa-busca::placeholder{color:var(--ink-faint);}
+
 /* Dica no lugar dos chips de empresa enquanto o snapshot está vazio (antes do
    1º Atualizar) — texto, não chip clicável, pra não parecer um filtro
    [2026-09-22, relato do usuário: "não aparece mais a company para
