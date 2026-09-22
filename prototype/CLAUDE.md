@@ -1108,6 +1108,141 @@ Complementa a divisão de código da seção 4 — juntas atacam a causa dos con
     intactas); e um build COMPLETO contra a API real (janela 01/09..09/09) —
     ver a mensagem do commit para os números medidos.
 
+- **[2026-09-22, pedido do usuário: "não atualizar ao executar a primeira vez,
+  permitir selecionar data e company e depois dar um atualizar clickando no
+  botão"] A TELA NÃO CONSULTA MAIS NADA SOZINHA + SELETOR DE EMPRESA QUE ESCOPA
+  O "ATUALIZAR".** Com o clique custando ~9 minutos (nota de 15/09), os dois
+  disparos automáticos que existiam viraram estorvo: `init()` (`index.js`)
+  disparava um `executarAtualizacao()` assim que a página carregava, e
+  `salvarTokenBeehus()` (`beehus_token.js`) disparava outro assim que o token
+  era colado — os dois sempre na janela default e em TODAS as empresas. Quem
+  queria outra data ou outro escopo esperava essa consulta terminar (ou
+  disputava com ela, cenário que já tinha motivado o `sequenciaAtualizacao` de
+  11/09).
+  - **Fim do automático**: `init()` agora só deixa a tela PRONTA — preenche
+    De/Até (`preencherCamposDataAtualizar`), preenche o seletor de empresas
+    (`preencherSelectEmpresas`, nova) e escreve o convite na `.atualizar-msg`
+    (`convidarParaAtualizar`, nova em `index.js`, que nunca sobrescreve uma
+    mensagem já existente de resultado/erro). `salvarTokenBeehus()` faz o mesmo
+    par depois de o token ser aceito (o seletor precisa dessa 2ª chance: no
+    boot `/api/empresas` responde 401, ainda não há token). Nenhuma outra
+    função foi tocada — `wireAtualizar()`, `executarAtualizacao()` e
+    `enviarAtualizacao()` são as mesmas.
+  - **Seletor "Empresa"** (`#empresa-atualizar`, `index_template.html` +
+    `index.html`, ao lado dos campos de data; CSS novo `.datefield select`): vai
+    como `company_id` em `GET /api/atualizar`. É escopo de CONSULTA, não filtro
+    de tela — `_montar_snapshot()` aplica `_filtrar_cadastro_por_empresa()`
+    (nova, `build_snapshot.py`) logo depois do passo `[1/6]`, **antes** do
+    fan-out da esteira, então o clique custa uma fração das chamadas de "Todas
+    as empresas" (a fila de `db.py` é data × empresa × tipo). O snapshot carrega
+    o filtro aplicado em `meta.companyIdFiltro`/`meta.companyFiltro`, que a tela
+    usa pra dizer "Empresa: X" no fim da mensagem de sucesso e pra avisar
+    "Nenhuma carteira do cadastro em X" quando a empresa não tem carteira no
+    `TemplateCarteiras.xlsx` (senão a grade vazia pareceria falha do Atualizar).
+  - **`GET /api/empresas`** (rota nova, fina) → `db.listar_empresas()` (nova) =
+    1 chamada a `list_companies()`. De propósito **não** reaproveita
+    `carregar_colecoes_pequenas()`: aquela também busca wallets/groupings/
+    explosão de TODAS as empresas (2-37s no timing `colecoes_pequenas` + os de
+    explosão) — caro demais pra preencher um `<select>` no carregamento da tela.
+    O preço dessa escolha é o seletor listar as ~19 empresas que o TOKEN vê, não
+    só as ~5 com carteira no cadastro.
+  - **Limite aceito**: com filtro ativo, `mapear_carteiras_compradas()` enxerga
+    só as carteiras daquela empresa — o cruzamento "comprada por carteira de
+    OUTRA empresa" (13/08) não é marcado enquanto o filtro estiver ligado; some
+    ao voltar pra "Todas as empresas". Documentado na docstring da função nova.
+  - **Verificado** (sem derrubar o servidor de 5050, via `app.test_client()`):
+    `/api/empresas` e `/api/atualizar?...&company_id=...` respondem o 401
+    amigável de token ausente (rota registrada e erro tratado, nunca 500 cru);
+    `/api/janela-padrao` intacto; `/` serve o `<select>` novo e os `.js` servem
+    as funções novas; `_filtrar_cadastro_por_empresa()` testada com cadastro
+    sintético (empresa com carteira → só ela e o agrupamento dela; empresa
+    inexistente → tudo vazio, que é o caminho da mensagem "Nenhuma carteira do
+    cadastro"). **Não testado contra a API real** — o token do dia é do
+    navegador do usuário; o teste ponta a ponta (escolher empresa, clicar,
+    comparar o tempo com o de "Todas as empresas") ficou para ele.
+
+- **[2026-09-22, relato do usuário: "um colega ainda não está aparecendo o
+  responsável e comentários, mesmo que são gravados e consumidos em uma base na
+  rede onedrive" + "sendo direto, não está aparecendo os responsáveis em 16/09
+  para o colega"] CAMINHO DA PASTA COMPARTILHADA AGORA SE ACHA SOZINHO EM
+  QUALQUER MÁQUINA + RODAPÉ DE DIAGNÓSTICO SEMPRE VISÍVEL.** Com o colega na
+  MESMA data de referência (16/09) que a máquina onde aparece, a diferença de
+  data ficou descartada e sobrou a origem do dado. Levantado com os dados reais
+  do arquivo compartilhado: 686 anotações, 35 delas em 16/09, gravadas às
+  14:47 de 22/09 — ou seja, o dado existe e está lá.
+  - **Causa nº 1 (corrigida), `utils/caminhos.py`**: a pasta compartilhada era
+    procurada num literal ÚNICO (`~/Beehus Tecnologia Ltda/Beehus Tecnologia
+    Ltda - Documentos/SWAT/...`). Esse nome é o que o OneDrive dá à biblioteca
+    NESTA máquina; em outra ele muda por motivos banais e invisíveis — Windows/
+    OneDrive em inglês sincroniza "... - Documents" (sem o "o"), a pessoa pode
+    ter a biblioteca no OneDrive pessoal (`OneDrive - Beehus Tecnologia Ltda/
+    SWAT/...`, um nível a menos) ou ter renomeado a pasta. Qualquer variação
+    caía no `data/` do próprio clone — uma ILHA que, num clone novo, não tem
+    `wallet_annotations.json` nenhum (.gitignore), dando exatamente "o
+    responsável não aparece pra mim", sem erro na tela. Agora, além do caminho
+    canônico (tentado primeiro, sem varrer nada), há `_procurar_data_dir_
+    compartilhado()`: lista as pastas com "beehus" no nome dentro de
+    `Path.home()` e das raízes de `OneDrive`/`OneDriveCommercial` (e dos pais
+    delas — biblioteca do SharePoint fica AO LADO do OneDrive pessoal, não
+    dentro), testando o sufixo estável `SWAT/ControleCargas/prototype/data` até
+    2 níveis. Medido: 0,03s, e só roda quando o caminho canônico falha. O
+    resultado é memorizado por processo.
+  - **`descrever_data_dir()` (nova) virou a fonte única**: devolve
+    `{caminho, origem, compartilhada, mensagem}`; `resolver_data_dir()` e
+    `diagnosticar_data_dir()` viraram wrappers finos dela (CLAUDE.md §3), então
+    os 4 módulos que já as chamavam (app.py, build_snapshot.py, pages/
+    anomalias.py, pages/controle_demandas.py) não mudaram nada.
+  - **`custodian_upload.py` seguia o mesmo literal** [lembrete do usuário: "o
+    caminho no onedrive deve seguir o usuário dele"]: `Path.home()` resolvia o
+    USUÁRIO, mas "Beehus Tecnologia Ltda/... - Documentos" continuava fixo.
+    Passou a montar o caminho do `Cliente Beehus/ControleUpload.xlsx` a partir
+    de `resolver_raiz_biblioteca()` (nova em utils/caminhos.py, derivada do
+    DATA_DIR já resolvido) — as duas fontes externas do app seguem agora a
+    mesma máquina/usuário. Override `CONTROLECARGAS_UPLOAD_XLSX` intacto.
+  - **Causa nº 2 (agora visível): o diagnóstico existia, mas ninguém via.** A
+    mensagem de AVISO da ilha (2026-09-21) só era impressa na 1ª linha do log
+    de boot — e `start.ps1` sobe o Python com `-WindowStyle Hidden` redirecionando
+    stdout pra `.controlecargas-server.out`. Agora `GET /api/diagnostico-dados`
+    (rota nova, fina) devolve pasta dos dados + se é a compartilhada + contagem
+    REAL de comentários/anotações lidos do disco (mesmas `_load_comments()`/
+    `_load_annotations()` das rotas de verdade) + mtime/tamanho de
+    `alert_comments.json`/`wallet_annotations.json`/`TemplateCarteiras.xlsx` +
+    **a pasta de onde o CÓDIGO subiu**. `static/js/controle_cargas/
+    diagnostico.js` (arquivo novo) pinta isso num rodapé SEMPRE visível
+    (decisão do usuário), em faixa vermelha quando a pasta não é a do time.
+  - **O rodapé também mata a dúvida da data**, sem mudar a semântica da
+    anotação (decisão do usuário: "precisa funcionar do mesmo jeito que
+    funciona na minha máquina, ao selecionar a data e dar atualizar"): ele conta
+    quantas anotações existem PARA A DATA DE REFERÊNCIA EM TELA
+    (`resumirAnotacoesDaDataEmTela()`, lê `ControleCargas.ANNOTATIONS` já
+    carregado). "0 anotações na data de referência em tela" com o arquivo
+    recente = a pessoa está olhando outra data; nada quebrado.
+  - **Redesenho sem acoplar em ninguém**: o rodapé reconsulta o servidor a cada
+    5 min (mtime/contagens) e se redesenha localmente a cada 10s a partir do que
+    já está em memória — assim acompanha a troca de data de um "Atualizar" e as
+    anotações que `sincronizacao.js` traz do colega, sem precisar de handler
+    dentro de `enviarAtualizacao()`/`loadAnnotations()` (zero edição nessas).
+  - **Verificado** (sem derrubar o servidor de 5050, via `app.test_client()` e
+    chamadas diretas): resolução nos 3 caminhos — canônico quebrado achando a
+    variante em 0,03s, ilha (nenhuma biblioteca) devolvendo `compartilhada:
+    False` com a mensagem de AVISO, e override `CONTROLECARGAS_DATA_DIR`
+    vencendo os dois; `resolver_raiz_biblioteca()` devolvendo a raiz certa e
+    `None` na ilha; `custodian_upload.CONTROLE_UPLOAD_XLSX` apontando pro
+    arquivo real (confirmado `os.path.isfile`); `GET /api/diagnostico-dados`
+    200 com pasta/contagens/mtimes corretos (89 comentários, 686 anotações,
+    anotações gravadas 22/09 14:47); `/` servindo o rodapé e o `<script>`;
+    `diagnostico.js` e o CSS servidos. **O que só o usuário pode confirmar**: o
+    rodapé na máquina DO COLEGA — é lá que ele diz qual das três causas é
+    (pasta local, arquivo desatualizado pelo OneDrive, ou código velho).
+  - **O que este commit NÃO resolve, e precisa de decisão**: quem sobe o app da
+    cópia obsoleta dentro do OneDrive (`SWAT/ControleCargas/prototype`, código
+    de 21/08 — log `.controlecargas-server-Adzo-7.err` mostra a máquina "Adzo"
+    rodando ela em 16/09) não recebe NADA disto, nem as correções de 31/08,
+    11/09 e 21/09 (entre elas a vigência do comentário pelo relógio local e o
+    `sincronizacao.js`). Nenhuma mudança no código novo alcança quem roda o
+    código velho — a única saída é neutralizar/remover aquela cópia, pendente
+    de confirmação do usuário desde 21/09.
+
 ---
 
 ## Checklist rápido (antes de considerar uma tarefa pronta)

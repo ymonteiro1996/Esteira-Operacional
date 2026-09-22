@@ -37,6 +37,25 @@ e o CLAUDE.md atualizado). O que ESTE arquivo faz:
      POR EMPRESA (get_processed_position/get_nav_results/
      get_preprocessing_status, ver db.py), então um intervalo customizado
      sem teto poderia disparar centenas de chamadas de uma vez.
+  4b) [2026-09-22, pedido do usuário: "permitir selecionar data e company e
+     depois dar um atualizar clickando no botao"] `GET /api/atualizar` aceita
+     `company_id` opcional (seletor "Empresa" da toolbar) — recorta o
+     cadastro pra UMA empresa ANTES do fan-out da esteira, então o clique
+     custa uma fração das chamadas de um Atualizar sem filtro. A lista do
+     seletor vem de `GET /api/empresas` (1 chamada à API Beehus). No mesmo
+     pedido, a tela DEIXOU de disparar um Atualizar sozinha ao carregar (ver
+     init(), static/js/controle_cargas/index.js): a 1ª consulta é sempre um
+     clique do usuário, depois de escolher data e empresa.
+  4c) [2026-09-22, relato do usuário: "um colega ainda não está aparecendo o
+     responsável e comentários, mesmo que são gravados e consumidos em uma
+     base na rede onedrive"] `GET /api/diagnostico-dados` — de qual pasta este
+     servidor lê/grava os dados compartilhados, se essa pasta é a do time ou
+     uma cópia isolada, quantos comentários/anotações vieram dela, quando cada
+     arquivo foi gravado pela última vez e de qual pasta o CÓDIGO está
+     rodando. Alimenta o rodapé de diagnóstico da tela (sempre visível,
+     static/js/controle_cargas/diagnostico.js) — antes disso a mesma
+     informação só existia na 1ª linha do log de boot, num arquivo que
+     ninguém abre.
   5) `GET /api/janela-padrao` — [2026-07-23] devolve De/Até default (D-3 do
      hoje REAL do servidor + 5du antes) sem tocar o Mongo; usada pra sugerir
      os campos de data no 1º acesso sem depender da meta.referenceDate
@@ -99,12 +118,13 @@ from flask import Flask, jsonify, request, send_from_directory, session
 
 from beehus_api import BeehusAPIError, BeehusAuthError, bind_session_id, clear_token, set_token, token_status, verify_token
 from build_snapshot import montar_snapshot, escrever_snapshot_json
+import db
 import progresso_atualizacao
 from pages.controle_demandas import bp as controle_demandas_bp
 from pages.anomalias import bp as anomalias_bp
 from snapshot_builder import LIMIAR_DIVERGENCIA_PADRAO, LIMIAR_DIVERGENCIA_REAIS_PADRAO
 from utils.datas import CalendarioDiasUteis, GRID_REFERENCE_LAG_DU, JANELA_INICIAL_DIAS_UTEIS, calcular_janela_grid
-from utils.caminhos import diagnosticar_data_dir, resolver_data_dir
+from utils.caminhos import descrever_data_dir, diagnosticar_data_dir, resolver_data_dir
 
 HERE = Path(__file__).resolve().parent
 # [2026-08-25, decisão do usuário: "consumirmos de um diretório" separado do código
@@ -387,6 +407,10 @@ def _montar_snapshot_vazio():
             "cacheInfo": {"datasNovasConsultadas": 0, "datasDoCache": 0},
             "limiarDivergenciaPct": LIMIAR_DIVERGENCIA_PADRAO,
             "limiarDivergenciaReais": LIMIAR_DIVERGENCIA_REAIS_PADRAO,
+            # [2026-09-22] paridade de schema com montar_snapshot(): nenhuma
+            # empresa filtrada ainda — quem preenche isso é o 1º Atualizar.
+            "companyIdFiltro": None,
+            "companyFiltro": None,
         },
         "wallets": [],
         "groupings": [],
@@ -1130,6 +1154,99 @@ def data_inicial_padrao():
     return jsonify({"dataInicial": data_inicial})
 
 
+def _descrever_arquivo_compartilhado(caminho):
+    """Contexto:
+    Descreve 1 arquivo da pasta compartilhada pro rodapé de diagnóstico da
+    tela — existe? quando foi gravado pela última vez? que tamanho tem?
+    Chamada por diagnostico_dados() para cada um dos arquivos que o time
+    edita a várias mãos. Retorna dict {existe, atualizadoEm, bytes}.
+
+    O `atualizadoEm` é o que distingue, na hora, os dois jeitos de "o dado do
+    colega não aparece": arquivo com data de hoje = o app está na pasta certa
+    e o problema é outro; arquivo de semanas atrás (ou ausente) = esta
+    máquina está lendo uma cópia isolada, ou o OneDrive não sincronizou
+    [2026-09-22].
+
+    Pseudocódigo:
+      1. Arquivo ausente (ou ilegível) -> {existe: False}.
+      2. Presente -> lê mtime/tamanho e formata a data em ISO (segundos).
+    """
+    try:
+        info = os.stat(caminho)
+    except OSError:
+        return {"existe": False, "atualizadoEm": None, "bytes": 0}
+    atualizado_em = dt.datetime.fromtimestamp(info.st_mtime).isoformat(timespec="seconds")
+    return {"existe": True, "atualizadoEm": atualizado_em, "bytes": info.st_size}
+
+
+@app.route("/api/diagnostico-dados", methods=["GET"])
+def diagnostico_dados():
+    """Contexto:
+    Diz DE ONDE este servidor está lendo/gravando os dados que o time edita a
+    várias mãos (comentário da carteira + criticidade + responsável +
+    comentário sobre atuação) e o que ele achou lá dentro — alimenta o rodapé
+    de diagnóstico, sempre visível na tela [2026-09-22, relato do usuário:
+    "um colega ainda não está aparecendo o responsável e comentários" com o
+    colega na MESMA data de referência]. Até aqui esse diagnóstico só existia
+    na 1ª linha do log de boot, que vai pra um arquivo (.controlecargas-
+    server.out) com a janela do servidor oculta — ou seja, ninguém via.
+    Devolve {dados, codigo, contagens, arquivos}. Não toca a API Beehus.
+
+    Pseudocódigo:
+      1. Pergunta a utils/caminhos.py qual pasta venceu e se ela é a
+         compartilhada do time (descrever_data_dir).
+      2. Conta comentários e anotações REALMENTE carregados do disco (mesmas
+         funções que as rotas /api/comments e /api/annotations usam, então o
+         número é o que a tela vê, não uma estimativa).
+      3. Descreve os 2 arquivos compartilhados + o Excel do cadastro
+         (existe/quando foi gravado).
+      4. Devolve junto a pasta DO CÓDIGO que está rodando — é o que denuncia
+         quem subiu o app da cópia velha do OneDrive em vez do clone do Git.
+    """
+    dados = descrever_data_dir(HERE)
+    comentarios = _load_comments()
+    anotacoes = _load_annotations()
+    return jsonify({
+        "dados": {
+            "caminho": dados["caminho"],
+            "origem": dados["origem"],
+            "compartilhada": dados["compartilhada"],
+        },
+        "codigo": {"caminho": str(HERE)},
+        "contagens": {"comentarios": len(comentarios), "anotacoes": len(anotacoes)},
+        "arquivos": {
+            "alertComments": _descrever_arquivo_compartilhado(COMMENTS_PATH),
+            "walletAnnotations": _descrever_arquivo_compartilhado(ANNOTATIONS_PATH),
+            "templateCarteiras": _descrever_arquivo_compartilhado(DATA_DIR / "TemplateCarteiras.xlsx"),
+        },
+    })
+
+
+@app.route("/api/empresas", methods=["GET"])
+def listar_empresas():
+    """Contexto:
+    Lista as empresas visíveis ao token, pro seletor "Empresa" da toolbar
+    (preencherSelectEmpresas, atualizar.js) — o valor escolhido volta como
+    `company_id` em /api/atualizar [2026-09-22, pedido do usuário:
+    "permitir selecionar data e company e depois dar um atualizar clickando
+    no botao"]. Rota fina (CLAUDE.md §4): quem fala com a API é db.py.
+    Devolve {empresas: [{id, name}, ...]}.
+
+    Pseudocódigo:
+      1. Pede a lista a db.listar_empresas() (1 chamada à API Beehus).
+      2. Sem token válido -> 401 com a MESMA mensagem amigável do
+         Atualizar (a tela ainda não tem token colado no 1º acesso, e o
+         seletor não pode virar um erro cru na tela por causa disso).
+      3. Qualquer outra falha -> 500 com mensagem amigável, nunca 500 cru.
+    """
+    try:
+        return jsonify({"empresas": db.listar_empresas()})
+    except BeehusAuthError as exc:
+        return jsonify({"error": _mensagem_amigavel_erro_atualizacao(exc)}), 401
+    except Exception as exc:  # pragma: no cover - defensivo, nunca 500 cru pro front
+        return jsonify({"error": _mensagem_amigavel_erro_atualizacao(exc)}), 500
+
+
 @app.route("/api/atualizar", methods=["GET"])
 def atualizar_snapshot():
     """Contexto:
@@ -1158,11 +1275,17 @@ def atualizar_snapshot():
       3. [2026-08-05] Valida que o intervalo pedido não passa de
          JANELA_MAXIMA_DIAS_UTEIS (5 du) — 400 cedo, antes de qualquer
          chamada à API, se passar.
+      3b. [2026-09-22, pedido do usuário] Lê `company_id` (seletor
+         "Empresa" da toolbar); vazio = todas as empresas, comportamento de
+         sempre. Não é validado contra a lista de /api/empresas de propósito
+         — isso custaria 1 chamada extra à API por clique, e um id
+         desconhecido simplesmente não casa com nenhuma carteira do
+         cadastro (o snapshot volta com 0 carteiras, e a tela avisa).
       4. Chama montar_snapshot(data_inicial, data_final,
          forcar_atualizacao=True, limiar_divergencia_pct=...,
-         limiar_divergencia_reais=...) — mesma função do CLI (que nunca
-         força, cache já começa vazio no boot), então qualquer melhoria ali
-         beneficia os dois caminhos.
+         limiar_divergencia_reais=..., company_id=...) — mesma função do CLI
+         (que nunca força, cache já começa vazio no boot), então qualquer
+         melhoria ali beneficia os dois caminhos.
       5. Devolve o snapshot completo (mesmo formato de snapshot.json) —
          o front-end troca ControleCargas.SNAPSHOT inteiro e re-renderiza
          (mais simples de integrar do que devolver só a fatia nova, e o
@@ -1175,6 +1298,7 @@ def atualizar_snapshot():
     data_final = request.args.get("data_final", "").strip()
     limiar_pct_bruto = request.args.get("limiar_divergencia_pct", "").strip()
     limiar_reais_bruto = request.args.get("limiar_divergencia_reais", "").strip()
+    company_id = request.args.get("company_id", "").strip()
 
     erro = (_validar_data_iso(data_inicial, "data_inicial")
             or _validar_data_iso(data_final, "data_final")
@@ -1199,7 +1323,8 @@ def atualizar_snapshot():
 
     try:
         snapshot = montar_snapshot(data_inicial=data_inicial, data_final=data_final, forcar_atualizacao=True,
-                                    limiar_divergencia_pct=limiar_pct, limiar_divergencia_reais=limiar_reais)
+                                    limiar_divergencia_pct=limiar_pct, limiar_divergencia_reais=limiar_reais,
+                                    company_id=company_id or None)
     except BeehusAuthError as exc:
         return jsonify({"error": _mensagem_amigavel_erro_atualizacao(exc)}), 401
     except Exception as exc:  # pragma: no cover - defensivo, nunca 500 cru pro front

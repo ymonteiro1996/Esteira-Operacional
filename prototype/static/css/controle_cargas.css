@@ -718,6 +718,30 @@ td.col-cust, th.hdr-cust{
   font-size:12.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);
   background:var(--surface-raised);color:var(--ink);
 }
+/* Rodapé de diagnóstico (diagnostico.js) — sempre visível [2026-09-22,
+   decisão do usuário], discreto no estado normal e em faixa de alerta quando
+   a pasta de dados NÃO é a compartilhada do time (o caso em que o colega não
+   enxerga o responsável/comentário de ninguém). */
+.diagnostico-rodape{
+  margin:16px 0 4px;padding:8px 10px;border-radius:8px;
+  border:1px solid var(--border);background:var(--surface-sunk);
+  color:var(--ink-faint);font-size:11px;line-height:1.5;word-break:break-word;
+}
+.diagnostico-rodape.alerta{
+  /* MESMOS tokens da faixa de erro do Atualizar (.alert-banner) — já
+     definidos nos 4 blocos de tema, então o alerta segue claro/escuro sem
+     token novo. */
+  background:var(--state-r1-bg);color:var(--state-r1-fg);
+  border-color:var(--state-r1-fg);font-weight:600;
+}
+
+/* Seletor de empresa da toolbar (#empresa-atualizar) — mesma caixinha dos
+   campos de data, pra ler como "mais um campo do Atualizar" e não como um
+   filtro da grade [2026-09-22, pedido do usuário]. */
+.datefield select{
+  font-size:12.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);
+  background:var(--surface-raised);color:var(--ink);max-width:220px;
+}
 /* Campo "de" (data-inicial) ficou readonly [2026-08-06, pedido do usuário:
    "coloque a data inicial como fixa" — ver sincronizarDataInicial() em
    atualizar.js] — visual apagado sinaliza que não é mais digitável, só

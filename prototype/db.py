@@ -334,6 +334,28 @@ def _resolver_explosao(carteiras_por_id, timings=None):
                                     if i in wallet_alvo_por_security_id]
 
 
+def listar_empresas():
+    """Contexto:
+    Devolve `[{"id": companyId, "name": nome}, ...]` das empresas que o token
+    enxerga — lista do seletor "Empresa" da toolbar (GET /api/empresas, ver
+    app.py), que escopa o clique em "Atualizar" a UMA empresa [2026-09-22,
+    pedido do usuário: "permitir selecionar data e company e depois dar um
+    atualizar clickando no botao"]. De propósito NÃO reaproveita
+    carregar_colecoes_pequenas(): aquela também busca wallets/groupings/
+    explosão de TODAS as empresas (dezenas de segundos a frio, ver os
+    timings `colecoes_pequenas`/`*_explosao` do log) — caro demais pra
+    preencher um <select> no carregamento da tela. Aqui é 1 chamada só.
+
+    Pseudocódigo:
+      1. Chama list_companies() (empresas visíveis ao token).
+      2. Normaliza id/nome e descarta itens sem id.
+      3. Devolve ordenado por nome (ordem de exibição do <select>).
+    """
+    empresas = [{"id": _idstr(c.get("_id")), "name": (c.get("name") or "").strip()}
+                for c in (list_companies() or []) if c.get("_id")]
+    return sorted(empresas, key=lambda e: e["name"].casefold())
+
+
 def carregar_colecoes_pequenas(timings=None):
     """Contexto:
     Carrega companies/entities/wallets/groupings inteiras (não dependem da

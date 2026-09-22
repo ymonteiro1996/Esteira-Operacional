@@ -38,19 +38,50 @@ from pathlib import Path
 
 import openpyxl
 
-# Caminho do Excel externo (fora do projeto — somente leitura).
-# [2026-08-28, achado do usuário: "há parte no código usando meu user no
-# diretório"] Estava fixo em "C:\Users\efigueira\..." — só funcionava na
-# máquina de quem escreveu o módulo. O caminho corporativo do OneDrive é
-# igual pra todo mundo a partir da pasta do usuário (Path.home()), então o
-# default agora monta com o usuário logado de cada máquina; aceita override
-# via CONTROLECARGAS_UPLOAD_XLSX (mesmo padrão de CONTROLECARGAS_DATA_DIR em
-# app.py) pra quem tiver o arquivo em outro lugar.
-CONTROLE_UPLOAD_XLSX = os.environ.get("CONTROLECARGAS_UPLOAD_XLSX") or str(
-    Path.home() / "Beehus Tecnologia Ltda"
-    / "Beehus Tecnologia Ltda - Documentos"
-    / "Cliente Beehus" / "ControleUpload.xlsx"
-)
+from utils.caminhos import resolver_raiz_biblioteca
+
+# Nome da pasta e do arquivo DENTRO da biblioteca compartilhada — a única
+# parte do caminho que é igual em toda máquina do time.
+_SUBCAMINHO_NA_BIBLIOTECA = Path("Cliente Beehus") / "ControleUpload.xlsx"
+
+
+def _resolver_caminho_controle_upload():
+    """Contexto:
+    Monta o caminho do ControleUpload.xlsx (Excel externo, fora do projeto,
+    somente leitura) na máquina de QUEM está rodando. Chamada 1x no import
+    deste módulo, para definir CONTROLE_UPLOAD_XLSX. Retorna string.
+
+    [2026-08-28, achado do usuário: "há parte no código usando meu user no
+    diretório"] O caminho era fixo no usuário de quem escreveu o módulo; passou
+    a montar a partir de Path.home(). [REVISADO 2026-09-22, lembrete do
+    usuário: "o caminho no onedrive deve seguir o usuário dele"] Path.home()
+    resolvia o USUÁRIO, mas o resto continuava literal ("Beehus Tecnologia
+    Ltda/Beehus Tecnologia Ltda - Documentos") — que é o nome que o OneDrive dá
+    à biblioteca NESTA máquina e muda em outra (idioma do Windows, OneDrive
+    pessoal, pasta renomeada). Agora a raiz da biblioteca vem da MESMA
+    resolução que acha a pasta data/ compartilhada (utils/caminhos.py), então
+    as duas fontes externas do app seguem sempre a mesma máquina/usuário.
+
+    Pseudocódigo:
+      1. Override explícito em CONTROLECARGAS_UPLOAD_XLSX vence (mesmo padrão
+         de CONTROLECARGAS_DATA_DIR).
+      2. Acha a raiz da biblioteca compartilhada (resolver_raiz_biblioteca) e
+         monta "Cliente Beehus/ControleUpload.xlsx" dentro dela.
+      3. Sem biblioteca nesta máquina (ilha local), devolve o caminho canônico
+         de sempre — não existe aqui, e a leitura é best-effort (quem chama
+         load_controle_upload() já trata a falha: a aba some, o resto segue).
+    """
+    override = os.environ.get("CONTROLECARGAS_UPLOAD_XLSX")
+    if override:
+        return override
+    raiz_biblioteca = resolver_raiz_biblioteca(os.path.dirname(os.path.abspath(__file__)))
+    if raiz_biblioteca is not None:
+        return str(raiz_biblioteca / _SUBCAMINHO_NA_BIBLIOTECA)
+    return str(Path.home() / "Beehus Tecnologia Ltda"
+               / "Beehus Tecnologia Ltda - Documentos" / _SUBCAMINHO_NA_BIBLIOTECA)
+
+
+CONTROLE_UPLOAD_XLSX = _resolver_caminho_controle_upload()
 SHEET_NAME = "Planilha1"
 HEADER_ROW = 2       # linha do cabeçalho de datas
 FIRST_DATA_ROW = 3   # primeira linha de custodiante

@@ -67,6 +67,34 @@ ver os comentários nem as anotações de ninguém. Resolva assim:
    ```
    Feche e reabra o terminal depois do `setx`.
 
+## 3b. Confira o rodapé: é ele que diz se você está na base do time
+
+A tela tem um **rodapé de diagnóstico sempre visível** (desde 22/09/2026). Leia antes de
+qualquer coisa — ele responde, em uma linha, a pergunta que mais gera confusão aqui
+("o responsável/comentário que o colega salvou não aparece pra mim"):
+
+```
+Dados do time: C:\Users\<você>\Beehus Tecnologia Ltda\...\prototype\data ·
+anotações gravadas por último em 22/09 14:47 ·
+carregados: 89 comentário(s), 686 anotação(ões) ·
+35 anotação(ões) na data de referência em tela (2026-09-16) ·
+código rodando de C:\...\ControleCargas\prototype
+```
+
+- **Faixa vermelha "⚠ Dados NÃO compartilhados"** = esta máquina está lendo uma cópia
+  LOCAL. Nada do time aparece, e nada do que você gravar chega ao time. Sincronize a
+  biblioteca **"Beehus Tecnologia Ltda - Documentos"** no OneDrive, ou aponte
+  `CONTROLECARGAS_DATA_DIR` (passo 3) para a pasta certa, e reinicie o app.
+- **"anotações gravadas por último em ..."** muito antiga = o OneDrive desta máquina
+  ainda não baixou a versão nova do arquivo (ou você está numa cópia parada).
+- **"N anotação(ões) na data de referência em tela"** = quantas existem para a data que
+  está no grid AGORA. Anotação é gravada **por data de referência**: a de 16/09 não
+  aparece se a tela estiver em 17/09. Zero aqui, com o arquivo recente, quase sempre
+  significa que você está olhando outra data.
+- **"código rodando de ..."** = de qual pasta o servidor subiu. Tem que ser o **seu clone
+  do Git**. Se aparecer um caminho dentro de `...\Beehus Tecnologia Ltda - Documentos\SWAT\ControleCargas\prototype`, você está rodando a cópia velha de agosto que mora
+  no OneDrive — feche e rode do clone (passo 1).
+
 ## 4. Cole o token da API Beehus
 
 Sem token o app **não carrega nada** — por isso o modal `🔑 Beehus API` abre sozinho.
@@ -84,14 +112,29 @@ O token é o Bearer do dia (a Beehus renova a cada 24h). Cole no campo e clique 
 - **"Token salvo, mas a API não respondeu para validar"** = o token pode estar certo,
   quem não respondeu foi a Beehus. O modal fica aberto de propósito; tente de novo ou
   feche e use o botão **Atualizar**.
+- Depois de salvar o token, **nada é consultado automaticamente** — o seletor de
+  empresas se preenche e a tela espera você clicar em **Atualizar** (passo 5).
 
 O token fica guardado por navegador e sobrevive a um restart do servidor. Ele **nunca**
 vai para o OneDrive nem para o Git (mora em `~/.swat/beehus.token`).
 
-## 5. Clique em Atualizar
+## 5. Escolha data e empresa e clique em Atualizar
 
-O `Atualizar` é o que traz dado fresco da API e recalcula a matriz. Enquanto roda, o
-botão mostra o progresso (`Atualizando… [3/6] ...`).
+**A tela não consulta nada sozinha** (mudou em 22/09/2026 — antes ela disparava uma
+consulta assim que a página abria, ou assim que o token era colado). Ela abre vazia,
+com os campos prontos, e espera você:
+
+1. **Data Referência** (campo "até") — o campo "De" se recalcula sozinho (5 dias úteis
+   pra trás, teto da consulta).
+2. **Empresa** — `Todas as empresas` (padrão) ou uma só. **Escolher uma empresa deixa o
+   clique MUITO mais rápido**: a consulta é por empresa × dia, então limitar o escopo
+   corta a maior parte das chamadas à API. Não é filtro de tela: é o que vai ser
+   consultado.
+3. **↻ Atualizar** — é o que traz dado fresco da API e recalcula a matriz. Enquanto
+   roda, o botão mostra o progresso (`Atualizando… [3/6] ...`).
+
+Se a empresa escolhida não tiver nenhuma carteira no `TemplateCarteiras.xlsx`, a grade
+volta vazia e a mensagem ao lado do botão diz isso — troque a empresa e clique de novo.
 
 **Por que isso importa para os comentários:** a matriz sem um `Atualizar` bem-sucedido
 pinta o último `snapshot.json` que existir em disco, que pode ser de semanas atrás.
@@ -139,6 +182,9 @@ sozinho — **nunca apague essas cópias na mão**, deixe o app processar.
 |---|---|---|
 | Comentários do dia não aparecem | Código antigo (anterior a 21/09/2026), ou pasta de dados isolada | `git pull` e conferir a 1ª linha do log (item 3) |
 | "Token rejeitado pela API" colando o token certo | Token de ontem, ou copiado pela metade | Copiar o token do dia inteiro |
+| Responsável/Comentário do colega não aparece | Rodapé em vermelho: lendo cópia local | Sincronizar a biblioteca do OneDrive, ou setar `CONTROLECARGAS_DATA_DIR` |
+| Responsável/Comentário do colega não aparece | Rodapé diz 0 anotações na data em tela | Conferir se você e ele estão na MESMA data de referência (campo "até") |
+| Responsável/Comentário do colega não aparece | Rodapé mostra código rodando de dentro do OneDrive | Rodar do seu clone do Git, não da cópia do OneDrive |
 | Colo o token e a tela não muda | A API não respondeu para validar | O modal agora mostra o aviso — tente de novo |
 | "Erro ao atualizar: Read timed out" / 429 | Código antigo, sem o freio de rate limit | `git pull` |
 | A janela do servidor abre e fecha na hora | Dependência faltando | `iniciar.bat` já instala; se persistir, ver `.controlecargas-server.err` |

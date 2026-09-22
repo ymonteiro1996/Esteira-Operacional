@@ -114,6 +114,35 @@ def _carregar_registry(timings):
     return registry, registry_por_id, wallet_ids, empresas_por_id, agrupamentos_por_id, orfas
 
 
+def _filtrar_cadastro_por_empresa(registry, agrupamentos_por_id, company_id):
+    """Contexto:
+    Recorta o cadastro já validado para UMA empresa — usado quando a tela
+    pede "Atualizar" com uma empresa escolhida no seletor da toolbar
+    [2026-09-22, pedido do usuário: "permitir selecionar data e company e
+    depois dar um atualizar"]. Chamada por _montar_snapshot() logo depois do
+    passo [1/6], ANTES de qualquer busca da esteira — é o que faz o fan-out
+    de db.py consultar só as datas × ESSA empresa (uma fração das chamadas de
+    um Atualizar sem filtro). Retorna (registry, registry_por_id, wallet_ids,
+    agrupamentos_por_id) já filtrados.
+
+    Limite conhecido: mapear_carteiras_compradas() passa a enxergar só as
+    carteiras desta empresa, então um cruzamento "comprada por carteira de
+    OUTRA empresa" não é marcado enquanto o filtro estiver ativo — some com
+    o filtro em "Todas as empresas".
+
+    Pseudocódigo:
+      1. Mantém só as linhas do registry cujo companyId bate.
+      2. Mantém só os agrupamentos da mesma empresa (o roll-up não pode
+         mostrar agrupamento de empresa que não foi consultada).
+      3. Reindexa registry_por_id/wallet_ids a partir do registry filtrado.
+    """
+    registry_filtrado = [w for w in registry if str(w.get("companyId") or "") == company_id]
+    agrupamentos_filtrados = {gid: g for gid, g in agrupamentos_por_id.items()
+                               if str(g.get("companyId") or "") == company_id}
+    registry_por_id = {w["walletId"]: w for w in registry_filtrado}
+    return registry_filtrado, registry_por_id, list(registry_por_id.keys()), agrupamentos_filtrados
+
+
 def _ler_controle_upload_custodiantes():
     """Contexto:
     Passo [5/6] de montar_snapshot(): lê o ControleUpload.xlsx (best-effort —
@@ -137,7 +166,8 @@ def _ler_controle_upload_custodiantes():
 
 
 def montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=False,
-                     limiar_divergencia_pct=None, limiar_divergencia_reais=None):
+                     limiar_divergencia_pct=None, limiar_divergencia_reais=None,
+                     company_id=None):
     """Contexto:
     Ponto de entrada público do build — fino de propósito (CLAUDE.md §3): só
     embrulha `_montar_snapshot()` nos dois contextos que valem para a
@@ -164,11 +194,13 @@ def montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=False
             data_inicial=data_inicial, data_final=data_final,
             forcar_atualizacao=forcar_atualizacao,
             limiar_divergencia_pct=limiar_divergencia_pct,
-            limiar_divergencia_reais=limiar_divergencia_reais)
+            limiar_divergencia_reais=limiar_divergencia_reais,
+            company_id=company_id)
 
 
 def _montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=False,
-                     limiar_divergencia_pct=None, limiar_divergencia_reais=None):
+                     limiar_divergencia_pct=None, limiar_divergencia_reais=None,
+                     company_id=None):
     """Contexto:
     Ponto de entrada principal — monta o snapshot completo (mesma estrutura
     de sempre: meta/wallets/groupings/custodianUpload). Se `data_inicial`/
@@ -224,6 +256,13 @@ def _montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=Fals
     registry, registry_por_id, wallet_ids, empresas_por_id, agrupamentos_por_id, orfas = \
         _carregar_registry(timings)
     print(f"      {len(registry)} carteiras casadas com `wallets`; {len(orfas)} órfãs.")
+    nome_empresa_filtro = None
+    if company_id:
+        registry, registry_por_id, wallet_ids, agrupamentos_por_id = (
+            _filtrar_cadastro_por_empresa(registry, agrupamentos_por_id, company_id))
+        nome_empresa_filtro = empresas_por_id.get(company_id, {}).get("name") or company_id
+        print(f"      filtro de empresa: {nome_empresa_filtro} ({company_id}) — "
+              f"{len(registry)} carteira(s), {len(agrupamentos_por_id)} agrupamento(s)")
 
     progresso_atualizacao.iniciar_etapa(2, "calendário e janela")
     print("[2/6] Calendário ANBIMA + janela do grid...")
@@ -338,6 +377,12 @@ def _montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=Fals
             # gerou o snapshot corrente.
             "limiarDivergenciaPct": limiar_pct_ativo,
             "limiarDivergenciaReais": limiar_reais_ativo,
+            # empresa escolhida no seletor da toolbar (None = todas) — a tela
+            # usa pra manter o <select> em sinc com o snapshot em tela e pra
+            # avisar quando o filtro não casou com nenhuma carteira do
+            # cadastro [2026-09-22, pedido do usuário].
+            "companyIdFiltro": company_id or None,
+            "companyFiltro": nome_empresa_filtro,
         },
         "wallets": linhas_carteiras,
         "groupings": linhas_agrupamentos,

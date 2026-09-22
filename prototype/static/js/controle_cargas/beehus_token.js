@@ -135,8 +135,14 @@ atualizarContagemTokenBeehus(){
         mensagem em vermelho; {warning:...} (token salvo mas não validado
         agora, ex. API fora do ar) -> mensagem neutra e o modal FICA ABERTO.
      3. Sucesso -> mensagem verde, atualiza o botão da masthead, fecha o
-        modal e dispara executarAtualizacao() (atualizar.js) pra já carregar
-        dado fresco com o token recém-colado.
+        modal, preenche o seletor de empresas (que no boot ainda tomou 401 —
+        não havia token) e deixa o convite a clicar em Atualizar na toolbar.
+        [REVISADO 2026-09-22, pedido do usuário: "não atualizar ao executar a
+        primeira vez, permitir selecionar data e company e depois dar um
+        atualizar clickando no botao"] Antes daqui saía um
+        executarAtualizacao() automático — que ignorava a data/empresa que a
+        pessoa ainda ia escolher e prendia a tela por minutos assim que o
+        token era colado.
 
    [2026-09-21, relato do usuário: "não está conseguindo colar o token"] O
    caso `warning` ANTES também fechava o modal, logo depois de escrever a
@@ -168,7 +174,8 @@ salvarTokenBeehus(){
       msg.textContent = 'Token válido — salvo com sucesso.';
       msg.classList.add('ok');
       ControleCargas.closeModal();
-      ControleCargas.executarAtualizacao();
+      ControleCargas.preencherSelectEmpresas();
+      ControleCargas.convidarParaAtualizar();
     })
     .catch(()=>{ msg.textContent = 'Falha de rede ao salvar o token.'; msg.classList.add('err'); });
 },

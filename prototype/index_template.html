@@ -119,6 +119,19 @@
          padrão fixo), ver preencherCamposLimiarDivergencia() (atualizar.js). -->
     <label class="datefield" title="Divergência Rent Contrib × Rent NAV mínima pra sinalizar o badge &quot;Rent&quot; — os 2 campos (% e R$) precisam passar juntos.">Rent ≥ <input type="number" id="limiar-divergencia-pct" step="0.01" min="0" style="width:64px"> %</label>
     <label class="datefield">e ≥ R$ <input type="number" id="limiar-divergencia-reais" step="1" min="0" style="width:80px"></label>
+    <!-- [2026-09-22, pedido do usuário: "permitir selecionar data e company
+         e depois dar um atualizar clickando no botao"] Seletor de empresa:
+         escopa a CONSULTA do botão Atualizar (company_id de /api/atualizar),
+         não é um filtro de tela — com uma empresa escolhida, o clique busca
+         só as carteiras dela na API, uma fração das chamadas de "Todas".
+         Opções preenchidas por preencherSelectEmpresas() (atualizar.js) a
+         partir de GET /api/empresas; sem token colado ainda, fica só com
+         "Todas as empresas" e se preenche assim que o token for salvo. -->
+    <label class="datefield" title="Escopa a consulta do botão Atualizar a UMA empresa — quanto menor o escopo, mais rápido o clique. Não filtra o que já está na tela.">Empresa
+      <select id="empresa-atualizar" autocomplete="off">
+        <option value="">Todas as empresas</option>
+      </select>
+    </label>
     <button class="btn" id="btn-atualizar">↻ Atualizar</button>
     <span class="atualizar-msg" id="atualizar-msg"></span>
     <span class="atualizar-timestamp" id="atualizar-timestamp"></span>
@@ -536,6 +549,19 @@
   </div>
 </div>
 
+<!-- [2026-09-22, relato do usuário: "um colega ainda não está aparecendo o
+     responsável e comentários, mesmo que são gravados e consumidos em uma base
+     na rede onedrive"] Rodapé de diagnóstico, SEMPRE visível (decisão do
+     usuário): de qual pasta vêm os dados compartilhados, quantos comentários/
+     anotações foram carregados dela, quando o arquivo foi gravado pela última
+     vez e de qual pasta o código está rodando. Preenchido por
+     static/js/controle_cargas/diagnostico.js (GET /api/diagnostico-dados) —
+     até aqui esse diagnóstico só existia na 1ª linha do log de boot, num
+     arquivo que ninguém abre (a janela do servidor sobe oculta). -->
+<div class="diagnostico-rodape" id="diagnostico-rodape">
+  <span id="diagnostico-texto">Verificando de onde vêm os dados compartilhados...</span>
+</div>
+
 <script src="/static/js/controle_cargas/state.js"></script>
 <script src="/static/js/controle_cargas/filtros.js"></script>
 <script src="/static/js/controle_cargas/filtro_cabecalho.js"></script>
@@ -563,6 +589,10 @@
 <script src="/static/js/controle_cargas/atualizar.js"></script>
 <script src="/static/js/controle_cargas/sincronizacao.js"></script>
 <script src="/static/js/controle_cargas/beehus_token.js"></script>
+<!-- [2026-09-22] Rodapé de diagnóstico — precisa vir depois de anotacoes.js/
+     comentarios.js (lê ControleCargas.ANNOTATIONS/COMMENTS pra contar o que
+     vale na data de referência em tela). -->
+<script src="/static/js/controle_cargas/diagnostico.js"></script>
 <script src="/static/js/controle_cargas/index.js"></script>
 
 <!-- [2026-08-21] Aba "Controle de Demandas" — JS quebrado por

@@ -1,8 +1,9 @@
 /* ControleCargas.atualizar — botão "Atualizar" + campos de janela (data
    inicial/final) — Tarefas 2 e 3 do refactor 2026-07-20.
    Parte do objeto único ControleCargas (ver state.js). Chama GET
-   /api/atualizar?data_inicial=...&data_final=... (app.py), que só consulta
-   a API Beehus para as datas AINDA não cacheadas nesta sessão (ver db.py/
+   /api/atualizar?data_inicial=...&data_final=...[&company_id=...] (app.py),
+   que só consulta a API Beehus para as datas AINDA não cacheadas nesta
+   sessão — e, com company_id, só as carteiras dessa empresa (ver db.py/
    cache no backend — "Otimização de Acesso ao Banco" do PLANNING.md) e devolve um
    snapshot completo recalculado para a janela pedida. O front-end troca
    ControleCargas.SNAPSHOT inteiro e reaproveita os mesmos builders do
@@ -161,6 +162,50 @@ preencherCamposDataAtualizar(){
 },
 
 /* Contexto:
+   Preenche o seletor "Empresa" da toolbar (#empresa-atualizar) com as
+   empresas visíveis ao token (GET /api/empresas) [2026-09-22, pedido do
+   usuário: "permitir selecionar data e company e depois dar um atualizar
+   clickando no botao"]. Chamada no bootstrap (init(), index.js) e de novo
+   depois que o usuário cola o token (salvarTokenBeehus, beehus_token.js) —
+   no 1º acesso a rota responde 401 (token ainda não colado) e o seletor
+   fica só com "Todas as empresas", então precisa de uma 2ª chance. Sempre
+   devolve uma Promise que resolve mesmo em falha (o seletor é opcional; a
+   tela continua utilizável com "Todas as empresas"). Não altera a escolha
+   do usuário.
+
+   Pseudocódigo:
+     1. Sem o seletor no DOM (versão antiga do HTML em cache), sai sem erro.
+     2. Guarda o valor escolhido agora, pra restaurar no fim.
+     3. Busca GET /api/empresas; erro/401 -> mantém o seletor como está.
+     4. Redesenha as opções: "Todas as empresas" + uma por empresa (value =
+        companyId, que é o que /api/atualizar espera).
+     5. Restaura a escolha anterior se ela ainda existir na lista nova. */
+preencherSelectEmpresas(){
+  const select = document.getElementById('empresa-atualizar');
+  if(!select) return Promise.resolve();
+  const escolhaAtual = select.value;
+
+  return fetch('/api/empresas')
+    .then(r=>{ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
+    .then(({empresas})=>{
+      select.innerHTML = '';
+      const todas = document.createElement('option');
+      todas.value = '';
+      todas.textContent = 'Todas as empresas';
+      select.appendChild(todas);
+      (empresas || []).forEach(({id, name})=>{
+        const opcao = document.createElement('option');
+        opcao.value = id;
+        opcao.textContent = name || id;
+        select.appendChild(opcao);
+      });
+      select.value = escolhaAtual;
+      if(!select.value) select.value = '';
+    })
+    .catch(()=>{});
+},
+
+/* Contexto:
    Preenche os 2 campos editáveis do filtro de divergência Rent Contrib ×
    Rent NAV (limiar-divergencia-pct/-reais, badge "Rent" da matriz) com o
    valor que REALMENTE gerou o SNAPSHOT atual (SNAPSHOT.meta.
@@ -224,7 +269,11 @@ formatarDataHoraAgora(){
         limiar_divergencia_pct/limiar_divergencia_reais quando os campos
         (limiar-divergencia-pct/-reais) tiverem valor — vazios não entram na
         URL, o backend aplica o padrão de sempre [2026-07-31, pedido do
-        usuário: "campos para mudar o valor"].
+        usuário: "campos para mudar o valor"] — e company_id quando o
+        seletor "Empresa" (#empresa-atualizar) tiver uma empresa escolhida
+        [2026-09-22, pedido do usuário: "permitir selecionar data e company
+        e depois dar um atualizar clickando no botao"]; "Todas as empresas"
+        (valor vazio) também não entra na URL.
      5. Em sucesso: troca SNAPSHOT inteiro, resincroniza os 2 campos de
         limiar com o que o backend REALMENTE usou
         (preencherCamposLimiarDivergencia), limpa a ordem congelada (senão
@@ -325,9 +374,14 @@ enviarAtualizacao(){
 
   const campoPct = document.getElementById('limiar-divergencia-pct');
   const campoReais = document.getElementById('limiar-divergencia-reais');
+  const selectEmpresa = document.getElementById('empresa-atualizar');
   let url = `/api/atualizar?data_inicial=${encodeURIComponent(dataInicial)}&data_final=${encodeURIComponent(dataFinal)}`;
   if(campoPct && campoPct.value) url += `&limiar_divergencia_pct=${encodeURIComponent(campoPct.value)}`;
   if(campoReais && campoReais.value) url += `&limiar_divergencia_reais=${encodeURIComponent(campoReais.value)}`;
+  // [2026-09-22, pedido do usuário] Empresa escolhida no seletor — vazio
+  // ("Todas as empresas") não entra na URL, e o backend consulta tudo, igual
+  // a antes deste campo existir.
+  if(selectEmpresa && selectEmpresa.value) url += `&company_id=${encodeURIComponent(selectEmpresa.value)}`;
   fetch(url)
     .then(r=> r.json().then(data=> ({ok:r.ok, data})))
     .then(({ok,data})=>{
@@ -350,9 +404,19 @@ enviarAtualizacao(){
         else ControleCargas.buildMatrix();
         if(msgEl){
           const cacheInfo = data.meta && data.meta.cacheInfo;
-          msgEl.textContent = cacheInfo
-            ? `Atualizado — ${cacheInfo.datasNovasConsultadas} data(s) nova(s) consultada(s) na API, ${cacheInfo.datasDoCache} do cache local.`
-            : 'Atualizado.';
+          const empresaFiltro = data.meta && data.meta.companyFiltro;
+          const semCarteira = !data.wallets || !data.wallets.length;
+          // [2026-09-22, pedido do usuário] Com empresa escolhida, o snapshot
+          // pode voltar legitimamente vazio (empresa sem carteira no
+          // TemplateCarteiras.xlsx) — sem este aviso a grade em branco
+          // pareceria falha do Atualizar.
+          if(empresaFiltro && semCarteira){
+            msgEl.textContent = `Nenhuma carteira do cadastro em "${empresaFiltro}" — escolha outra empresa ou "Todas as empresas".`;
+          } else {
+            msgEl.textContent = (cacheInfo
+              ? `Atualizado — ${cacheInfo.datasNovasConsultadas} data(s) nova(s) consultada(s) na API, ${cacheInfo.datasDoCache} do cache local.`
+              : 'Atualizado.') + (empresaFiltro ? ` Empresa: ${empresaFiltro}.` : '');
+          }
         }
       });
     })

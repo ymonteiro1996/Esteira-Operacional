@@ -278,21 +278,44 @@ wire(){
 },
 
 /* Contexto:
+   Escreve na .atualizar-msg o convite a clicar em "Atualizar" — a tela não
+   consulta mais nada sozinha ao carregar [2026-09-22, pedido do usuário:
+   "não atualizar ao executar a primeira vez, permitir selecionar data e
+   company e depois dar um atualizar clickando no botao"], então sem este
+   texto o 1º acesso seria uma grade vazia sem explicação. Chamada pelo
+   init() e por salvarTokenBeehus() (beehus_token.js), logo depois de o
+   token ser aceito. Não retorna nada.
+
+   Pseudocódigo:
+     1. Sem o elemento no DOM (versão antiga do HTML em cache), sai sem erro.
+     2. Só escreve se a mensagem estiver vazia — nunca apaga o resultado
+        ("Atualizado — ...") ou o erro de um Atualizar já executado. */
+convidarParaAtualizar(){
+  const msgEl = document.getElementById('atualizar-msg');
+  if(!msgEl || msgEl.textContent) return;
+  msgEl.textContent = 'Escolha a data de referência e a empresa e clique em ↻ Atualizar.';
+},
+
+/* Contexto:
    Bootstrap da tela depois que snapshot + comentários já chegaram — 1º
    render completo. Chamada por startWithSnapshot(). Não retorna nada.
 
-   [REVISADO 2026-07-27, pedido do usuário — "veja uma solução robusta e
-   definitiva": uma carteira tinha Unprocessed novo no Mongo que não
-   aparecia na tela] `snapshot.json` é um arquivo ESTÁTICO, escrito só no
-   boot do servidor (atualizar_snapshot_no_boot(), app.py) — se o servidor
-   fica de pé o dia todo, qualquer carga nova no Mongo depois do boot fica
-   invisível até alguém clicar "Atualizar" manualmente ou reiniciar o
-   servidor. Agora o próprio carregamento da página já dispara um
-   "Atualizar" automático (mesma rota /api/atualizar, cache-aware — só
-   consulta o Mongo pelas datas que ainda não viu nesta sessão do
-   processo): o usuário vê a matriz renderizada com o snapshot estático
-   imediatamente (sem tela em branco) e, assim que a janela padrão é
-   resolvida, a tela se atualiza sozinha com o dado mais fresco possível.
+   [REVISADO 2026-09-22, pedido do usuário: "não atualizar ao executar a
+   primeira vez, permitir selecionar data e company e depois dar um
+   atualizar clickando no botao"] O carregamento da página NÃO dispara mais
+   um "Atualizar" sozinho. A 1ª consulta é sempre um clique do usuário,
+   depois de ele escolher a data de referência e a empresa — antes disto, a
+   tela abria já disparando uma consulta de vários minutos na janela/escopo
+   default, e quem queria outra data ou outra empresa esperava essa primeira
+   terminar (ou disputava com ela) pra só então pedir a que interessava.
+
+   O que o init() faz agora é deixar a tela PRONTA pra esse clique: preenche
+   De/Até com a janela padrão, preenche o seletor de empresas e escreve na
+   .atualizar-msg o convite a clicar. A matriz nasce com o que veio de
+   snapshot.json — que o app.py já serve vazio quando está ausente ou com
+   data de referência velha (_snapshot_json_esta_desatualizado()), então o
+   1º acesso mostra uma tela vazia e interativa, nunca dado antigo
+   disfarçado de atual.
 
    Pseudocódigo:
      1. Constrói cabeçalho, legenda e filtros com o snapshot estático (1º
@@ -305,10 +328,10 @@ wire(){
         Divergencia — [2026-07-31, pedido do usuário: "campos para mudar o
         valor"]; SNAPSHOT já está carregado neste ponto, não precisa de
         fetch à parte, ao contrário das datas no passo 6).
-     6. Preenche os campos de data (janela padrão) e, assim que prontos,
-        dispara executarAtualizacao() automaticamente — refresh silencioso
-        com dado fresco, sem exigir clique do usuário (que também
-        resincroniza os 2 campos do passo 5 com o snapshot fresco). */
+     6. Preenche os campos de data (janela padrão) e o seletor de empresas
+        (/api/empresas — sem token colado ainda ele fica só com "Todas as
+        empresas" e é repreenchido por salvarTokenBeehus, beehus_token.js).
+        Nenhum dos dois dispara consulta: quem consulta é o botão. */
 init(){
   ControleCargas.buildHeader();
   ControleCargas.buildLegend();
@@ -317,7 +340,9 @@ init(){
   ControleCargas.buildMatrix();
   document.querySelectorAll('.grid-scroll').forEach(ControleCargas.enableDragScroll);
   ControleCargas.preencherCamposLimiarDivergencia();
-  ControleCargas.preencherCamposDataAtualizar().then(()=> ControleCargas.executarAtualizacao());
+  ControleCargas.preencherCamposDataAtualizar();
+  ControleCargas.preencherSelectEmpresas();
+  ControleCargas.convidarParaAtualizar();
 },
 });
 
