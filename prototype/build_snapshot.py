@@ -47,7 +47,7 @@ from cache import cache_ttl_colecoes
 from registry import ler_linhas_do_template, montar_registry_validado
 from snapshot_builder import (
     compute_wallet_row, compute_groupings_rows, definir_limiares_divergencia,
-    mapear_carteiras_compradas,
+    mapear_carteiras_compradas, aplicar_defasagem_herdada_da_explosao,
     LIMIAR_DIVERGENCIA_PADRAO, LIMIAR_DIVERGENCIA_REAIS_PADRAO,
 )
 from utils.datas import CalendarioDiasUteis, calcular_janela_grid, GRID_REFERENCE_LAG_DU, mapear_distancia_dias_uteis_hoje
@@ -307,6 +307,10 @@ def _montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=Fals
     # repassado pra cada compute_wallet_row() abaixo (ver snapshot_builder.
     # mapear_carteiras_compradas).
     compradores_por_alvo = mapear_carteiras_compradas(registry_por_id)
+    # [2026-09-24, pedido do usuário] Quem compra carteira que explode segue
+    # a maior carência (Defasagem) entre a própria e a da explodida — tem de
+    # rodar ANTES de compute_wallet_row, que calcula o prazo com ela.
+    aplicar_defasagem_herdada_da_explosao(registry_por_id)
 
     linhas_carteiras = []
     for w in registry:

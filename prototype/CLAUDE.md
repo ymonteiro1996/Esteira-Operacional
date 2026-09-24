@@ -1265,6 +1265,25 @@ Complementa a divisão de código da seção 4 — juntas atacam a causa dos con
     código velho — a única saída é neutralizar/remover aquela cópia, pendente
     de confirmação do usuário desde 21/09.
 
+- **[2026-09-24, pedido do usuário: "Carteiras que compram carteiras que explodem,
+  seguir a maior carência entre a cadastrada no Template Carteiras e a da Carteira
+  explodida"] DEFASAGEM HERDADA DA EXPLOSÃO.** Se A tem B (também do Template) em
+  `explodedWalletIds`, o prazo de A usa `max(Defasagem de A, Defasagem efetiva de B)`.
+  - `snapshot_builder.aplicar_defasagem_herdada_da_explosao(registry_por_id)` roda 1x
+    em `_montar_snapshot()` logo depois de `mapear_carteiras_compradas()` e grava em
+    cada carteira `lagBizDaysEfetiva` + `defasagemHerdadaDe` (nome da explodida que
+    impôs a carência). `lagBizDays` (o cadastrado) NÃO muda. `compute_cell()` usa
+    `defasagem_efetiva_du(wallet)` — logo estágio, Atraso/Pauta, SLA do tooltip e
+    ordenação já saem com a carência herdada.
+  - **Transitivo** (A→B→C: A herda a de C se for a maior da cadeia), com defesa contra
+    ciclo (A↔B não trava). "M"/vazio conta como 0 (mesma regra do prazo). Empate não
+    herda (a cadastrada vale).
+  - Exibição: painel de detalhe mostra "D-n (herdada de X; cadastro D-m)" em violeta
+    (`montarTextoDefasagemPainel`, paineis.js); coluna Defasagem do Excel exportado
+    vira "D-n (herdada de X)" (`montarDefasagemExcel`, exportar.js).
+  - **Limite**: com filtro de empresa ativo, só enxerga explodidas da MESMA empresa (mesmo
+    limite de `mapear_carteiras_compradas`).
+
 ---
 
 ## Checklist rápido (antes de considerar uma tarefa pronta)

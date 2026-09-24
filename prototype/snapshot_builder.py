@@ -243,6 +243,84 @@ def mapear_carteiras_compradas(registry_por_id):
     return dict(compradores_por_alvo)
 
 
+def _resolver_defasagem_efetiva(wallet_id, registry_por_id, resolvidas, em_andamento):
+    """Contexto:
+    Calcula (recursivamente, com memo) a Defasagem EFETIVA de 1 carteira —
+    a maior entre a cadastrada no Template e a efetiva de cada carteira do
+    Template que ela explode (compra). Chamada só por
+    aplicar_defasagem_herdada_da_explosao(). Retorna (dias, nome_origem):
+    `nome_origem` = nome da carteira explodida que impôs a carência maior,
+    ou None quando a cadastrada já é a maior.
+
+    Pseudocódigo:
+      1. Já resolvida -> devolve do memo.
+      2. Parte da cadastrada (`lagBizDays`; None = "M"/vazio, que o prazo
+         trata como 0 — ver compute_cell()).
+      3. Pra cada walletId explodido que TAMBÉM está no Template (e não é
+         ela mesma nem está no caminho atual — defesa contra ciclo A↔B),
+         resolve a efetiva dele primeiro (transitivo: A compra B que compra
+         C -> A herda a de C se for a maior da cadeia).
+      4. Se alguma explodida tem carência ESTRITAMENTE maior que a atual,
+         passa a valer a dela e guarda o nome da explodida.
+      5. Grava no memo e devolve.
+    """
+    if wallet_id in resolvidas:
+        return resolvidas[wallet_id]
+    em_andamento.add(wallet_id)
+    wallet = registry_por_id[wallet_id]
+    dias, nome_origem = wallet["lagBizDays"], None
+    for alvo_id in wallet.get("explodedWalletIds") or []:
+        if alvo_id not in registry_por_id or alvo_id == wallet_id or alvo_id in em_andamento:
+            continue
+        dias_alvo, _ = _resolver_defasagem_efetiva(alvo_id, registry_por_id, resolvidas, em_andamento)
+        if dias_alvo is not None and dias_alvo > (dias or 0):
+            dias, nome_origem = dias_alvo, registry_por_id[alvo_id]["name"]
+    em_andamento.discard(wallet_id)
+    resolvidas[wallet_id] = (dias, nome_origem)
+    return resolvidas[wallet_id]
+
+
+def aplicar_defasagem_herdada_da_explosao(registry_por_id):
+    """Contexto:
+    [NOVO 2026-09-24, pedido do usuário: "Carteiras que compram carteiras que
+    explodem, seguir a maior carência entre a cadastrada no Template
+    Carteiras e a da Carteira explodida"] Se a carteira A explode (compra) a
+    carteira B, ambas do Template, A só consegue fechar depois de B — então o
+    prazo de A passa a usar max(Defasagem de A, Defasagem efetiva de B).
+    Mesmo cruzamento de `explodedWalletIds` de mapear_carteiras_compradas()
+    (só conta explodida que também está no Template). Chamada 1x por
+    montar_snapshot() (build_snapshot.py), antes do loop de
+    compute_wallet_row. Escreve em cada carteira do registry
+    `lagBizDaysEfetiva` (o que compute_cell() usa pro prazo) e
+    `defasagemHerdadaDe` (nome da explodida que impôs a carência, ou None);
+    `lagBizDays` (o cadastrado) não é alterado. Não retorna nada.
+
+    Pseudocódigo:
+      1. Pra cada carteira do registry, resolve a efetiva
+         (_resolver_defasagem_efetiva, memo compartilhado).
+      2. Grava `lagBizDaysEfetiva`/`defasagemHerdadaDe` na carteira.
+    """
+    resolvidas = {}
+    for wallet_id, wallet in registry_por_id.items():
+        dias, nome_origem = _resolver_defasagem_efetiva(wallet_id, registry_por_id, resolvidas, set())
+        wallet["lagBizDaysEfetiva"] = dias
+        wallet["defasagemHerdadaDe"] = nome_origem
+
+
+def defasagem_efetiva_du(wallet):
+    """Contexto: Defasagem (dias úteis) que vale pro prazo da carteira — a
+    efetiva herdada da explosão quando já calculada
+    (aplicar_defasagem_herdada_da_explosao), senão a cadastrada; None/"M"
+    vira 0. Usada por compute_cell(). Retorna int.
+
+    Pseudocódigo:
+      1. Usa `lagBizDaysEfetiva` se presente, senão `lagBizDays`.
+      2. None -> 0.
+    """
+    dias = wallet.get("lagBizDaysEfetiva", wallet.get("lagBizDays"))
+    return dias or 0
+
+
 def compute_sort_key(celulas, nome, aguardando_explosao=False):
     """Contexto:
     Monta a chave de ordenação por prioridade de 1 linha (carteira ou
@@ -413,7 +491,9 @@ def compute_cell(wallet, data, doc_unprocessed, doc_processed, doc_nav, calendar
     processada = doc_processed is not None
     unprocessed = doc_unprocessed is not None
 
-    prazo = calendario.prazo_regime_diario(data, wallet["lagBizDays"] or 0)
+    # [2026-09-24] Defasagem efetiva: carteira que explode outra do Template
+    # herda a maior carência da cadeia (aplicar_defasagem_herdada_da_explosao).
+    prazo = calendario.prazo_regime_diario(data, defasagem_efetiva_du(wallet))
     atraso_du = calendario.dias_uteis_entre(prazo, data_hoje)
 
     if publicada or (processada and not wallet["mustPublish"]):
@@ -715,6 +795,11 @@ def montar_dict_linha_carteira(wallet, celulas, chave_ordenacao, comprada_por_no
         "groupingIds": wallet["groupingIds"],
         "periodicity": wallet["periodicity"],
         "lagBizDays": wallet["lagBizDays"],
+        # [2026-09-24] Defasagem que de fato gerou os prazos (herdada da
+        # carteira explodida quando maior) + de quem veio — ver
+        # aplicar_defasagem_herdada_da_explosao().
+        "lagBizDaysEfetiva": wallet.get("lagBizDaysEfetiva", wallet["lagBizDays"]),
+        "defasagemHerdadaDe": wallet.get("defasagemHerdadaDe"),
         "slaPdfReceiptDu": wallet["slaPdfReceiptDu"],
         "slaUploadDu": wallet["slaUploadDu"],
         "dailyRepetition": wallet["dailyRepetition"],

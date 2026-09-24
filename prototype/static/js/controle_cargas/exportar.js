@@ -113,8 +113,12 @@ buildEstilosExcel(){
      1. Regime mensal (periodicity 'M') -> "M" (o SLA mensal usa outro
         cálculo, ver prazo_regime_mensal em utils/datas.py).
      2. Regime diário -> "D-{lagBizDays}" (ou "—" se, por algum motivo,
-        lagBizDays não veio preenchido). */
+        lagBizDays não veio preenchido).
+     0. [2026-09-24] Antes de tudo: carência herdada da carteira explodida
+        (defasagemHerdadaDe) -> "D-{efetiva} (herdada de X)" — é ela que
+        gerou os prazos/cores da Matriz. */
 montarDefasagemExcel(r){
+  if(r.defasagemHerdadaDe) return `D-${r.lagBizDaysEfetiva} (herdada de ${r.defasagemHerdadaDe})`;
   if(r.periodicity==='M') return 'M';
   return r.lagBizDays!=null ? `D-${r.lagBizDays}` : '—';
 },

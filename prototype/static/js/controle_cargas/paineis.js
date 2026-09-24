@@ -339,6 +339,25 @@ buildSecaoSituacaoDiaCarteira(entry, focusDate){
   return html;
 },
 
+/* Contexto:
+   Texto da linha "Defasagem / SLA" do painel de carteira. [2026-09-24,
+   pedido do usuário] Quando a carteira explode outra do Template com
+   carência maior, o prazo segue a da explodida — mostra a efetiva, de quem
+   veio e a cadastrada. Chamada por buildSecaoCadastroSlaCarteira(). Retorna
+   string HTML (nome já escapado).
+
+   Pseudocódigo:
+     1. Herdada (defasagemHerdadaDe) -> "D-{efetiva} (herdada de X; cadastro D-n|M)".
+     2. Senão, regime mensal -> texto do fechamento do mês.
+     3. Senão -> "D-{cadastrada}". */
+montarTextoDefasagemPainel(r){
+  const cadastro = r.periodicity==='M' ? 'M' : ('D-'+(r.lagBizDays||0));
+  if(r.defasagemHerdadaDe){
+    return `D-${r.lagBizDaysEfetiva} <span style="color:var(--overlay-comprada);font-weight:700">(herdada de ${ControleCargas.esc(r.defasagemHerdadaDe)}; cadastro ${cadastro})</span>`;
+  }
+  return r.periodicity==='M' ? 'fechamento do mês + 15du (10 recebimento + 5 upload)' : cadastro;
+},
+
 /* Contexto: monta a seção 4 (cadastro & SLA completos) do painel de
    carteira. Chamada por buildWalletPanel(). Retorna string HTML.
 
@@ -357,7 +376,7 @@ buildSecaoCadastroSlaCarteira(r){
     <tr><td>Company</td><td>${ControleCargas.esc(r.company||'—')}</td></tr>
     <tr><td>Modelo de Carga</td><td>${ControleCargas.esc(r.loadModel||'—')}${r.isManualLoad?' (manual)':''}</td></tr>
     <tr><td>Periodicidade</td><td>${r.periodicity==='M'?'Mensal':'Diário'}</td></tr>
-    <tr><td>Defasagem / SLA</td><td>${r.periodicity==='M' ? 'fechamento do mês + 15du (10 recebimento + 5 upload)' : ('D-'+(r.lagBizDays||0))}</td></tr>
+    <tr><td>Defasagem / SLA</td><td>${ControleCargas.montarTextoDefasagemPainel(r)}</td></tr>
     <tr><td>Deve Publicar</td><td>${r.mustPublish?'Sim':'Não'}</td></tr>
     <tr><td>Repetição Diária</td><td>${r.dailyRepetition?'Sim':'Não'}</td></tr>
     <tr><td>Exceção</td><td>${ControleCargas.esc(r.exception||'—')}</td></tr>
