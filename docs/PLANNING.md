@@ -897,6 +897,12 @@ modelo de tier/`priorityScore` descrito acima.
   demais — `filtro_cabecalho.js`), com as tags extras **"Pauta do dia"** e
   **"Carga Mensal"** (Periodicidade M) além de siglas/"Problema
   Rent"/"Comprada" ("Comprada" só na Ref).
+- **Referência D-1 + rótulo D-n** [2026-09-24, pedido do usuário] — a data
+  de referência sugerida passou de D-3 para **D-1** (`GRID_REFERENCE_LAG_DU = 1`,
+  `utils/datas.py`; vale pra /api/janela-padrao e janela default). Acima
+  de cada data do cabeçalho aparece **D-1, D-2, D-3...** = dias úteis até
+  hoje, calculados no backend com o calendário ANBIMA
+  (`meta.diasUteisAteHoje`, `mapear_distancia_dias_uteis_hoje`).
 - **Anotações por linha** — 2 colunas editáveis novas, **Responsável** e
   **Comentário sobre atuação**, ligadas SÓ à data de referência (nunca por
   dia da janela). Persistência própria: `data/wallet_annotations.json` +

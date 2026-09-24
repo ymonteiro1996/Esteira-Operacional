@@ -56,7 +56,7 @@ e o CLAUDE.md atualizado). O que ESTE arquivo faz:
      static/js/controle_cargas/diagnostico.js) — antes disso a mesma
      informação só existia na 1ª linha do log de boot, num arquivo que
      ninguém abre.
-  5) `GET /api/janela-padrao` — [2026-07-23] devolve De/Até default (D-3 do
+  5) `GET /api/janela-padrao` — [2026-07-23] devolve De/Até default (D-1 do
      hoje REAL do servidor + 5du antes) sem tocar o Mongo; usada pra sugerir
      os campos de data no 1º acesso sem depender da meta.referenceDate
      congelada do snapshot.json (arquivo pré-gerado, ver build_snapshot.py).
@@ -123,7 +123,7 @@ import progresso_atualizacao
 from pages.controle_demandas import bp as controle_demandas_bp
 from pages.anomalias import bp as anomalias_bp
 from snapshot_builder import LIMIAR_DIVERGENCIA_PADRAO, LIMIAR_DIVERGENCIA_REAIS_PADRAO
-from utils.datas import CalendarioDiasUteis, GRID_REFERENCE_LAG_DU, JANELA_INICIAL_DIAS_UTEIS, calcular_janela_grid
+from utils.datas import CalendarioDiasUteis, GRID_REFERENCE_LAG_DU, JANELA_INICIAL_DIAS_UTEIS, calcular_janela_grid, mapear_distancia_dias_uteis_hoje
 from utils.caminhos import descrever_data_dir, diagnosticar_data_dir, resolver_data_dir
 
 HERE = Path(__file__).resolve().parent
@@ -395,6 +395,7 @@ def _montar_snapshot_vazio():
             "referenceDate": data_referencia,
             "gridReferenceLagDu": GRID_REFERENCE_LAG_DU,
             "window": janela,
+            "diasUteisAteHoje": mapear_distancia_dias_uteis_hoje(calendario, janela, hoje),
             "calendarSource": calendario.fonte,
             "calendarFallback": calendario.fallback,
             "companies": [],
@@ -1031,7 +1032,7 @@ def janela_padrao():
       1. Monta o calendário ANBIMA (mesmo usado por montar_snapshot()).
       2. Calcula (data_referencia, janela) contra o hoje real via
          calcular_janela_grid() — MESMA fórmula/constantes do default do
-         snapshot (utils/datas.py: D-3 de referência — GRID_REFERENCE_LAG_DU,
+         snapshot (utils/datas.py: D-1 de referência — GRID_REFERENCE_LAG_DU,
          [REVISADO 2026-07-24, pedido do usuário] foi D-5 por 1 dia —, 5 du
          antes),
          sem nenhuma consulta à API (só aritmética de calendário — barato,

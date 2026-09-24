@@ -243,6 +243,9 @@ table.matrix thead th{
   cursor:pointer; position:sticky; top:0; background:var(--surface-raised); z-index:3;
 }
 table.matrix thead th.ref{color:var(--accent);}
+/* [2026-09-24] rótulo D-n (dias úteis até hoje) acima da data do cabeçalho */
+table.matrix thead th .dline{display:block;font-size:9px;font-weight:600;letter-spacing:.04em;color:var(--ink-faint);}
+table.matrix thead th.ref .dline{color:inherit;}
 table.matrix thead th.ref .refline{font-size:9px;text-transform:uppercase;letter-spacing:.06em;display:block;}
 /* coluna de data escolhida no cabeçalho pra alimentar o painel "Carteiras
    Publicadas" (buildPublishStat) — distinta da coluna .ref (que é sempre a

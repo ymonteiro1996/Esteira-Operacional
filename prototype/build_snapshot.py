@@ -50,7 +50,7 @@ from snapshot_builder import (
     mapear_carteiras_compradas,
     LIMIAR_DIVERGENCIA_PADRAO, LIMIAR_DIVERGENCIA_REAIS_PADRAO,
 )
-from utils.datas import CalendarioDiasUteis, calcular_janela_grid, GRID_REFERENCE_LAG_DU
+from utils.datas import CalendarioDiasUteis, calcular_janela_grid, GRID_REFERENCE_LAG_DU, mapear_distancia_dias_uteis_hoje
 from utils.caminhos import diagnosticar_data_dir, resolver_data_dir
 from excel_report import write_excel_report
 
@@ -274,7 +274,7 @@ def _montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=Fals
         print(f"      janela CUSTOMIZADA pedida pelo usuário: {data_inicial}..{data_final} ({len(janela)} du)")
     else:
         data_referencia, janela = calcular_janela_grid(calendario, hoje)
-        print(f"      janela DEFAULT (5du/D-3): {janela[0]}..{janela[-1]} ({len(janela)} du)")
+        print(f"      janela DEFAULT (5du/D-{GRID_REFERENCE_LAG_DU}): {janela[0]}..{janela[-1]} ({len(janela)} du)")
     data_extra_gate_sequencia = calendario.deslocar(janela[0], -1)  # 1du a mais p/ checar gate de sequência do 1º dia visível
 
     todas_datas_pedidas = [data_extra_gate_sequencia] + janela
@@ -355,6 +355,8 @@ def _montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=Fals
             "referenceDate": data_referencia,
             "gridReferenceLagDu": GRID_REFERENCE_LAG_DU,
             "window": janela,
+            # rótulo D-n acima de cada data do cabeçalho [2026-09-24]
+            "diasUteisAteHoje": mapear_distancia_dias_uteis_hoje(calendario, janela, hoje),
             "calendarSource": calendario.fonte,
             "calendarFallback": calendario.fallback,
             "companies": empresas_vistas,

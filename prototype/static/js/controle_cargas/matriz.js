@@ -193,8 +193,8 @@ setaOrdenacaoHtml(criterio){
         ordenação `institution` que já existia); Modelo de Carga é só
         informativo, sem ordenação] — as colunas clicáveis ganham a seta de
         direção (setaOrdenacaoHtml).
-     2. 1 coluna por dia da janela (todas com o ▾ de filtro de status
-        [2026-09-24]), destacando a coluna de referência (▾ ref), mostrando o dia da semana nas demais e marcando (foco) a coluna
+     2. 1 coluna por dia da janela (todas com o ▾ de filtro de status e o
+        rótulo D-n acima da data [2026-09-24]), destacando a coluna de referência (▾ ref), mostrando o dia da semana nas demais e marcando (foco) a coluna
         escolhida pelo usuário pra alimentar o painel "Carteiras Publicadas"
         (data-date + classe "focuscol" quando ≠ ref — clique religado em
         wireHeaderDateClicks()).
@@ -207,6 +207,24 @@ setaOrdenacaoHtml(criterio){
         [REMOVIDO 2026-08-05, pedido do usuário — migração API Beehus: as 3
         colunas-resumo Últ. Unp/Pro/Pub que vinham depois saíram por
         completo, sem endpoint equivalente na API; ver db.py]. */
+/* Contexto:
+   Rótulo "D-n" exibido acima de cada data do cabeçalho — quantos dias
+   úteis a data está atrás de hoje (meta.diasUteisAteHoje, calculado no
+   backend com o calendário ANBIMA) [2026-09-24, pedido do usuário: "em
+   cima das datas do cabeçalho aparecer D-1, D-2, D-3 conforme a relação
+   com a data de hoje"]. Chamada por buildCabecalhoMatriz(). Retorna string
+   HTML (vazia se o snapshot não trouxer o mapa — snapshot antigo).
+
+   Pseudocódigo:
+     1. Sem distância para a data -> string vazia.
+     2. 0 -> "D0"; n > 0 -> "D-n". */
+rotuloDistanciaHojeHtml(data){
+  const distancias = (ControleCargas.SNAPSHOT.meta || {}).diasUteisAteHoje || {};
+  const n = distancias[data];
+  if(n == null) return '';
+  return `<span class="dline">${n === 0 ? 'D0' : 'D-' + n}</span>`;
+},
+
 buildCabecalhoMatriz(window_, refDate, isWallets){
   const focusDate = ControleCargas.state.focusDate || refDate;
   let thead = `<thead><tr>`;
@@ -232,7 +250,7 @@ buildCabecalhoMatriz(window_, refDate, isWallets){
     // `statusRef` na Ref, `statusDia:<data>` nas demais
     // (chaveFiltroColunaDia, filtro_cabecalho.js).
     const botaoFiltroDia = ControleCargas.renderFiltroCabecalhoBotaoHtml(ControleCargas.chaveFiltroColunaDia(d, refDate));
-    thead += `<th class="${classe}" data-date="${d}" title="Clique para ver &quot;Carteiras Publicadas&quot; nesta data">${ControleCargas.fmtDM(d)}${isRef?`<span class="refline">▾ ref ${botaoFiltroDia}</span>`:`<br><span style="font-weight:400">${ControleCargas.weekdayAbbrev(d)}</span>${botaoFiltroDia}`}${(isFocus&&!isRef)?'<span class="focusline">● foco</span>':''}</th>`;
+    thead += `<th class="${classe}" data-date="${d}" title="Clique para ver &quot;Carteiras Publicadas&quot; nesta data">${ControleCargas.rotuloDistanciaHojeHtml(d)}${ControleCargas.fmtDM(d)}${isRef?`<span class="refline">▾ ref ${botaoFiltroDia}</span>`:`<br><span style="font-weight:400">${ControleCargas.weekdayAbbrev(d)}</span>${botaoFiltroDia}`}${(isFocus&&!isRef)?'<span class="focusline">● foco</span>':''}</th>`;
   });
   thead += `<th class="hdr-summary" title="Só na data de referência (${refDate}) — editável">Responsável${ControleCargas.renderFiltroCabecalhoBotaoHtml('responsavel')}</th>`;
   thead += `<th class="hdr-summary" title="Só na data de referência (${refDate}) — editável">Comentário sobre atuação${ControleCargas.renderFiltroCabecalhoBotaoHtml('comentarioAtuacao')}</th>`;

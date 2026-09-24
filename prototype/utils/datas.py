@@ -31,7 +31,9 @@ JANELA_INICIAL_DIAS_UTEIS = 5
 # exibido; SLA/atraso continuam calculados contra o hoje REAL
 # (dt.date.today()), nunca contra esta referência — ver compute_cell() em
 # snapshot_builder.py.
-GRID_REFERENCE_LAG_DU = 3  # "hoje" do grid = hoje real - 3 dias úteis (PLANNING §Grid)
+# [REVISADO 2026-09-24, pedido do usuário: "Data de sugestão da Data
+# Referência deve ser D-1"] 3 -> 1.
+GRID_REFERENCE_LAG_DU = 1  # "hoje" do grid = hoje real - 1 dia útil (PLANNING §Grid)
 
 
 class CalendarioDiasUteis:
@@ -180,6 +182,20 @@ class CalendarioDiasUteis:
         """
         total_du = (sla_recebimento_pdf_du or 0) + (sla_upload_beehus_du or 0)
         return self.deslocar(fim_do_mes, total_du)
+
+
+def mapear_distancia_dias_uteis_hoje(calendario, janela, data_hoje):
+    """Contexto:
+    Distância em dias úteis de cada data da janela até hoje (ex.: ontem útil
+    = 1, anteontem útil = 2) — alimenta o rótulo "D-1/D-2/D-3" acima de cada
+    data no cabeçalho da matriz [2026-09-24, pedido do usuário]. Calculado
+    no backend porque o front não tem o calendário ANBIMA (feriados).
+    Retorna dict {data: int}.
+
+    Pseudocódigo:
+      1. Para cada data da janela, conta os dias úteis dela até hoje.
+    """
+    return {data: calendario.dias_uteis_entre(data, data_hoje) for data in janela}
 
 
 def calcular_janela_grid(calendario, data_hoje, lag_dias_uteis=GRID_REFERENCE_LAG_DU,
