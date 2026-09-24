@@ -1284,6 +1284,41 @@ Complementa a divisão de código da seção 4 — juntas atacam a causa dos con
   - **Limite**: com filtro de empresa ativo, só enxerga explodidas da MESMA empresa (mesmo
     limite de `mapear_carteiras_compradas`).
 
+- **[2026-09-24, pedido do usuário] ABA "CARTEIRAS NÃO CADASTRADAS".** Carteiras que o
+  token vê no Beehus (não trashed) e cujo WalletID não está no TemplateCarteiras.xlsx.
+  - Backend: `pages/carteiras_nao_cadastradas.py` (blueprint, `GET
+    /api/carteiras-nao-cadastradas`) + 2 leituras novas em `db.py`
+    (`listar_nomes_entidades`, `buscar_ultima_carga_por_carteira`). Frontend:
+    `static/js/carteiras_nao_cadastradas/` (state/filtros/resultados/index) +
+    `static/css/carteiras_nao_cadastradas.css`; troca de aba aditiva (mesma técnica de
+    Demandas/Anomalias — nenhum listener existente alterado).
+  - **Nova** = criada há < `DIAS_UTEIS_SINALIZACAO_NOVA` (10) du → badge "Nova · N du"
+    (du restantes), linha no topo e contador no botão da aba. Depois disso perde o
+    badge e continua na lista. **Data de criação** sai do próprio WalletID (ObjectId:
+    8 primeiros hex = timestamp) — a API de wallets não expõe `createdAt`.
+  - **Verificador de carga** = "Carga últimos 45 dias?" (`DIAS_CORRIDOS_VERIFICACAO_CARGA`,
+    dias corridos): existe unprocessedSecurityPositions na faixa (1 chamada por empresa,
+    endpoint aceita faixa de datas) + coluna "Última carga".
+  - Ordem: novas (mais recente primeiro) → com carga recente → resto. Consulta só no 1º
+    clique na aba e no "↻ Atualizar lista" (custa chamadas à API; a 1ª a frio inclui o
+    catálogo de wallets + explosão, que o Atualizar principal já deixa em cache por 120s).
+  - **Colunas** definidas 1x em `COLUNAS` (state.js) — tabela, filtro de cabeçalho e Excel
+    leem de lá. **Filtro ▾ por cabeçalho** (pedido do usuário: "poder filtrar cabeçalho
+    também") em toda coluna, estilo Excel e em cascata, via `static/js/utils/
+    filtro_popover.js` — genérico, mesmas classes `.th-filter-*` da Matriz. O
+    `filtro_cabecalho.js` da Matriz NÃO foi tocado (é amarrado a `state.filtroValoresColuna`/
+    `buildMatrix`); o util novo é candidato a substituí-lo numa refatoração futura.
+  - **Exportar Excel** (`exportar.js` da aba): .xls SpreadsheetML com o que está NA TELA
+    (filtros aplicados), mesma ordem/colunas, novas em âmbar, autofiltro + cabeçalho
+    congelado, e aba "Parâmetros" (consulta, faixa de carga, regra de Nova). Reusa
+    `ControleCargas.ssCell` em vez de duplicar o gerador de célula.
+  - **Não testado contra a API real** (sem token na máquina de desenvolvimento) — testado
+    com `app.test_client()` + dados sintéticos (401 amigável sem token; excluídas e já
+    cadastradas ficam de fora; nova no topo; última carga por carteira); JS em Edge
+    headless (21 checagens: troca de aba, badge, filtro de cabeçalho/cascata, Limpar, só
+    novas, escape de HTML, XML bem-formado); .xls aberto no Excel via COM (2 abas,
+    acentos corretos, autofiltro e congelamento ativos).
+
 ---
 
 ## Checklist rápido (antes de considerar uma tarefa pronta)

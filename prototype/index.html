@@ -21,6 +21,10 @@
      visual de controle_demandas.css (cards/badges/modais), classes "an-"
      próprias, escopado sob #panel-anomalias/.an-modal-*. -->
 <link rel="stylesheet" href="/static/css/anomalias.css">
+<!-- [2026-09-24] CSS autocontido da aba "Carteiras Não Cadastradas" (classes
+     "cnc-", escopado sob #panel-nao-cadastradas; segue as variáveis --sb-*
+     de tema_escuro.css). -->
+<link rel="stylesheet" href="/static/css/carteiras_nao_cadastradas.css">
 <!-- [2026-08-21] Tema escuro do app inteiro (6 abas) — carregado por ÚLTIMO
      (depois dos 3 CSS acima), único arquivo novo de cor desta tarefa. Ver
      cabeçalho de tema_escuro.css pro detalhe das 3 seções. -->
@@ -94,6 +98,10 @@
          tocar switchTab()/wireAbas() nem os listeners de
          controle_demandas/index.js). -->
     <button class="tab" id="tab-anomalias">Anomalias</button>
+    <!-- [2026-09-24] Aba nova "Carteiras Não Cadastradas" — mesmo padrão
+         aditivo (clique ligado por static/js/carteiras_nao_cadastradas/
+         index.js). O badge mostra quantas carteiras NOVAS (< 10 du) há. -->
+    <button class="tab" id="tab-nao-cadastradas">Carteiras Não Cadastradas<span class="cnc-tab-badge" id="cnc-tab-badge" style="display:none;"></span></button>
   </div>
 
   <!-- Tarefas 2/3 do refactor 2026-07-20: janela inicial de 5 dias úteis
@@ -309,6 +317,49 @@
     <div class="an-met-bar" id="an-metrics"></div>
 
     <div class="an-board" id="an-board"></div>
+  </div>
+
+  <!-- ── Aba "Carteiras Não Cadastradas" [2026-09-24] ──
+       Carteiras que existem no Beehus e não estão no TemplateCarteiras.xlsx
+       (GET /api/carteiras-nao-cadastradas, pages/carteiras_nao_cadastradas.py).
+       Novas (< 10 du desde a criação) no topo com badge; depois disso perdem
+       o badge mas continuam na lista. Coluna "Carga últimos 45 dias?" =
+       verificador de carga (unprocessed na faixa). Consulta só no 1º clique
+       na aba e no botão "Atualizar lista". -->
+  <div id="panel-nao-cadastradas" style="display:none;">
+    <div class="cnc-topo">
+      <div>
+        <h2 class="cnc-titulo">Carteiras Não Cadastradas</h2>
+        <p id="cnc-subtitulo" class="cnc-subtitulo">Abra a aba para consultar.</p>
+      </div>
+      <div class="cnc-acoes">
+        <button class="cnc-btn cnc-btn-secundario" id="cnc-btn-exportar" type="button" disabled title="Baixa um Excel com as linhas que estão na tela (filtros aplicados)">⬇ Exportar Excel</button>
+        <button class="cnc-btn" id="cnc-btn-atualizar" type="button">↻ Atualizar lista</button>
+      </div>
+    </div>
+
+    <div class="cnc-filtros">
+      <input class="cnc-input" id="cnc-f-busca" type="search" placeholder="Buscar carteira, WalletID ou conta…" autocomplete="off">
+      <select class="cnc-select" id="cnc-f-empresa"><option value="">Todas as empresas</option></select>
+      <select class="cnc-select" id="cnc-f-carga">
+        <option value="">Carga: todas</option>
+        <option value="sim">Com carga nos últimos 45 dias</option>
+        <option value="nao">Sem carga nos últimos 45 dias</option>
+      </select>
+      <label class="cnc-checkbox"><input type="checkbox" id="cnc-f-novas"> Só novas</label>
+      <button class="cnc-limpar" id="cnc-btn-limpar-filtros" type="button">Limpar filtros</button>
+    </div>
+
+    <div class="cnc-met-bar" id="cnc-metricas"></div>
+
+    <div class="cnc-tabela-wrap">
+      <table class="cnc-tabela">
+        <!-- cabeçalho desenhado por resultados.js::renderizarCabecalho() a partir de
+             COLUNAS (state.js), cada coluna com o ▾ de filtro. -->
+        <thead id="cnc-thead"></thead>
+        <tbody id="cnc-tbody"></tbody>
+      </table>
+    </div>
   </div>
 
   <div class="panel" id="panel-legend">
@@ -631,5 +682,16 @@
 <script src="/static/js/anomalias/vinculos.js"></script>
 <script src="/static/js/anomalias/modais.js"></script>
 <script src="/static/js/anomalias/index.js"></script>
+
+<!-- [2026-09-24] Aba "Carteiras Não Cadastradas" — objeto próprio
+     CarteirasNaoCadastradas, 1 arquivo por funcionalidade (CLAUDE.md §4).
+     Carregado DEPOIS de anomalias/index.js: os botões tab-demandas/
+     tab-anomalias já existem e só ganham 1 listener a mais. -->
+<script src="/static/js/utils/filtro_popover.js"></script>
+<script src="/static/js/carteiras_nao_cadastradas/state.js"></script>
+<script src="/static/js/carteiras_nao_cadastradas/filtros.js"></script>
+<script src="/static/js/carteiras_nao_cadastradas/resultados.js"></script>
+<script src="/static/js/carteiras_nao_cadastradas/exportar.js"></script>
+<script src="/static/js/carteiras_nao_cadastradas/index.js"></script>
 </body>
 </html>

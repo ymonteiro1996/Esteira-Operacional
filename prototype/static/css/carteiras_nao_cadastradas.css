@@ -1,0 +1,87 @@
+/* carteiras_nao_cadastradas.css — aba "Carteiras Não Cadastradas" [2026-09-24].
+   Autocontido: todo seletor vive sob #panel-nao-cadastradas ou no badge do
+   botão da aba (#tab-nao-cadastradas). Usa as custom properties --sb-* de
+   tema_escuro.css (com fallback claro), então segue o tema claro/escuro sem
+   editar nenhum outro CSS. "Nova" usa o âmbar de atenção (--sb-chip-atencao-*). */
+
+#panel-nao-cadastradas{
+  background:var(--sb-bg-panel,#fff); border:1px solid var(--sb-border,#e5e7eb);
+  border-radius:10px; overflow:hidden; margin-bottom:22px;
+}
+#panel-nao-cadastradas .cnc-topo{
+  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  padding:14px 18px; border-bottom:1px solid var(--sb-border,#e5e7eb);
+}
+#panel-nao-cadastradas .cnc-titulo{font-size:15px;font-weight:600;color:var(--sb-text-strong,#111827);margin:0;}
+#panel-nao-cadastradas .cnc-subtitulo{font-size:11.5px;color:var(--sb-text-faint,#9ca3af);margin:2px 0 0;}
+#panel-nao-cadastradas .cnc-btn{
+  background:var(--sb-btn-primary-bg,#111827); color:var(--sb-btn-primary-fg,#fff);
+  font-size:12px; font-weight:600; padding:8px 14px; border:none; border-radius:8px; cursor:pointer;
+}
+#panel-nao-cadastradas .cnc-btn:hover{background:var(--sb-btn-primary-hover-bg,#374151);color:var(--sb-btn-primary-hover-fg,#fff);}
+#panel-nao-cadastradas .cnc-btn:disabled{opacity:.55;cursor:not-allowed;}
+#panel-nao-cadastradas .cnc-acoes{display:flex;gap:8px;flex-wrap:wrap;}
+#panel-nao-cadastradas .cnc-btn-secundario{
+  background:var(--sb-bg-panel,#fff); color:var(--sb-text-strong,#111827);
+  border:1px solid var(--sb-border-input,#d1d5db);
+}
+#panel-nao-cadastradas .cnc-btn-secundario:hover{background:var(--sb-bg-sunk2,#f3f4f6);color:var(--sb-text-strong,#111827);}
+#panel-nao-cadastradas .cnc-limpar{
+  margin-left:auto; background:none; border:none; font-size:11.5px; color:var(--sb-text-faint,#9ca3af);
+  text-decoration:underline; cursor:pointer;
+}
+#panel-nao-cadastradas .cnc-limpar:hover{color:var(--sb-text-strong,#374151);}
+#panel-nao-cadastradas .cnc-chip-exibindo{margin-left:auto;}
+#panel-nao-cadastradas .cnc-tabela th .th-filter-btn{margin-left:2px;}
+
+#panel-nao-cadastradas .cnc-filtros{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 18px;}
+#panel-nao-cadastradas .cnc-input,
+#panel-nao-cadastradas .cnc-select{
+  font-size:12px; padding:7px 11px; border-radius:8px; border:1px solid var(--sb-border-input,#d1d5db);
+  background:var(--sb-bg-panel,#fff); color:var(--sb-text-strong,#111827); font-family:inherit;
+}
+#panel-nao-cadastradas .cnc-input{min-width:240px;}
+#panel-nao-cadastradas .cnc-checkbox{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sb-text-muted2,#6b7280);cursor:pointer;user-select:none;}
+
+#panel-nao-cadastradas .cnc-met-bar{
+  padding:8px 18px; display:flex; gap:6px; flex-wrap:wrap;
+  border-top:1px solid var(--sb-border,#e5e7eb); border-bottom:1px solid var(--sb-border,#e5e7eb);
+}
+#panel-nao-cadastradas .cnc-chip{
+  display:inline-flex; align-items:center; gap:4px; font-size:11px; padding:3px 9px; border-radius:20px;
+  border:1px solid var(--sb-chip-border,#e5e7eb); background:var(--sb-chip-bg,#f9fafb); color:var(--sb-chip-fg,#374151);
+}
+#panel-nao-cadastradas .cnc-chip b{font-weight:700;}
+#panel-nao-cadastradas .cnc-chip-nova{background:var(--sb-chip-atencao-bg,#fffbeb);color:var(--sb-chip-atencao-fg,#b45309);border-color:var(--sb-chip-atencao-border,#fde68a);}
+#panel-nao-cadastradas .cnc-chip-sim{background:var(--sb-chip-done-bg,#f0fdf4);color:var(--sb-chip-done-fg,#15803d);border-color:var(--sb-chip-done-border,#bbf7d0);}
+
+#panel-nao-cadastradas .cnc-tabela-wrap{overflow:auto;max-height:70vh;}
+#panel-nao-cadastradas .cnc-tabela{width:100%;border-collapse:collapse;font-size:12px;}
+#panel-nao-cadastradas .cnc-tabela th{
+  position:sticky; top:0; z-index:1; text-align:left; white-space:nowrap; font-weight:600;
+  padding:8px 10px; background:var(--sb-bg-sunk,#f9fafb); color:var(--sb-text-med,#374151);
+  border-bottom:1px solid var(--sb-border,#e5e7eb);
+}
+#panel-nao-cadastradas .cnc-tabela td{
+  padding:7px 10px; border-bottom:1px solid var(--sb-border,#e5e7eb);
+  color:var(--sb-text-base,#1f2937); white-space:nowrap;
+}
+#panel-nao-cadastradas .cnc-nome{font-weight:600;}
+#panel-nao-cadastradas .cnc-mono{font-family:ui-monospace,Consolas,monospace;font-size:11px;}
+#panel-nao-cadastradas .cnc-vazio{text-align:center;padding:24px;color:var(--sb-text-faint,#9ca3af);}
+#panel-nao-cadastradas tr.cnc-linha-nova > td:first-child{box-shadow:inset 3px 0 0 var(--sb-chip-atencao-fg,#b45309);}
+#panel-nao-cadastradas .cnc-badge-nova{
+  display:inline-block; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:20px;
+  background:var(--sb-chip-atencao-bg,#fffbeb); color:var(--sb-chip-atencao-fg,#b45309);
+  border:1px solid var(--sb-chip-atencao-border,#fde68a);
+}
+#panel-nao-cadastradas .cnc-pill{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:20px;border:1px solid;}
+#panel-nao-cadastradas .cnc-pill-sim{background:var(--sb-chip-done-bg,#f0fdf4);color:var(--sb-chip-done-fg,#15803d);border-color:var(--sb-chip-done-border,#bbf7d0);}
+#panel-nao-cadastradas .cnc-pill-nao{background:var(--sb-chip-bg,#f9fafb);color:var(--sb-text-muted2,#6b7280);border-color:var(--sb-chip-border,#e5e7eb);}
+
+/* Badge de alerta no botão da aba (nº de carteiras novas). */
+#tab-nao-cadastradas .cnc-tab-badge{
+  display:inline-block; margin-left:6px; font-size:10px; font-weight:700; padding:1px 7px; border-radius:20px;
+  background:var(--sb-chip-atencao-bg,#fffbeb); color:var(--sb-chip-atencao-fg,#b45309);
+  border:1px solid var(--sb-chip-atencao-border,#fde68a);
+}

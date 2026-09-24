@@ -122,6 +122,7 @@ import db
 import progresso_atualizacao
 from pages.controle_demandas import bp as controle_demandas_bp
 from pages.anomalias import bp as anomalias_bp
+from pages.carteiras_nao_cadastradas import bp as carteiras_nao_cadastradas_bp
 from snapshot_builder import LIMIAR_DIVERGENCIA_PADRAO, LIMIAR_DIVERGENCIA_REAIS_PADRAO
 from utils.datas import CalendarioDiasUteis, GRID_REFERENCE_LAG_DU, JANELA_INICIAL_DIAS_UTEIS, calcular_janela_grid, mapear_distancia_dias_uteis_hoje
 from utils.caminhos import descrever_data_dir, diagnosticar_data_dir, resolver_data_dir
@@ -488,6 +489,10 @@ app.register_blueprint(controle_demandas_bp)
 # HTML própria. Nenhuma rota/função já existente neste arquivo foi
 # alterada para isso.
 app.register_blueprint(anomalias_bp)
+
+# [2026-09-24] Aba "Carteiras Não Cadastradas" (pages/carteiras_nao_cadastradas.py)
+# — mesmo mecanismo aditivo: só expõe GET /api/carteiras-nao-cadastradas.
+app.register_blueprint(carteiras_nao_cadastradas_bp)
 
 
 def _carregar_ou_criar_secret_key():

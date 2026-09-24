@@ -911,3 +911,58 @@ def buscar_issues_detail(wallet_ids, data_inicial, data_final, timings=None):
     if timings is not None:
         timings["issues_detail"] = time.monotonic() - t0
     return resultado
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Aba "Carteiras Não Cadastradas" [2026-09-24] — leituras de apoio
+# ─────────────────────────────────────────────────────────────────────────
+
+def listar_nomes_entidades():
+    """Contexto:
+    `{entityId: nome}` de todas as instituições que o token enxerga — a aba
+    "Carteiras Não Cadastradas" (pages/carteiras_nao_cadastradas.py) mostra a
+    instituição de carteiras que NÃO estão no Template, então não há coluna
+    Instituição do Excel pra usar; o catálogo de carregar_colecoes_pequenas()
+    só guarda o índice inverso (nome -> id, em casefold). 1 chamada à API.
+    Retorna dict.
+
+    Pseudocódigo:
+      1. list_entities().
+      2. Mapeia id normalizado -> nome, descartando itens sem id/nome. """
+    return {_idstr(e.get("_id")): (e.get("name") or "").strip()
+            for e in (list_entities() or []) if e.get("_id") and e.get("name")}
+
+
+def buscar_ultima_carga_por_carteira(wallet_ids, data_inicial, data_final):
+    """Contexto:
+    Última `positionDate` com carga (unprocessedSecurityPositions) de cada
+    carteira dentro de [data_inicial..data_final] — é o "verificador de
+    carga" da aba "Carteiras Não Cadastradas" [2026-09-24, pedido do
+    usuário: "Carga nos últimos 45 dias? Sim ou Não"]. Usa o endpoint de
+    unprocessed porque ele é o único que aceita FAIXA de datas (1 chamada
+    por empresa pra janela inteira, em vez de 1 por dia). Retorna
+    `{walletId: "YYYY-MM-DD"}` — carteira sem carga na faixa não aparece.
+
+    Pseudocódigo:
+      1. Sem carteiras -> {} (nenhuma chamada).
+      2. Agrupa as carteiras por empresa (endpoint é escopado por empresa).
+      3. Fan-out paralelo por empresa: 1 get_unprocessed_security_positions
+         com a faixa inteira (o próprio cliente divide walletIds grandes).
+      4. Guarda a maior positionDate vista por carteira. """
+    if not wallet_ids:
+        return {}
+    carteiras_por_empresa = _agrupar_por_empresa(wallet_ids, _mapa_empresa_por_carteira())
+
+    def _buscar_empresa(company_id):
+        return get_unprocessed_security_positions(
+            company_id=company_id, initial_date=data_inicial, final_date=data_final,
+            wallet_ids=carteiras_por_empresa[company_id])
+
+    ultima_por_carteira = {}
+    for docs in _fan_out_por_empresa(list(carteiras_por_empresa.keys()), _buscar_empresa).values():
+        for doc in (docs or []):
+            wid = _idstr(doc.get("walletId"))
+            data_posicao = str(doc.get("positionDate") or "")[:10]
+            if wid and data_posicao and data_posicao > ultima_por_carteira.get(wid, ""):
+                ultima_por_carteira[wid] = data_posicao
+    return ultima_por_carteira
