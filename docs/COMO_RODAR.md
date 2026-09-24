@@ -124,8 +124,8 @@ vai para o OneDrive nem para o Git (mora em `~/.swat/beehus.token`).
 consulta assim que a página abria, ou assim que o token era colado). Ela abre vazia,
 com os campos prontos, e espera você:
 
-1. **Data Referência** (campo "até") — o campo "De" se recalcula sozinho (5 dias úteis
-   pra trás, teto da consulta).
+1. **Data Referência** (campo "até") — o campo "De" se recalcula sozinho (6 dias úteis
+   pra trás — 7 datas na tela —, teto da consulta).
 2. **Empresa** — `Todas as empresas` (padrão) ou uma só. **Escolher uma empresa deixa o
    clique MUITO mais rápido**: a consulta é por empresa × dia, então limitar o escopo
    corta a maior parte das chamadas à API. Não é filtro de tela: é o que vai ser

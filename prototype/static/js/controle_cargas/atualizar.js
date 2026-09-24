@@ -25,7 +25,7 @@ Object.assign(ControleCargas, {
         ("de" não recebe mais Enter — ficou readonly, ver
         sincronizarDataInicial()).
      4. Troca do campo "até" dispara sincronizarDataInicial(), que
-        recalcula "de" sozinho (data_final − 5 du).
+        recalcula "de" sozinho (data_final − 6 du).
      5. Cada tecla no campo de busca de empresa filtra o seletor
         (filtrarEmpresasDigitadas); Enter ali é neutralizado de propósito. */
 wireAtualizar(){
@@ -54,14 +54,14 @@ wireAtualizar(){
 /* Contexto:
    Recalcula o campo "de" (data-inicial) a partir do campo "até"
    (data-final), mantendo a janela pedida sempre dentro do teto de
-   /api/atualizar (JANELA_MAXIMA_DIAS_UTEIS, hoje 5 du) [2026-08-06, pedido
+   /api/atualizar (JANELA_MAXIMA_DIAS_UTEIS, hoje 6 du — 7 datas) [2026-08-06, pedido
    do usuário: "coloque a data inicial como fixa, onde ao mudar a data
    final ela mude também" — depois de um clique em Atualizar falhar com 400
    por passar do teto]. O campo "de" ficou readonly no HTML (index.html);
    este é o ÚNICO jeito dele mudar de valor agora. Chamada no evento
    'change' de "até" (wireAtualizar) — o preenchimento inicial dos dois
    campos (preencherCamposDataAtualizar, via /api/janela-padrao) já nasce
-   consistente com essa mesma regra (mesma constante 5 du em
+   consistente com essa mesma regra (mesma constante 6 du em
    utils/datas.py), então não precisa chamar esta função de novo no boot.
    Não retorna nada.
 
@@ -136,7 +136,7 @@ esconderAlertaAtualizacao(){
    em quando foi gerado, não em "hoje" de verdade; o botão Atualizar só
    reenvia o que já está nos campos, então um default nascido errado nunca se
    autocorrige. Agora busca a janela fresca em GET /api/janela-padrao (D-3 do
-   hoje REAL do servidor + 5du antes, sem tocar o Mongo).
+   hoje REAL do servidor + 6du antes, sem tocar o Mongo).
 
    Pseudocódigo:
      1. Sem os dois campos no DOM, ou já preenchidos (usuário mexeu antes),

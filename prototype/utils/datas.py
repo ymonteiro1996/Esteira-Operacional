@@ -22,7 +22,10 @@ import datetime as dt
 # Agora é o DESLOCAMENTO em du entre data_inicial e data_final: data_inicial =
 # data_final − JANELA_INICIAL_DIAS_UTEIS du (ver calcular_janela_grid()) — a
 # janela default passou a ter 6 dias úteis (data_final e os 5 du anteriores).
-JANELA_INICIAL_DIAS_UTEIS = 5
+# [REVISADO 2026-09-24, pedido do usuário: "aumentar mais um dia na janela
+# de datas, aparecendo sempre 7 dias"] 5 -> 6 (data_final + 6 du anteriores).
+# Também é o teto do Atualizar (JANELA_MAXIMA_DIAS_UTEIS, app.py).
+JANELA_INICIAL_DIAS_UTEIS = 6
 
 # [REVISADO 2026-07-24, pedido do usuário] Era D-3; passou pra D-5 em
 # 2026-07-23; voltou pra D-3 em 2026-07-24 ("ajustar o até do Range inicial

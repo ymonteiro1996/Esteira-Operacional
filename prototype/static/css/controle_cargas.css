@@ -168,7 +168,9 @@ body{
   font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   font-size:14px; line-height:1.5;
 }
-.page{max-width:1400px;margin:0 auto;padding:32px 28px 64px;}
+/* [2026-09-24, pedido do usuário: "deixar o painel mais largo"] 1400px ->
+   1840px — com 7 datas na janela a matriz ficava espremida em telas largas. */
+.page{max-width:1840px;margin:0 auto;padding:32px 28px 64px;}
 
 .masthead{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:6px;flex-wrap:wrap;}
 .masthead h1{font-size:20px;font-weight:650;letter-spacing:-0.01em;margin:0;}

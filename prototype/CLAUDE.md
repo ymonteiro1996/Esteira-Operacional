@@ -387,7 +387,8 @@ Complementa a divisão de código da seção 4 — juntas atacam a causa dos con
     carrega — é o ÚNICO requisito de conexão do app; o modal abre automaticamente
     quando ausente/expirado. `start.ps1` não checa mais nenhuma variável de ambiente
     de Mongo antes de subir o servidor (checagem removida — era um gate morto agora).
-  - **Janela travada em 5 dias úteis** [pedido do usuário: "pode travar para 5DU"]: o
+  - **Janela travada em 6 dias úteis (7 datas)** [pedido do usuário: "pode travar para 5DU";
+    ampliado para 6 du em 2026-09-24: "aparecendo sempre 7 dias"]: o
     campo De/Até do botão "Atualizar" (`/api/atualizar`) rejeita intervalos maiores —
     cada dia da janela custa chamadas reais à API por empresa (`get_processed_position`/
     `get_nav_results`/`get_preprocessing_status`), então um intervalo customizado grande
