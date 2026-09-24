@@ -133,7 +133,7 @@ offenderListHtml(members){
     const entry = cmap[refDate];
     const st = entry ? ControleCargas.STATES[entry.s] : null;
     const letter = entry && entry.s==='miss' ? '∅' : (entry?st.letter:'—');
-    const ovIcons = (entry&&entry.ov||[]).map(o=>({div:'Rent',div_strong:'Rent',seq:'◇',issue:'◤',atraso:'Atras',atraso_strong:'Atras'}[o]||'')).join(' ');
+    const ovIcons = (entry&&entry.ov||[]).map(o=>({div:'Rent',div_strong:'Rent',seq:'◇',issue:'◤',atraso:'Atras',atraso_strong:'Atras',pauta:'Pauta'}[o]||'')).join(' ');
     html += `<div class="offender" data-drill-wallet="${w.walletId}">
       <div class="cell ${st?st.cls:'s-g2'}" style="min-width:34px;height:22px;font-size:10px;">${letter}</div>
       <div class="oname">${ControleCargas.esc(w.name)}${ControleCargas.acoesIdentificadorHtml(w.name)} <code style="font-size:10px;color:var(--ink-faint);user-select:all;">${ControleCargas.esc(w.walletId)}</code>${ControleCargas.acoesIdentificadorHtml(w.walletId)}</div>

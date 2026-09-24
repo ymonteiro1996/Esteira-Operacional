@@ -28,6 +28,9 @@ Object.assign(ControleCargas, {
 // especial: cada linha pode contribuir com MAIS de 1 tag (o nome do estado
 // na data de referência, e também "Problema Rent" quando há divergência
 // >2bp nessa data) — ver tagsColunaParaLinha() em filtro_cabecalho.js.
+// [2026-09-24] Além das chaves fixas abaixo, cada coluna de dia não-Ref
+// ganha chave dinâmica "statusDia:YYYY-MM-DD" quando filtrada (criada no OK
+// do popover) — applyFilters() já percorre todas as chaves presentes.
 // [2026-09-11, relato do usuário: "às vezes fica em data antiga"]
 // sequenciaAtualizacao / sincronizacaoDataInicial são estado de CONCORRÊNCIA do
 // botão Atualizar (atualizar.js): a tela dispara /api/atualizar de 4 lugares

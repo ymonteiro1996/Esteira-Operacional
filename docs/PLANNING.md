@@ -885,6 +885,18 @@ modelo de tier/`priorityScore` descrito acima.
   referência (`annotationAtual()`, `anotacoes.js`). Mesmo padrão dos demais
   filtros: aplicados em `applyFilters()`, sem mudança de backend (os dados
   já estão todos no cliente).
+- **Badge "Pauta" + filtros por data** [2026-09-24, pedido do usuário] — no
+  dia EXATO da Defasagem (`atraso_du == 0`, prazo = hoje) o badge "Atras"
+  amarelo vira **"Pauta"** (fúcsia `#c026d3`, dark `#e879f9`): a carteira é
+  a pauta da esteira de hoje, ainda não atraso. Só muda o badge
+  (`atraso_overlay_kind`, overlay `pauta`) e o texto SLA ("pauta do dia");
+  estado, fundo e ordenação continuam os mesmos (`wip_late`/`miss_late`).
+  No agrupamento, "Pauta" só aparece se nenhum membro venceu antes de hoje
+  (`maior_atraso_du_membros`). O filtro ▾ da coluna Ref passou a existir em
+  **toda coluna de dia** (chave `statusRef` na Ref, `statusDia:<data>` nas
+  demais — `filtro_cabecalho.js`), com as tags extras **"Pauta do dia"** e
+  **"Carga Mensal"** (Periodicidade M) além de siglas/"Problema
+  Rent"/"Comprada" ("Comprada" só na Ref).
 - **Anotações por linha** — 2 colunas editáveis novas, **Responsável** e
   **Comentário sobre atuação**, ligadas SÓ à data de referência (nunca por
   dia da janela). Persistência própria: `data/wallet_annotations.json` +

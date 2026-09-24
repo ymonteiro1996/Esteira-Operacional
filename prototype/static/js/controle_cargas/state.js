@@ -49,7 +49,7 @@ PRIORITY_ORDER: ['miss', 'wait', 'notcov', 'wu', 'wc', 'cD', 'p', 'fp'],
 // <span> real (ControleCargas.atrasoBadgeHtml) porque ::before/::after já estão ocupados
 // (triângulo de issues / badge Rent) e os badges precisam coexistir.
 OV_CLASS: {div:'ov-dot', div_strong:'ov-div_strong', seq:'ov-seq', issue:'ov-issue',
-                  atraso:'', atraso_strong:''},
+                  atraso:'', atraso_strong:'', pauta:''},
 
 /* Contexto:
    Escapa texto para inserção segura em HTML (evita XSS/quebra de marcação
@@ -85,18 +85,22 @@ fmtNum(v){ return v==null ? '—' : Number(v).toLocaleString('pt-BR', {maximumFr
 /* Contexto:
    Monta o HTML do badge "Atraso" (rodada 7) — espelho visual do badge Rent,
    no canto inferior esquerdo da célula; amarelo = atraso leve (1-2du),
-   vermelho = elevado (≥3du). Chamada por rowHtml()/miniTimelineHtml() ao
-   desenhar cada célula. Retorna string HTML (vazia quando não há atraso).
+   vermelho = elevado (≥3du). [NOVO 2026-09-24, pedido do usuário] No
+   próprio dia da Defasagem (prazo == hoje) o badge é "Pauta" (fúcsia) em
+   vez de "Atras" — é a pauta da esteira de hoje, ainda não atraso.
+   Chamada por rowHtml()/miniTimelineHtml() ao desenhar cada célula. Retorna string HTML (vazia quando não há atraso).
 
    Pseudocódigo:
      1. Sem overlays -> string vazia.
      2. Overlay 'atraso_strong' -> badge vermelho.
      3. Overlay 'atraso' -> badge amarelo.
-     4. Nenhum dos dois -> string vazia. */
+     4. Overlay 'pauta' -> badge fúcsia "Pauta".
+     5. Nenhum deles -> string vazia. */
 atrasoBadgeHtml(ovs){
   if(!ovs) return '';
   if(ovs.includes('atraso_strong')) return '<span class="atraso-badge strong" aria-hidden="true">Atras</span>';
   if(ovs.includes('atraso')) return '<span class="atraso-badge" aria-hidden="true">Atras</span>';
+  if(ovs.includes('pauta')) return '<span class="atraso-badge pauta" aria-hidden="true">Pauta</span>';
   return '';
 },
 };

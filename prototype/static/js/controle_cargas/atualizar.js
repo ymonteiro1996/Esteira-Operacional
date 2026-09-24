@@ -564,6 +564,11 @@ enviarAtualizacao(){
       ControleCargas.state.filtroValoresColuna.statusRef = null;
       ControleCargas.state.filtroValoresColuna.responsavel = null;
       ControleCargas.state.filtroValoresColuna.comentarioAtuacao = null;
+      // [2026-09-24] filtros das demais colunas de dia (statusDia:<data>)
+      // também saem — a janela pode ter mudado e "Pauta" depende de hoje.
+      Object.keys(ControleCargas.state.filtroValoresColuna)
+        .filter(coluna=> coluna.startsWith(ControleCargas.PREFIXO_COLUNA_DIA))
+        .forEach(coluna=> delete ControleCargas.state.filtroValoresColuna[coluna]);
       const freezeBadge = document.getElementById('freeze-badge');
       if(freezeBadge) freezeBadge.style.display = 'none';
       return Promise.all([ControleCargas.loadComments(), ControleCargas.loadAnnotations()]).then(()=>{

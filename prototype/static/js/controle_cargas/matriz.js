@@ -193,8 +193,8 @@ setaOrdenacaoHtml(criterio){
         ordenação `institution` que já existia); Modelo de Carga é só
         informativo, sem ordenação] — as colunas clicáveis ganham a seta de
         direção (setaOrdenacaoHtml).
-     2. 1 coluna por dia da janela, destacando a coluna de referência (▾
-        ref), mostrando o dia da semana nas demais e marcando (foco) a coluna
+     2. 1 coluna por dia da janela (todas com o ▾ de filtro de status
+        [2026-09-24]), destacando a coluna de referência (▾ ref), mostrando o dia da semana nas demais e marcando (foco) a coluna
         escolhida pelo usuário pra alimentar o painel "Carteiras Publicadas"
         (data-date + classe "focuscol" quando ≠ ref — clique religado em
         wireHeaderDateClicks()).
@@ -227,7 +227,12 @@ buildCabecalhoMatriz(window_, refDate, isWallets){
     // class="refline"> (display:block), então quebrava linha e ficava
     // espremido entre o cabeçalho e a 1ª linha de dados, quase invisível;
     // agora entra DENTRO do span, na mesma linha do texto "▾ ref".]
-    thead += `<th class="${classe}" data-date="${d}" title="Clique para ver &quot;Carteiras Publicadas&quot; nesta data">${ControleCargas.fmtDM(d)}${isRef?`<span class="refline">▾ ref ${ControleCargas.renderFiltroCabecalhoBotaoHtml('statusRef')}</span>`:`<br><span style="font-weight:400">${ControleCargas.weekdayAbbrev(d)}</span>`}${(isFocus&&!isRef)?'<span class="focusline">● foco</span>':''}</th>`;
+    // [AMPLIADO 2026-09-24, pedido do usuário: "permita o mesmo filtro da
+    // Data REF para as outras datas"] toda coluna de dia ganha o ▾ — chave
+    // `statusRef` na Ref, `statusDia:<data>` nas demais
+    // (chaveFiltroColunaDia, filtro_cabecalho.js).
+    const botaoFiltroDia = ControleCargas.renderFiltroCabecalhoBotaoHtml(ControleCargas.chaveFiltroColunaDia(d, refDate));
+    thead += `<th class="${classe}" data-date="${d}" title="Clique para ver &quot;Carteiras Publicadas&quot; nesta data">${ControleCargas.fmtDM(d)}${isRef?`<span class="refline">▾ ref ${botaoFiltroDia}</span>`:`<br><span style="font-weight:400">${ControleCargas.weekdayAbbrev(d)}</span>${botaoFiltroDia}`}${(isFocus&&!isRef)?'<span class="focusline">● foco</span>':''}</th>`;
   });
   thead += `<th class="hdr-summary" title="Só na data de referência (${refDate}) — editável">Responsável${ControleCargas.renderFiltroCabecalhoBotaoHtml('responsavel')}</th>`;
   thead += `<th class="hdr-summary" title="Só na data de referência (${refDate}) — editável">Comentário sobre atuação${ControleCargas.renderFiltroCabecalhoBotaoHtml('comentarioAtuacao')}</th>`;
@@ -349,7 +354,7 @@ atualizarDomEEstadoMatriz(table, thead, body, data, isWallets, shownCount, windo
      1. Resolve a data em foco corrente (state.focusDate ou, na ausência, a
         data de referência) — só pra decidir o efeito do clique.
      2. Para cada <th data-date>, liga um clique: se o alvo é o botão "▾" de
-        filtro estilo Excel (só a coluna de referência tem, ver
+        filtro estilo Excel (toda coluna de dia tem desde 2026-09-24, ver
         buildCabecalhoMatriz/filtro_cabecalho.js), IGNORA — quem trata esse
         clique é wireFiltrosCabecalho(), não o foco de data [2026-07-29,
         senão os dois cliques disparariam juntos]. Senão, se a coluna
@@ -656,6 +661,9 @@ buildLegend(){
   let overlayGroup = '<div class="legend-group"><span class="lg-title">Marcadores sobrepostos (4 cantos + borda)</span>';
   overlayGroup += `<div class="legend-item"><span class="legend-swatch s-g1" style="position:relative;"><span class="atraso-badge">Atras</span></span><span>Badge <b>Atraso</b> amarelo (inf. esq.) — qualquer estágio ≠ Publicado (Unp/Pro em andamento ou vazio ∅) com prazo vencido há 1–2 du</span></div>`;
   overlayGroup += `<div class="legend-item"><span class="legend-swatch s-g1" style="position:relative;"><span class="atraso-badge strong">Atras</span></span><span>Badge <b>Atraso</b> vermelho — idem, prazo vencido há ≥3 du</span></div>`;
+  // [NOVO 2026-09-24, pedido do usuário] Pauta — no lugar do Atras no dia
+  // exato da Defasagem (atraso_overlay_kind, snapshot_builder.py).
+  overlayGroup += `<div class="legend-item"><span class="legend-swatch s-g1" style="position:relative;"><span class="atraso-badge pauta">Pauta</span></span><span>Badge <b>Pauta</b> fúcsia (inf. esq.) — hoje é o dia da Defasagem: carteira na esteira do dia, ainda não publicada (filtro "Pauta do dia" no ▾ das datas)</span></div>`;
   overlayGroup += `<div class="legend-item"><span class="legend-swatch s-g1 ov-dot" style="color:transparent">•</span><span>Badge <b>Rent</b> amarelo (sup. dir.) — divergência Rent Contribuição × Rent NAV leve, &gt;2bp (0,02%) <b>e</b> impacto ≥ R$800</span></div>`;
   overlayGroup += `<div class="legend-item"><span class="legend-swatch s-g1 ov-div_strong" style="color:transparent">•</span><span>Badge <b>Rent</b> vermelho — divergência elevada, &gt;5bp (idem, impacto ≥ R$800)</span></div>`;
   overlayGroup += `<div class="legend-item"><span class="legend-swatch s-g1 ov-seq" style="color:transparent">•</span><span>Anel vermelho (borda) — fora de sequência: processada sem D-1 processada</span></div>`;

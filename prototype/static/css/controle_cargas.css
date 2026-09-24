@@ -71,6 +71,12 @@
   --overlay-div-strong-ink:#ffffff;  /* texto do badge elevado — branco sobre vermelho (4.8:1) */
   --overlay-seq:#991b1b;             /* anel fora-de-sequência — red-800 (5.7:1 sobre red-200) */
   --overlay-issue:#475569;
+  /* [NOVO 2026-09-24, pedido do usuário: "escolha uma cor chamativa"] badge
+     "Pauta" — dia exato da Defasagem (esteira de hoje). Fúcsia: não se
+     confunde com o amarelo/vermelho do Atras/Rent nem com o violeta do
+     "Comprada"; texto branco (4.8:1). */
+  --overlay-pauta:#c026d3;
+  --overlay-pauta-ink:#ffffff;
 
   /* [NOVO 2026-08-13, pedido do usuário: "se a carteira da lista for
      comprada por alguma carteira da lista... um contorno nele e na
@@ -83,7 +89,7 @@
      das que a compram). Cor escolhida por inspeção (Tailwind violet-600 /
      violet-400), NÃO passou pelo validate_palette.py da skill dataviz como
      os outros pares acima — revisitar se o time achar baixo contraste. */
-  --overlay-comprada:#7c3aed;        /* violet-600 */
+  --overlay-pauta:#c026d3; --overlay-pauta-ink:#ffffff; --overlay-comprada:#7c3aed;        /* violet-600 */
   --overlay-comprada-ink:#ffffff;
   --overlay-comprada-wash:rgba(124,58,237,.14);
 
@@ -116,7 +122,7 @@
        17.8 (deutan) / normal 24.5; texto no badge 9.8:1 (leve) e 5.8:1
        (elevado). */
     --overlay-div:#facc15; --overlay-div-strong:#f87171; --overlay-div-ink:#451a03; --overlay-div-strong-ink:#450a0a; --overlay-seq:#f87171; --overlay-issue:#94a3b8;
-    --overlay-comprada:#a78bfa; --overlay-comprada-ink:#2e1065; --overlay-comprada-wash:rgba(167,139,250,.16);
+    --overlay-pauta:#e879f9; --overlay-pauta-ink:#3b0764; --overlay-comprada:#a78bfa; --overlay-comprada-ink:#2e1065; --overlay-comprada-wash:rgba(167,139,250,.16);
   }
 }
 :root[data-theme="dark"]{
@@ -135,7 +141,7 @@
   --tier-att-bg:#3a2a06;  --tier-att-fg:#f0b642;
   /* rodada 6: espelho exato do bloco @media dark acima — manter em sincronia. */
   --overlay-div:#facc15; --overlay-div-strong:#f87171; --overlay-div-ink:#451a03; --overlay-div-strong-ink:#450a0a; --overlay-seq:#f87171; --overlay-issue:#94a3b8;
-  --overlay-comprada:#a78bfa; --overlay-comprada-ink:#2e1065; --overlay-comprada-wash:rgba(167,139,250,.16);
+  --overlay-pauta:#e879f9; --overlay-pauta-ink:#3b0764; --overlay-comprada:#a78bfa; --overlay-comprada-ink:#2e1065; --overlay-comprada-wash:rgba(167,139,250,.16);
 }
 :root[data-theme="light"]{
   --surface:#f6f7f5; --surface-raised:#ffffff; --surface-sunk:#eef0ec;
@@ -153,7 +159,7 @@
   --tier-att-bg:#fef3c7;  --tier-att-fg:#92400e;
   /* rodada 6: espelho exato do :root claro acima — manter em sincronia. */
   --overlay-div:#eab308; --overlay-div-strong:#dc2626; --overlay-div-ink:#451a03; --overlay-div-strong-ink:#ffffff; --overlay-seq:#991b1b; --overlay-issue:#475569;
-  --overlay-comprada:#7c3aed; --overlay-comprada-ink:#ffffff; --overlay-comprada-wash:rgba(124,58,237,.14);
+  --overlay-pauta:#c026d3; --overlay-pauta-ink:#ffffff; --overlay-comprada:#7c3aed; --overlay-comprada-ink:#ffffff; --overlay-comprada-wash:rgba(124,58,237,.14);
 }
 
 *{box-sizing:border-box;}
@@ -273,6 +279,14 @@ th.ref .th-filter-btn{
 }
 th.ref .th-filter-btn:hover{opacity:1; background:transparent;}
 th.ref .th-filter-btn.active{background:var(--accent); color:var(--accent-ink); opacity:1; border-radius:3px;}
+/* [2026-09-24, pedido do usuário: "permita o mesmo filtro da Data REF para
+   as outras datas"] as demais colunas de dia também ganharam o ▾ — mesma
+   versão compacta da coluna Ref (coluna estreita), em tom neutro. */
+th[data-date]:not(.ref) .th-filter-btn{
+  padding:0 2px; margin-left:3px; border:none; background:transparent; opacity:.7;
+}
+th[data-date]:not(.ref) .th-filter-btn:hover{opacity:1; background:transparent;}
+th[data-date]:not(.ref) .th-filter-btn.active{background:var(--accent); color:var(--accent-ink); opacity:1; border-radius:3px;}
 .th-filter-popover{
   position:fixed;z-index:50;width:250px;max-height:320px;display:flex;flex-direction:column;
   background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;
@@ -458,6 +472,7 @@ td.col-anotacao.sev-red{background:rgba(220,38,38,.14);}
   user-select:none; pointer-events:none;
 }
 .atraso-badge.strong{background:var(--overlay-div-strong); color:var(--overlay-div-strong-ink);}
+.atraso-badge.pauta{background:var(--overlay-pauta); color:var(--overlay-pauta-ink);}
 /* versão compacta nas mini-matrizes dos painéis (células de 22px) */
 .mini-row .cell .atraso-badge{
   bottom:0; left:0; height:8px; line-height:8px; padding:0 2px; font-size:5.5px;

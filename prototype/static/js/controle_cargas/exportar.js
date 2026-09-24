@@ -210,7 +210,7 @@ buildAbaMatrizExcel(window_, walletRows){
 // pedido do usuário 2026-07-23 ("nossos alertas... Rent, Atras, etc").
 OVERLAY_LABELS_EXCEL: {
   div: 'Rent', div_strong: 'Rent forte',
-  atraso: 'Atraso', atraso_strong: 'Atraso forte',
+  atraso: 'Atraso', atraso_strong: 'Atraso forte', pauta: 'Pauta do dia',
   seq: 'Sequência', issue: 'Issue',
 },
 

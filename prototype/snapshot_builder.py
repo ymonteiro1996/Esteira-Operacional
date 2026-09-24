@@ -439,7 +439,7 @@ def compute_cell(wallet, data, doc_unprocessed, doc_processed, doc_nav, calendar
     return estado, sigla, atraso_du, prazo
 
 
-def atraso_overlay_kind(estado):
+def atraso_overlay_kind(estado, atraso_du=None):
     """Contexto: classifica o badge "Atraso" a partir do estado de
     severidade de uma célula — chamada por compute_overlays() e pelo roll-up
     de agrupamentos. [REVISADO 2026-07-22, pedido do usuário — quebra a regra
@@ -447,23 +447,32 @@ def atraso_overlay_kind(estado):
     comunica"), confirmado com o desenvolvedor] O badge agora existe em
     QUALQUER estágio diferente de Publicado com prazo vencido — Unp/Pro em
     andamento (wip_*) OU vazio (miss_*, ∅); em Agd/— (dentro do prazo/não
-    esperado) e em Pub não há o que atrasar. Retorna None | 'atraso' |
-    'atraso_strong'.
+    esperado) e em Pub não há o que atrasar.
+
+    [NOVO 2026-09-24, pedido do usuário: "novo alerta, no lugar do Atras
+    quando é exatamente a data da Defasagem... remeta a esteira operacional
+    do dia"] No PRÓPRIO dia do vencimento (atraso_du == 0, prazo == hoje) o
+    badge vira "Pauta" (overlay 'pauta') em vez de "Atras": a carteira ainda
+    não está atrasada de fato, é a pauta da esteira de hoje. O estado
+    (wip_late/miss_late) não muda — ordenação, fundo e SLA continuam iguais.
+    Retorna None | 'pauta' | 'atraso' | 'atraso_strong'.
 
     Pseudocódigo:
-      1. Estado com 1-2 du de atraso (wip_late ou miss_late) -> 'atraso'.
-      2. Estado com ≥3 du de atraso (wip_very_late ou miss_very_late) ->
+      1. Estado com atraso leve (wip_late ou miss_late) e atraso_du == 0
+         -> 'pauta'.
+      2. Estado com 1-2 du de atraso (wip_late ou miss_late) -> 'atraso'.
+      3. Estado com ≥3 du de atraso (wip_very_late ou miss_very_late) ->
          'atraso_strong'.
-      3. Qualquer outro estado -> None (sem badge).
+      4. Qualquer outro estado -> None (sem badge).
     """
     if estado in ("wip_late", "miss_late"):
-        return "atraso"
+        return "pauta" if atraso_du == 0 else "atraso"
     if estado in ("wip_very_late", "miss_very_late"):
         return "atraso_strong"
     return None
 
 
-def compute_overlays(nav_doc, tipos_de_issue, sequencia_quebrada, estado):
+def compute_overlays(nav_doc, tipos_de_issue, sequencia_quebrada, estado, atraso_du=None):
     """Contexto:
     Monta os overlays de 1 célula (marcadores independentes da cor de fundo:
     divergência = badge Rent, issues = triângulo, sequência = anel, atraso =
@@ -472,14 +481,15 @@ def compute_overlays(nav_doc, tipos_de_issue, sequencia_quebrada, estado):
     texto_issues) — os 2 últimos só preenchidos quando aplicável.
 
     Pseudocódigo:
-      1. Badge de atraso, a partir do estado (atraso_overlay_kind).
+      1. Badge de atraso/pauta, a partir do estado e do atraso em du
+         (atraso_overlay_kind).
       2. Se há navPackage do dia, calcula divergência (div_overlay_kind) e
          monta o detalhe numérico pro tooltip/painel.
       3. Se há issues pendentes no dia, monta o texto resumido (top 4 tipos).
       4. Se a sequência está quebrada, adiciona o overlay 'seq'.
     """
     overlays = []
-    tipo_atraso = atraso_overlay_kind(estado)
+    tipo_atraso = atraso_overlay_kind(estado, atraso_du)
     if tipo_atraso:
         overlays.append(tipo_atraso)
     info_divergencia = None
@@ -581,11 +591,16 @@ def montar_texto_sla_celula(wallet, estado, atraso_du, prazo):
     é None quando não há o que mostrar.
 
     Pseudocódigo:
-      1. Se o estado é vermelho/âmbar, mostra "atrasada +Ndu".
+      1. Se o estado é vermelho/âmbar, mostra "atrasada +Ndu" — ou, no
+         próprio dia do vencimento (atraso_du == 0, badge Pauta), "pauta do
+         dia" [2026-09-24].
       2. Se está em progresso/aguardando dentro do prazo, mostra "no prazo".
     """
     texto_sla, sla_alerta = None, False
-    if estado in ("wip_late", "wip_very_late", "miss_late", "miss_very_late"):
+    if estado in ("wip_late", "miss_late") and atraso_du == 0:
+        texto_sla = f"pauta do dia (limite {prazo})"
+        sla_alerta = True
+    elif estado in ("wip_late", "wip_very_late", "miss_late", "miss_very_late"):
         texto_sla = f"atrasada +{max(atraso_du, 0)}du (limite era {prazo})"
         sla_alerta = True
     elif estado in ("wip_ok", "pending") and prazo:
@@ -772,7 +787,7 @@ def compute_wallet_row(wallet, janela, calendario, data_hoje, unp_map, pro_map, 
 
         tipos_de_issue = issues_map.get((wallet_id, data))
         overlays, info_divergencia, texto_issues = compute_overlays(
-            doc_nav, tipos_de_issue, sequencia_quebrada, estado)
+            doc_nav, tipos_de_issue, sequencia_quebrada, estado, atraso_du)
 
         mockkey = STATE_TO_MOCKKEY.get((estado, sigla)) or STATE_TO_MOCKKEY.get((estado, None))
 
@@ -973,27 +988,47 @@ def achar_pior_celula_ativa(ativos, data, lookup_celulas):
     return pior, state_from_cell(pior)
 
 
+def maior_atraso_du_membros(ativos, data, lookup_celulas):
+    """Contexto:
+    Maior atraso em du ("adu") entre as carteiras-membro ativas do grouping
+    num dia — decide se a célula do grouping leva o badge "Pauta" (todos os
+    membros atrasados vencem HOJE) ou "Atras" (algum já venceu antes). O
+    "adu" da pior célula sozinho não basta: 2 membros wip_late empatam no
+    ranking mesmo com adu 0 e 2. Chamada por montar_overlays_celula_grouping()
+    [2026-09-24]. Retorna int ou None (nenhum membro com "adu" gravado).
+
+    Pseudocódigo:
+      1. Junta o "adu" das células ativas do dia que o têm gravado.
+      2. Devolve o maior, ou None se nenhuma tinha.
+    """
+    atrasos = [c["adu"] for wid in ativos
+               for c in [lookup_celulas.get(wid, {}).get(data)] if c and "adu" in c]
+    return max(atrasos) if atrasos else None
+
+
 def montar_overlays_celula_grouping(ativos, data, lookup_celulas, estado, grouping_id, nav_group_map):
     """Contexto:
     Monta a lista de overlays da célula do grouping num dia: união dos
-    overlays dos membros ativos (exceto os de atraso individual, que são
-    recalculados no nível do grouping), + o badge de atraso do estado
-    herdado, + a divergência do navPackage do próprio grouping. Chamada 1x
-    por dia da janela por montar_celula_grouping_dia(), quando há uma pior
-    célula encontrada. Retorna lista de overlays (sem duplicatas).
+    overlays dos membros ativos (exceto os de atraso/pauta individuais, que
+    são recalculados no nível do grouping), + o badge de atraso/pauta do
+    estado herdado, + a divergência do navPackage do próprio grouping.
+    Chamada 1x por dia da janela por montar_celula_grouping_dia(), quando há
+    uma pior célula encontrada. Retorna lista de overlays (sem duplicatas).
 
     Pseudocódigo:
       1. Junta os overlays de todos os membros ativos no dia, removendo
-         "atraso"/"atraso_strong" individuais e duplicatas.
-      2. Recalcula o badge de atraso a partir do estado JÁ herdado (o do
-         grouping, não o de cada membro) e anexa.
+         "atraso"/"atraso_strong"/"pauta" individuais e duplicatas.
+      2. Recalcula o badge a partir do estado JÁ herdado (o do grouping, não
+         o de cada membro) e do maior atraso entre os membros
+         (maior_atraso_du_membros — "Pauta" só se ninguém venceu antes de
+         hoje) e anexa.
       3. Se há divergência no navPackage do PRÓPRIO grouping e nenhum
          membro já trouxe overlay de divergência, anexa também.
     """
     overlays = list(dict.fromkeys(
         o for o in sum((lookup_celulas.get(wid, {}).get(data, {}).get("ov", []) for wid in ativos), [])
-        if o not in ("atraso", "atraso_strong")))
-    tipo_atraso = atraso_overlay_kind(estado)
+        if o not in ("atraso", "atraso_strong", "pauta")))
+    tipo_atraso = atraso_overlay_kind(estado, maior_atraso_du_membros(ativos, data, lookup_celulas))
     if tipo_atraso:
         overlays.append(tipo_atraso)
     navg = nav_group_map.get((grouping_id, data)) or {}

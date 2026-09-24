@@ -21,6 +21,15 @@
    por linha, o modelo de "1 linha = 1 valor" virou "1 linha = array de
    tags" (tagsColunaParaLinha) em TODA coluna — as demais colunas continuam
    com array de 1 elemento, sem mudança de comportamento.
+
+   [AMPLIADO 2026-09-24, pedido do usuário: "acrescente na filtragem como
+   Pauta do dia, também permita o mesmo filtro da Data REF para as outras
+   datas. Acrescente também o filtro Carga Mensal"] Toda coluna de dia da
+   janela ganhou o mesmo filtro da Ref: a Ref continua com a chave fixa
+   `statusRef`; as demais usam chave dinâmica `statusDia:YYYY-MM-DD`
+   (PREFIXO_COLUNA_DIA). As colunas de dia oferecem também as tags "Pauta
+   do dia" (célula com o badge Pauta) e "Carga Mensal" (carteira com
+   Periodicidade M).
 */
 Object.assign(ControleCargas, {
 // coluna -> rótulo exibido no popover/título do botão ▾.
@@ -30,6 +39,96 @@ FILTRO_CABECALHO_COLUNAS: {
   institution: 'Instituição',
   loadModel: 'Modelo de Carga',
   statusRef: 'Status (Data Referência)',
+},
+
+// prefixo da chave de filtro das colunas de dia que NÃO são a Ref (a Ref
+// segue com `statusRef`) — ex.: "statusDia:2026-09-22" [2026-09-24].
+PREFIXO_COLUNA_DIA: 'statusDia:',
+
+// tags de coluna de dia que não são sigla de estado — entram na lista do
+// filtro depois dos estados, nesta ordem [2026-09-24].
+TAGS_EXTRAS_COLUNA_DIA: ['Pauta do dia', 'Problema Rent', 'Comprada', 'Carga Mensal'],
+
+/* Contexto:
+   Chave de filtro de uma coluna de dia do cabeçalho — `statusRef` na data
+   de referência, `statusDia:<data>` nas demais. Usada por
+   buildCabecalhoMatriz() (matriz.js) ao desenhar o ▾ de cada dia
+   [2026-09-24]. Retorna string.
+
+   Pseudocódigo:
+     1. Data == referência -> 'statusRef'.
+     2. Senão -> PREFIXO_COLUNA_DIA + data. */
+chaveFiltroColunaDia(data, refDate){
+  return data === refDate ? 'statusRef' : ControleCargas.PREFIXO_COLUNA_DIA + data;
+},
+
+/* Contexto:
+   Diz se uma chave de filtro é de coluna de dia (Ref ou outra data) —
+   essas compartilham a mesma lógica de tags e de ordenação. Usada por
+   tagsColunaParaLinha()/listaValoresDistintosColuna()/rotuloColunaFiltro()
+   [2026-09-24]. Retorna bool.
+
+   Pseudocódigo:
+     1. 'statusRef' ou começa com PREFIXO_COLUNA_DIA -> true. */
+isColunaDia(coluna){
+  return coluna === 'statusRef' || coluna.startsWith(ControleCargas.PREFIXO_COLUNA_DIA);
+},
+
+/* Contexto:
+   Rótulo legível de uma coluna filtrável (título do botão ▾) — fixo em
+   FILTRO_CABECALHO_COLUNAS ou, pras colunas de dia não-Ref, montado com a
+   data [2026-09-24]. Retorna string.
+
+   Pseudocódigo:
+     1. Coluna com rótulo fixo -> o rótulo.
+     2. Coluna de dia -> "Status (dd/mm)".
+     3. Senão -> string vazia. */
+rotuloColunaFiltro(coluna){
+  if(ControleCargas.FILTRO_CABECALHO_COLUNAS[coluna]) return ControleCargas.FILTRO_CABECALHO_COLUNAS[coluna];
+  if(ControleCargas.isColunaDia(coluna)){
+    return `Status (${ControleCargas.fmtDM(coluna.slice(ControleCargas.PREFIXO_COLUNA_DIA.length))})`;
+  }
+  return '';
+},
+
+/* Contexto:
+   Célula de 1 linha na coluna de dia do filtro — a última da janela pra
+   `statusRef` (mesmo critério de mockkeyReferencia), a da data para
+   `statusDia:<data>` [2026-09-24]. Retorna o objeto da célula ou null.
+
+   Pseudocódigo:
+     1. statusRef -> última célula (ou null sem células).
+     2. statusDia:<data> -> célula dessa data (cellByDate, matriz.js). */
+celulaDaColunaDia(coluna, r){
+  const cells = r.cells || [];
+  if(coluna === 'statusRef') return cells.length ? cells[cells.length-1] : null;
+  const data = coluna.slice(ControleCargas.PREFIXO_COLUNA_DIA.length);
+  return ControleCargas.cellByDate(r)[data] || null;
+},
+
+/* Contexto:
+   Tags de 1 linha numa coluna de dia (Ref ou outra data): a sigla do
+   estado na célula + os alertas que o usuário pediu pra filtrar. Usada por
+   tagsColunaParaLinha() [extraída 2026-09-24 ao estender o filtro da Ref
+   pras demais datas]. Retorna array de strings (≥1).
+
+   Pseudocódigo:
+     1. Sigla do estado da célula (STATES[...].letter; "—" sem célula).
+     2. Badge Pauta na célula -> "Pauta do dia".
+     3. Divergência Rent×NAV > 2bp na célula -> "Problema Rent".
+     4. Só na Ref, carteira aguardando explosão -> "Comprada" (o sinal é
+        calculado só pra data de referência, snapshot_builder.py).
+     5. Carteira com Periodicidade M -> "Carga Mensal". */
+tagsColunaDia(coluna, isWallets, r){
+  const celula = ControleCargas.celulaDaColunaDia(coluna, r);
+  const st = celula ? ControleCargas.STATES[celula.s] : null;
+  const tags = [ st ? st.letter : '—' ];
+  if(celula && (celula.ov||[]).includes('pauta')) tags.push('Pauta do dia');
+  const div = celula && celula.tt && celula.tt.div;
+  if(div && div.bp > 2) tags.push('Problema Rent');
+  if(coluna === 'statusRef' && isWallets && r.aguardandoExplosao) tags.push('Comprada');
+  if(isWallets && r.monthly) tags.push('Carga Mensal');
+  return tags;
 },
 
 /* Contexto:
@@ -43,7 +142,7 @@ FILTRO_CABECALHO_COLUNAS: {
         mesmo espírito do estado "on" dos chips de filtro. */
 renderFiltroCabecalhoBotaoHtml(coluna){
   const ativo = ControleCargas.state.filtroValoresColuna[coluna] != null;
-  return `<button type="button" class="th-filter-btn ${ativo?'active':''}" data-filtro-coluna="${coluna}" title="Filtrar ${ControleCargas.esc(ControleCargas.FILTRO_CABECALHO_COLUNAS[coluna]||'')}">▾</button>`;
+  return `<button type="button" class="th-filter-btn ${ativo?'active':''}" data-filtro-coluna="${coluna}" title="Filtrar ${ControleCargas.esc(ControleCargas.rotuloColunaFiltro(coluna))}">▾</button>`;
 },
 
 /* Contexto:
@@ -67,7 +166,9 @@ renderFiltroCabecalhoBotaoHtml(coluna){
         divergenciaBpReferencia(r) > 2bp, também "Problema Rent", e [NOVO
         2026-08-13, pedido do usuário: "se a carteira da lista for comprada
         por alguma carteira da lista..."] se r.aguardandoExplosao (só
-        carteira, nunca Agrupamento), também "Comprada". */
+        carteira, nunca Agrupamento), também "Comprada". [2026-09-24] Toda
+        coluna de dia (statusRef ou statusDia:<data>) delega pra
+        tagsColunaDia(), que acrescenta "Pauta do dia" e "Carga Mensal". */
 tagsColunaParaLinha(coluna, isWallets, r){
   if(coluna === 'responsavel' || coluna === 'comentarioAtuacao'){
     const targetType = isWallets ? 'wallet' : 'grouping';
@@ -77,14 +178,8 @@ tagsColunaParaLinha(coluna, isWallets, r){
   if(coluna === 'institution' || coluna === 'loadModel'){
     return [ r[coluna] || '' ];
   }
-  if(coluna === 'statusRef'){
-    const mk = ControleCargas.mockkeyReferencia(r);
-    const st = ControleCargas.STATES[mk];
-    const tags = [ st ? st.letter : '—' ];
-    const bp = ControleCargas.divergenciaBpReferencia(r);
-    if(bp != null && bp > 2) tags.push('Problema Rent');
-    if(isWallets && r.aguardandoExplosao) tags.push('Comprada');
-    return tags;
+  if(ControleCargas.isColunaDia(coluna)){
+    return ControleCargas.tagsColunaDia(coluna, isWallets, r);
   }
   return [''];
 },
@@ -103,20 +198,23 @@ tagsColunaParaLinha(coluna, isWallets, r){
    vem primeiro no array, por ser o mais urgente dos dois) — então "Pro"
    fica ranqueado na posição do pior dos dois, sem esforço extra. "Problema
    Rent"/"Comprada" (não são mockkey real) entram logo depois do pior estado
-   presente. Usada por listaValoresDistintosColuna(). Retorna número (menor =
-   mostrado primeiro).
+   presente. [2026-09-24] Vale pra toda coluna de dia; as tags extras
+   (TAGS_EXTRAS_COLUNA_DIA — Pauta do dia, Problema Rent, Comprada, Carga
+   Mensal) vêm depois dos estados, nessa ordem. Usada por
+   listaValoresDistintosColuna(). Retorna número (menor = mostrado primeiro).
 
    Pseudocódigo:
      1. Sigla de estado real -> índice em PRIORITY_ORDER (via
         STATES[mk].letter — 1º match, ver nota acima sobre "Pro").
-     2. "Problema Rent"/"Comprada" [2026-08-13] -> logo depois do último
-        estado (PRIORITY_ORDER.length).
-     3. Qualquer outra coisa (não deveria ocorrer) -> ainda depois disso. */
+     2. Tag extra (TAGS_EXTRAS_COLUNA_DIA) -> depois do último estado,
+        na ordem da lista.
+     3. Qualquer outra coisa (não deveria ocorrer) -> depois de tudo. */
 RANK_ORDEM_STATUS_REF(tag){
   const idx = ControleCargas.PRIORITY_ORDER.findIndex(mk=> ControleCargas.STATES[mk] && ControleCargas.STATES[mk].letter === tag);
   if(idx !== -1) return idx;
-  if(tag === 'Problema Rent' || tag === 'Comprada') return ControleCargas.PRIORITY_ORDER.length;
-  return ControleCargas.PRIORITY_ORDER.length + 1;
+  const idxExtra = ControleCargas.TAGS_EXTRAS_COLUNA_DIA.indexOf(tag);
+  if(idxExtra !== -1) return ControleCargas.PRIORITY_ORDER.length + idxExtra;
+  return ControleCargas.PRIORITY_ORDER.length + ControleCargas.TAGS_EXTRAS_COLUNA_DIA.length;
 },
 
 /* Contexto:
@@ -132,7 +230,7 @@ RANK_ORDEM_STATUS_REF(tag){
         coluna não deve restringir a lista dela mesma).
      3. Conta ocorrências de cada tag (tagsColunaParaLinha) — uma linha com
         2 tags (caso statusRef+Problema Rent) conta pras duas.
-     4. Ordena: `statusRef` usa a ordem de severidade da grade
+     4. Ordena: colunas de dia (statusRef/statusDia:<data>) usam a ordem de severidade da grade
         (RANK_ORDEM_STATUS_REF, pior→melhor — pedido do usuário: "a ordem da
         seleção do filtro deve ser a mesma da exibição"); as demais colunas
         continuam alfabéticas, com "(Vazio)" sempre por último. */
@@ -148,7 +246,7 @@ listaValoresDistintosColuna(coluna, isWallets){
   const entradas = Array.from(contagem.entries()).map(([valor,n])=> ({
     valor, contagem:n, label: valor === '' ? '(Vazio)' : valor,
   }));
-  if(coluna === 'statusRef'){
+  if(ControleCargas.isColunaDia(coluna)){
     entradas.sort((a,b)=> ControleCargas.RANK_ORDEM_STATUS_REF(a.valor) - ControleCargas.RANK_ORDEM_STATUS_REF(b.valor));
   } else {
     entradas.sort((a,b)=> (a.valor==='') - (b.valor==='') || a.label.localeCompare(b.label));
