@@ -787,6 +787,40 @@ td.col-cust, th.hdr-cust{
 /* Separador entre o grupo e os chips de empresa — barra fina, não texto. */
 .filtros-divisor{width:1px;align-self:stretch;min-height:22px;background:var(--border);margin:0 2px;}
 
+/* Edição de comentário no painel de detalhe [2026-09-24, pedido do usuário].
+   O "editar" fica discreto à direita do cabeçalho do comentário; o rastro de
+   quem editou vem no mesmo tom do restante do cabeçalho. */
+.comment-item .ceditar{margin-left:auto;font-size:10.5px;}
+.cedited{font-size:10px;color:var(--ink-faint);font-style:italic;}
+.comment-edit{margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);}
+.comment-edit textarea{width:100%;box-sizing:border-box;min-height:58px;}
+
+/* Célula SELECIONADA na matriz [2026-09-24, pedido do usuário: "precisamos
+   implementar seleção de célula na matriz"]. Anel azul de seleção
+   (--filtro-sel, o mesmo "isto está escolhido" dos filtros) POR FORA da
+   célula, via outline: os 4 cantos e a borda já estão ocupados pelos badges
+   (Atraso/Pauta, Rent, issue, sequência, comentário), então usar borda ou
+   box-shadow aqui brigaria com eles. */
+.cell.celula-selecionada{
+  outline:3px solid var(--filtro-sel);
+  outline-offset:1px;
+  position:relative;z-index:2;
+}
+
+/* Tag do dia que a linha está editando quando NÃO é a data de referência —
+   aparece dentro da célula "Responsável" [2026-09-24]. */
+.anot-data-tag{
+  display:inline-flex;align-items:center;gap:2px;margin-right:4px;
+  font-size:9.5px;font-weight:800;line-height:1;padding:2px 3px 2px 4px;
+  border-radius:4px;background:var(--filtro-sel);color:var(--filtro-sel-ink);
+  vertical-align:middle;cursor:help;
+}
+.anot-data-x{
+  background:none;border:none;color:inherit;font-size:11px;line-height:1;
+  padding:0 1px;cursor:pointer;opacity:.75;
+}
+.anot-data-x:hover{opacity:1;}
+
 /* Botão do filtro de Pauta na faixa de filtros (botaoFiltroPautaHtml,
    filtros.js) — [2026-09-24, pedido do usuário: "um filtro só na pauta que eu
    consiga selecionar o Status Pauta"]. É um .th-filter-btn de verdade (o

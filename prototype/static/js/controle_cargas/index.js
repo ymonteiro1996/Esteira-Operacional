@@ -265,7 +265,10 @@ wireAjudaEExportar(){
         (wireFiltrosCabecalho, filtro_cabecalho.js) [2026-07-29].
      8. Liga os botões ℹ️/📋 de nome/walletId/groupingId, por delegação
         global — cobre matriz E modal, nunca precisa religar depois de um
-        redesenho (wireAcoesIdentificador, identificadores.js) [2026-07-30]. */
+        redesenho (wireAcoesIdentificador, identificadores.js) [2026-07-30].
+     9. Liga o que a seleção de célula precisa fora da matriz — o "×" que
+        volta pra data de referência e o Esc (wireSelecaoCelula,
+        selecao_celula.js) [2026-09-24]. */
 wire(){
   ControleCargas.wireAbas();
   ControleCargas.wireNavegacaoCustodiante();
@@ -275,6 +278,7 @@ wire(){
   ControleCargas.wireSalvarAnotacoes();
   ControleCargas.wireFiltrosCabecalho();
   ControleCargas.wireAcoesIdentificador();
+  ControleCargas.wireSelecaoCelula();
 },
 
 /* Contexto:

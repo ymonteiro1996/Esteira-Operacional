@@ -103,7 +103,10 @@ rowHtml(r, isWallets, window_){
   const rowSev = ControleCargas.rowCommentSeverity(targetType, rid);
   const compradaPendente = isWallets && !!r.aguardandoExplosao;
 
-  let html = `<tr${compradaPendente ? ' class="linha-comprada-pendente"' : ''}><td class="col-company"><span class="companylink" data-company="${ControleCargas.escAttr(r.company)}">${ControleCargas.esc(r.company)}</span></td><td class="col-name">`;
+  // data-rid na <tr>: é por ele que redesenharColunasAnotacao()
+  // (selecao_celula.js) acha a linha pra religar os 2 campos ao dia
+  // selecionado, sem repintar a matriz inteira [2026-09-24].
+  let html = `<tr data-rid="${ControleCargas.escAttr(rid)}"${compradaPendente ? ' class="linha-comprada-pendente"' : ''}><td class="col-company"><span class="companylink" data-company="${ControleCargas.escAttr(r.company)}">${ControleCargas.esc(r.company)}</span></td><td class="col-name">`;
   // nome já abre o painel de detalhe ao clicar (wireRowClicks) — só o botão
   // 📋 é novo aqui; ℹ️ seria redundante (identificadores.js) [2026-07-30].
   html += `<span class="wname" data-id="${rid}" data-kind="${targetType}">${ControleCargas.esc(r.name)}</span>${ControleCargas.acoesIdentificadorHtml(r.name)}`;
@@ -145,7 +148,10 @@ rowHtml(r, isWallets, window_){
     const letterHtml = entry.s==='miss' ? `<span class="emptyset">${st.letter}</span>` : st.letter;
     const commentDot = (commentSev ? `<span class="cmt-dot ${commentSev}"></span>` : '')
       + (temAnotacao ? `<span class="atuacao-dot"></span>` : '');
-    html += `<td><div class="cell ${st.cls} ${ControleCargas.ovClass(ovs)}" tabindex="0"
+    // [2026-09-24] célula selecionada nasce marcada (a classe também é
+    // ligada/desligada sem repintura por pintarSelecaoCelula).
+    const selecionada = ControleCargas.celulaEstaSelecionada(ControleCargas.state.view, rid, d) ? ' celula-selecionada' : '';
+    html += `<td><div class="cell ${st.cls} ${ControleCargas.ovClass(ovs)}${selecionada}" tabindex="0"
                 data-view="${ControleCargas.state.view}" data-rid="${rid}" data-date="${d}">${letterHtml}${ControleCargas.atrasoBadgeHtml(ovs)}${commentDot}</div></td>`;
   });
 

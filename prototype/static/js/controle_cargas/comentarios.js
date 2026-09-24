@@ -189,6 +189,53 @@ postComment(payload){
 },
 
 /* Contexto:
+   Edita 1 comentário já existente (PATCH /api/comments/<id>) — chamada pelo
+   botão "salvar" do formulário de edição do painel [2026-09-24, pedido do
+   usuário: "ver o comentário, criar, editar"]. Manda só os campos que mudam;
+   o servidor preserva o autor original e carimba updatedAt/editedBy. Retorna
+   Promise que REJEITA em erro (quem chama mostra a mensagem no formulário,
+   mesmo padrão de postComment).
+
+   Pseudocódigo:
+     1. PATCH com o corpo recebido.
+     2. Resposta não-ok -> rejeita com a mensagem do backend. */
+patchComment(id, payload){
+  return fetch(`/api/comments/${encodeURIComponent(id)}`, {
+    method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload),
+  }).then(async r=>{
+    const data = await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(data.error || ('http '+r.status));
+    return data.comment;
+  });
+},
+
+/* Contexto:
+   Formulário de edição de 1 comentário, escondido até alguém clicar em
+   "editar" — vai junto de cada item da lista (commentsSectionHtml)
+   [2026-09-24, pedido do usuário]. Retorna string HTML.
+
+   Pseudocódigo:
+     1. 3 botões de severidade, com o atual já marcado.
+     2. Textarea com o texto atual e os 2 campos de vigência.
+     3. Botões salvar/cancelar + área de mensagem. */
+formularioEdicaoComentarioHtml(c){
+  const botaoSev = (sev, rotulo)=>
+    `<button type="button" class="sevbtn ${c.severity===sev?'on':''}" data-sev="${sev}">${rotulo}</button>`;
+  return `<div class="comment-edit" data-comment-id="${ControleCargas.escAttr(c.id)}" style="display:none;">
+    <div class="sevbtns">${botaoSev('green','Verde')}${botaoSev('yellow','Amarelo')}${botaoSev('red','Vermelho')}</div>
+    <textarea class="ce-text">${ControleCargas.esc(c.text)}</textarea>
+    <div class="fieldlabel">Período de datas (vigência do comentário)</div>
+    <div class="datesrow">
+      <label>De <input type="date" class="ce-from" value="${ControleCargas.escAttr(c.validFrom)}"></label>
+      <label>Até <input type="date" class="ce-to" value="${ControleCargas.escAttr(c.validTo)}"></label>
+    </div>
+    <button class="btn" type="button" data-action="salvar-edicao">Salvar alteração</button>
+    <button type="button" class="linklike" data-action="cancelar-edicao">Cancelar</button>
+    <div class="formmsg"></div>
+  </div>`;
+},
+
+/* Contexto:
    Monta o HTML da seção final "Comentários" do painel de detalhe — idêntica
    nos 2 painéis (PLANNING: painel de Agrupamento "mesmo formulário do item
    4"). Mostra vigentes → expirados → formulário de novo comentário
@@ -224,12 +271,19 @@ commentsSectionHtml(targetType, targetId, cellDate){
 
   const renderList = (list, expired)=> list.map(c=>{
     const scopeLabel = c.cellDate ? `dia ${c.cellDate}` : (targetType==='wallet'?'carteira toda':'agrupamento todo');
+    // [2026-09-24, pedido do usuário: "ver o comentário, criar, editar"]
+    // Qualquer pessoa edita (decisão dele), com rastro: o autor original
+    // continua aparecendo e o "editado por" entra ao lado quando houver.
+    const editadoPor = c.editedBy && c.editedBy !== c.author
+      ? `<span class="cedited">editado por ${ControleCargas.esc(c.editedBy)}</span>` : '';
     return `<div class="comment-item"><div class="chead">
       <span class="comment-dot ${c.severity}"></span>
       <span class="cauthor">${ControleCargas.esc(c.author)}</span>
       <span class="cvalid">${scopeLabel} · vigência ${c.validFrom} → ${c.validTo}</span>
+      ${editadoPor}
       ${expired?`<span class="cexpired-tag">expirado em ${ControleCargas.esc(c.validTo)}</span>`:''}
-    </div><div class="ctext">${ControleCargas.esc(c.text)}</div></div>`;
+      <button type="button" class="linklike ceditar" data-action="editar-comentario" data-comment-id="${ControleCargas.escAttr(c.id)}">editar</button>
+    </div><div class="ctext">${ControleCargas.esc(c.text)}</div>${ControleCargas.formularioEdicaoComentarioHtml(c)}</div>`;
   }).join('');
 
   let html = `<div class="psec"><h4>Comentários</h4>`;

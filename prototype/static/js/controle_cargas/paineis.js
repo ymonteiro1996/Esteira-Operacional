@@ -241,6 +241,59 @@ wireFormularioComentarioPainel(body, targetType, targetId, focusDate){
 },
 
 /* Contexto:
+   Liga o "editar" de cada comentário da lista do painel: abre/fecha o
+   formulário, troca a severidade escolhida e salva via PATCH
+   [2026-09-24, pedido do usuário: "ver o comentário, criar, editar"].
+   Chamada por wirePanelInteractions(). Não retorna nada.
+
+   Pseudocódigo:
+     1. "editar" -> mostra o formulário daquele comentário (e esconde os
+        outros que estejam abertos).
+     2. Botões de severidade -> marcam o escolhido dentro do formulário.
+     3. "cancelar" -> só esconde.
+     4. "salvar" -> valida texto não vazio, manda PATCH com severidade/texto/
+        vigência, recarrega os comentários e redesenha painel + matriz (o
+        balão da célula pode ter mudado de cor ou de dia). */
+wireEdicaoComentarioPainel(body, targetType, targetId, focusDate){
+  body.querySelectorAll('[data-action="editar-comentario"]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.commentId;
+      body.querySelectorAll('.comment-edit').forEach(f=>{
+        f.style.display = (f.dataset.commentId === id && f.style.display === 'none') ? '' : 'none';
+      });
+    });
+  });
+
+  body.querySelectorAll('.comment-edit').forEach(form=>{
+    form.querySelectorAll('.sevbtn').forEach(b=> b.addEventListener('click', ()=>{
+      form.querySelectorAll('.sevbtn').forEach(x=> x.classList.remove('on'));
+      b.classList.add('on');
+    }));
+    form.querySelector('[data-action="cancelar-edicao"]').addEventListener('click', ()=>{ form.style.display = 'none'; });
+    form.querySelector('[data-action="salvar-edicao"]').addEventListener('click', ()=>{
+      const msgEl = form.querySelector('.formmsg');
+      msgEl.className = 'formmsg'; msgEl.textContent = '';
+      const texto = form.querySelector('.ce-text').value.trim();
+      if(!texto){ msgEl.classList.add('err'); msgEl.textContent = 'O comentário não pode ficar vazio.'; return; }
+      const sevOn = form.querySelector('.sevbtn.on');
+      ControleCargas.patchComment(form.dataset.commentId, {
+        text: texto,
+        severity: sevOn ? sevOn.dataset.sev : undefined,
+        validFrom: form.querySelector('.ce-from').value,
+        validTo: form.querySelector('.ce-to').value,
+      }).then(()=> ControleCargas.loadComments()).then(()=>{
+        if(targetType==='wallet') ControleCargas.buildWalletPanel(targetId, focusDate);
+        else ControleCargas.buildGroupingPanel(targetId, focusDate);
+        ControleCargas.buildMatrix();
+      }).catch(err=>{
+        msgEl.classList.add('err');
+        msgEl.textContent = 'Erro ao salvar a edição: ' + err.message;
+      });
+    });
+  });
+},
+
+/* Contexto:
    Liga os elementos interativos DENTRO do painel de detalhe recém-
    renderizado: re-foco de data na mini-timeline, drill-through
    carteira<->agrupamento, e submissão do formulário de comentário (POST
@@ -251,12 +304,15 @@ wireFormularioComentarioPainel(body, targetType, targetId, focusDate){
    Pseudocódigo:
      1. Religa foco de data (wireFocoDataPainel).
      2. Religa drill-through (wireDrillThroughPainel).
-     3. Liga a lógica do formulário de comentário (wireFormularioComentarioPainel). */
+     3. Liga a lógica do formulário de comentário (wireFormularioComentarioPainel).
+     4. Liga a edição dos comentários já existentes
+        (wireEdicaoComentarioPainel) [2026-09-24]. */
 wirePanelInteractions(targetType, targetId, focusDate){
   const body = document.getElementById('modal-body');
   ControleCargas.wireFocoDataPainel(body, targetType, targetId);
   ControleCargas.wireDrillThroughPainel(body, focusDate);
   ControleCargas.wireFormularioComentarioPainel(body, targetType, targetId, focusDate);
+  ControleCargas.wireEdicaoComentarioPainel(body, targetType, targetId, focusDate);
 },
 
 // ═══ Painel de Detalhe — CARTEIRA (9 seções, PLANNING §Painéis de Detalhe) ═══
@@ -288,7 +344,7 @@ buildSecaoCabecalhoCarteira(r, focusDate){
   // Responsável/Comentário sobre atuação (anotacoes.js) — pedido do usuário
   // 2026-07-30: o clique na célula (que abre este painel) também precisa
   // mostrar o comentário, não só o hover (tooltip, escondido pelo modal).
-  html += ControleCargas.resumoAtuacaoHtml('wallet', r.walletId);
+  html += ControleCargas.resumoAtuacaoHtml('wallet', r.walletId, focusDate);
   return html;
 },
 
@@ -564,7 +620,7 @@ buildSecaoCabecalhoGrouping(g, focusDate){
   // Responsável/Comentário sobre atuação (anotacoes.js) — pedido do usuário
   // 2026-07-30: o clique na célula (que abre este painel) também precisa
   // mostrar o comentário, não só o hover (tooltip, escondido pelo modal).
-  html += ControleCargas.resumoAtuacaoHtml('grouping', g.groupingId);
+  html += ControleCargas.resumoAtuacaoHtml('grouping', g.groupingId, focusDate);
   return html;
 },
 
@@ -721,20 +777,30 @@ buildGroupingPanel(groupingId, focusDate){
 },
 
 /* Contexto:
-   Liga o clique de abrir o painel de detalhe nas células da matriz e nos
-   nomes das linhas. Chamada no fim de buildMatrix() (precisa religar a
-   cada redesenho do DOM). Não retorna nada.
+   Liga o clique das células da matriz e dos nomes das linhas. Chamada no fim
+   de buildMatrix() (precisa religar a cada redesenho do DOM). Não retorna
+   nada.
 
    Pseudocódigo:
-     1. Para cada célula, liga clique que abre o painel de carteira ou de
-        agrupamento (conforme data-view) focado no dia clicado.
+     1. Para cada célula, liga o clique em DOIS tempos [2026-09-24, pedido do
+        usuário: "Caso click uma vez, aparece o comentário editável nele.
+        Caso click novamente na celula, aparece todas informações"]: o 1º
+        clique SELECIONA a célula (selecao_celula.js — as colunas
+        Responsável/Comentário sobre atuação da linha passam a editar o dia
+        dela); o 2º clique na MESMA célula abre o painel de detalhe focado
+        nesse dia, que era o que o clique fazia sozinho antes.
      2. Para cada nome de linha (.wname), liga clique que abre o painel
-        correspondente focado na data de referência do grid. */
+        correspondente focado na data de referência do grid (sem seleção —
+        ali não há dia escolhido). */
 wireRowClicks(){
   document.querySelectorAll('.cell').forEach(cell=>{
     cell.addEventListener('click', ()=>{
-      const rid = cell.dataset.rid, date = cell.dataset.date;
-      if(cell.dataset.view==='wallets') ControleCargas.buildWalletPanel(rid, date); else ControleCargas.buildGroupingPanel(rid, date);
+      const rid = cell.dataset.rid, date = cell.dataset.date, view = cell.dataset.view;
+      if(!ControleCargas.celulaEstaSelecionada(view, rid, date)){
+        ControleCargas.selecionarCelula(view, rid, date);
+        return;
+      }
+      if(view==='wallets') ControleCargas.buildWalletPanel(rid, date); else ControleCargas.buildGroupingPanel(rid, date);
     });
   });
   document.querySelectorAll('.wname').forEach(el=>{

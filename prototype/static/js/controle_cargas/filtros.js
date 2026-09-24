@@ -43,6 +43,11 @@ Object.assign(ControleCargas, {
 // inteiro ("Problema Rent" marcado na coluna da Pauta = o que o chip
 // "Divergência na Pauta" fazia, e ainda dá pra cruzar com Unp/Pro/Pub, Carga
 // Mensal, etc.).
+// [2026-09-24, pedido do usuário: "precisamos implementar seleção de célula
+// na matriz"] celulaSelecionada = {view, rid, date} da ÚNICA célula marcada
+// na tela (null = nenhuma). Quem lê e explica o efeito é
+// static/js/controle_cargas/selecao_celula.js: a linha selecionada passa a
+// editar a anotação DO DIA da célula, em vez da data de referência.
 // [2026-09-11, relato do usuário: "às vezes fica em data antiga"]
 // sequenciaAtualizacao / sincronizacaoDataInicial são estado de CONCORRÊNCIA do
 // botão Atualizar (atualizar.js): a tela dispara /api/atualizar de 4 lugares
@@ -59,7 +64,7 @@ Object.assign(ControleCargas, {
 // fica no state só pra nunca existir mais de um timer de pé ao mesmo tempo.
 state: { view:'wallets', sort:'priority', sortDir:1, frozen:null, company:null,
               filtroValoresColuna: {responsavel:null, comentarioAtuacao:null, institution:null, loadModel:null, statusRef:null, statusPauta:null},
-              search:'', showBloco3:false, focusDate:null,
+              search:'', showBloco3:false, focusDate:null, celulaSelecionada:null,
               sequenciaAtualizacao:0, sincronizacaoDataInicial:null,
               timerProgresso:null },
 

@@ -37,14 +37,17 @@ chaveAnotacao(targetType, targetId, referenceDate){
    nunca undefined).
 
    Pseudocódigo:
-     1. Monta a chave pra (targetType, targetId, data de referência CORRENTE
-        do snapshot — nunca outro dia da janela).
+     1. Monta a chave pra (targetType, targetId, `data`) — [2026-09-24,
+        pedido do usuário: seleção de célula] o 3º argumento é opcional e
+        quase sempre vem vazio; sem ele vale a data de referência, como
+        sempre. Com uma célula selecionada, a linha dela manda o dia da
+        célula (ver dataAnotacaoDaLinha, selecao_celula.js).
      2. Edição pendente ainda não salva tem prioridade (é o que o usuário
         está vendo/editando agora).
      3. Sem pendência, usa o valor já salvo (ANNOTATIONS).
      4. Sem nenhum dos dois, strings vazias. */
-annotationAtual(targetType, targetId){
-  const refDate = ControleCargas.SNAPSHOT.meta.referenceDate;
+annotationAtual(targetType, targetId, data){
+  const refDate = data || ControleCargas.SNAPSHOT.meta.referenceDate;
   const chave = ControleCargas.chaveAnotacao(targetType, targetId, refDate);
   const pendente = ControleCargas.PENDING_ANNOTATIONS[chave];
   const salva = ControleCargas.ANNOTATIONS[chave];
@@ -77,12 +80,14 @@ loadAnnotations(){
    Não retorna nada.
 
    Pseudocódigo:
-     1. Monta a chave (targetType, targetId, data de referência corrente).
+     1. Monta a chave (targetType, targetId, `data` — a do dia selecionado
+        quando a linha está com uma célula marcada; senão a de referência,
+        comportamento de sempre [2026-09-24]).
      2. Parte do valor pendente já acumulado (ou do valor salvo, se essa
         linha ainda não tem pendência) e sobrescreve só o campo editado.
      3. Atualiza o indicador visual do botão "Salvar" (tem pendência?). */
-registrarEdicaoAnotacao(targetType, targetId, campo, valor){
-  const refDate = ControleCargas.SNAPSHOT.meta.referenceDate;
+registrarEdicaoAnotacao(targetType, targetId, campo, valor, data){
+  const refDate = data || ControleCargas.SNAPSHOT.meta.referenceDate;
   const chave = ControleCargas.chaveAnotacao(targetType, targetId, refDate);
   const base = ControleCargas.PENDING_ANNOTATIONS[chave] || ControleCargas.ANNOTATIONS[chave] || {};
   ControleCargas.PENDING_ANNOTATIONS[chave] = {
@@ -159,7 +164,7 @@ salvarAnotacoes(){
 
    Pseudocódigo:
      1. Resolve o valor corrente (pendente > salvo > vazio).
-     2. Resolve a severidade do comentário vigente NA DATA DE REFERÊNCIA
+     2. Resolve a severidade do comentário vigente NA DATA EDITADA
         (cellCommentSeverity) — [2026-08-07, pedido do usuário: "o
         comentário vigente verde/amarelo/vermelho aparecer como sinalização
         nas células Responsável e Comentário, para avaliar antes de lançar
@@ -171,12 +176,22 @@ salvarAnotacoes(){
         texto livre) com data-attributes de identificação (targetType/
         targetId) pra o handler de input achar a linha certa. */
 colunasAnotacaoHtml(targetType, targetId){
-  const {responsavel, comentarioAtuacao} = ControleCargas.annotationAtual(targetType, targetId);
+  // [2026-09-24, pedido do usuário: "a seleção dele seja dinâmica"] A data
+  // editada aqui é a do dia SELECIONADO nesta linha (selecao_celula.js) —
+  // sem seleção, segue sendo a de referência, como sempre.
+  const data = ControleCargas.dataAnotacaoDaLinha(targetId);
   const refDate = ControleCargas.SNAPSHOT.meta.referenceDate;
-  const sev = ControleCargas.cellCommentSeverity(targetType, targetId, refDate);
+  const {responsavel, comentarioAtuacao} = ControleCargas.annotationAtual(targetType, targetId, data);
+  const sev = ControleCargas.cellCommentSeverity(targetType, targetId, data);
   const classeSev = sev ? ` sev-${sev}` : '';
-  return `<td class="col-anotacao${classeSev}"><input type="text" class="anot-input anot-responsavel" data-target-type="${targetType}" data-target-id="${ControleCargas.escAttr(targetId)}" value="${ControleCargas.escAttr(responsavel)}" placeholder="—"></td>` +
-         `<td class="col-anotacao col-anotacao-comentario${classeSev}"><input type="text" class="anot-input anot-comentario" data-target-type="${targetType}" data-target-id="${ControleCargas.escAttr(targetId)}" value="${ControleCargas.escAttr(comentarioAtuacao)}" placeholder="Comentário sobre atuação..."></td>`;
+  // Tag só quando a linha NÃO está na data de referência: é o aviso de que o
+  // que se digita aqui vale para outro dia (e o "×" volta para a referência).
+  const tagData = data === refDate ? '' :
+    `<span class="anot-data-tag" title="Editando a anotação do dia ${ControleCargas.escAttr(data)} (célula selecionada), não a da data de referência ${ControleCargas.escAttr(refDate)}">${ControleCargas.esc(ControleCargas.fmtDM(data))}`
+    + `<button type="button" class="anot-data-x" data-acao="limpar-selecao-celula" title="Voltar a editar a data de referência">×</button></span>`;
+  const atributos = `data-target-type="${targetType}" data-target-id="${ControleCargas.escAttr(targetId)}" data-data="${ControleCargas.escAttr(data)}"`;
+  return `<td class="col-anotacao${classeSev}">${tagData}<input type="text" class="anot-input anot-responsavel" ${atributos} value="${ControleCargas.escAttr(responsavel)}" placeholder="—"></td>` +
+         `<td class="col-anotacao col-anotacao-comentario${classeSev}"><input type="text" class="anot-input anot-comentario" ${atributos} value="${ControleCargas.escAttr(comentarioAtuacao)}" placeholder="Comentário sobre atuação..."></td>`;
 },
 
 /* Contexto:
@@ -205,11 +220,24 @@ wireSalvarAnotacoes(){
         no blur — "estilo Excel", edição imediata) que grava no buffer de
         pendências (registrarEdicaoAnotacao). */
 wireColunasAnotacao(){
-  document.querySelectorAll('.anot-input').forEach(inp=>{
-    inp.addEventListener('input', ()=>{
-      const campo = inp.classList.contains('anot-responsavel') ? 'responsavel' : 'comentarioAtuacao';
-      ControleCargas.registrarEdicaoAnotacao(inp.dataset.targetType, inp.dataset.targetId, campo, inp.value);
-    });
+  document.querySelectorAll('.anot-input').forEach(ControleCargas.ligarInputAnotacao);
+},
+
+/* Contexto:
+   Liga 1 campo editável de anotação ao buffer de pendências. Extraída de
+   wireColunasAnotacao() [2026-09-24] pra o redesenho de UMA linha
+   (redesenharColunasAnotacao, selecao_celula.js) poder religar só os campos
+   que ele recriou — chamar wireColunasAnotacao() de novo duplicaria o
+   listener de todas as outras linhas. Não retorna nada.
+
+   Pseudocódigo:
+     1. A cada tecla ("estilo Excel", não espera o blur), descobre qual dos 2
+        campos é e grava no buffer, com a DATA que a célula está editando
+        (data-data — a do dia selecionado ou a de referência). */
+ligarInputAnotacao(inp){
+  inp.addEventListener('input', ()=>{
+    const campo = inp.classList.contains('anot-responsavel') ? 'responsavel' : 'comentarioAtuacao';
+    ControleCargas.registrarEdicaoAnotacao(inp.dataset.targetType, inp.dataset.targetId, campo, inp.value, inp.dataset.data);
   });
 },
 
@@ -226,12 +254,12 @@ wireColunasAnotacao(){
    nota em rowHtml()]. Retorna string (vazia quando não se aplica).
 
    Pseudocódigo:
-     1. `date` ≠ data de referência do grid -> string vazia (a anotação só
-        existe na referência).
-     2. `date` == referência -> devolve o texto corrente (annotationAtual). */
+     1. Devolve o texto gravado para (alvo, `date`) — vazio quando não há.
+        [REVISADO 2026-09-24, pedido do usuário: agora a anotação pode ser de
+        qualquer dia da janela (seleção de célula), então o dia deixou de ser
+        filtrado aqui: quem responde é o próprio dicionário de anotações.] */
 atuacaoTextoNaData(targetType, targetId, date){
-  if(date !== ControleCargas.SNAPSHOT.meta.referenceDate) return '';
-  return ControleCargas.annotationAtual(targetType, targetId).comentarioAtuacao;
+  return ControleCargas.annotationAtual(targetType, targetId, date).comentarioAtuacao;
 },
 
 /* Contexto:
@@ -243,11 +271,11 @@ atuacaoTextoNaData(targetType, targetId, date){
    o responsável]. Retorna string (vazia quando não se aplica).
 
    Pseudocódigo:
-     1. `date` ≠ data de referência do grid -> string vazia.
-     2. `date` == referência -> devolve o responsável corrente (annotationAtual). */
+     1. Devolve o responsável gravado para (alvo, `date`) — vazio quando não
+        há. [REVISADO 2026-09-24: vale pra qualquer dia, ver
+        atuacaoTextoNaData.] */
 atuacaoResponsavelNaData(targetType, targetId, date){
-  if(date !== ControleCargas.SNAPSHOT.meta.referenceDate) return '';
-  return ControleCargas.annotationAtual(targetType, targetId).responsavel;
+  return ControleCargas.annotationAtual(targetType, targetId, date).responsavel;
 },
 
 /* Contexto:
@@ -262,13 +290,13 @@ atuacaoResponsavelNaData(targetType, targetId, date){
    Retorna bool.
 
    Pseudocódigo:
-     1. `date` ≠ data de referência do grid -> false (anotação só existe
-        nesse dia).
-     2. `date` == referência -> true se responsável OU comentário tiver
-        algum texto (não os dois vazios). */
+     1. True se responsável OU comentário tiver algum texto naquele dia (não
+        os dois vazios). [REVISADO 2026-09-24, pedido do usuário: com a
+        seleção de célula a anotação pode ser de qualquer dia, e é este ponto
+        azul que faz ela aparecer na grade no dia certo — sem isso, uma
+        anotação gravada no dia 15 ficaria invisível.] */
 anotacaoExisteNaData(targetType, targetId, date){
-  if(date !== ControleCargas.SNAPSHOT.meta.referenceDate) return false;
-  const {responsavel, comentarioAtuacao} = ControleCargas.annotationAtual(targetType, targetId);
+  const {responsavel, comentarioAtuacao} = ControleCargas.annotationAtual(targetType, targetId, date);
   return Boolean(responsavel || comentarioAtuacao);
 },
 
@@ -287,14 +315,18 @@ anotacaoExisteNaData(targetType, targetId, date){
      1. Resolve o valor corrente (annotationAtual).
      2. Sem responsável e sem comentário -> string vazia.
      3. Com algum dos dois, monta 1 linha com os campos presentes, rotulada
-        com a data de referência (o único dia ao qual a anotação se aplica). */
-resumoAtuacaoHtml(targetType, targetId){
-  const {responsavel, comentarioAtuacao} = ControleCargas.annotationAtual(targetType, targetId);
+        com o dia a que a anotação pertence — o dia FOCADO no painel
+        [REVISADO 2026-09-24: com a seleção de célula a anotação pode ser de
+        qualquer dia da janela, então o painel mostra a do dia que ele está
+        focando, não sempre a da referência]. */
+resumoAtuacaoHtml(targetType, targetId, data){
+  const dia = data || ControleCargas.SNAPSHOT.meta.referenceDate;
+  const {responsavel, comentarioAtuacao} = ControleCargas.annotationAtual(targetType, targetId, dia);
   if(!responsavel && !comentarioAtuacao) return '';
   const partes = [];
   if(responsavel) partes.push(`<b>Responsável:</b> ${ControleCargas.esc(responsavel)}`);
   if(comentarioAtuacao) partes.push(`<b>Comentário sobre atuação:</b> ${ControleCargas.esc(comentarioAtuacao)}`);
-  return `<p class="psub" style="margin-top:8px;">${partes.join(' · ')} <span style="color:var(--ink-faint)">(ref. ${ControleCargas.esc(ControleCargas.SNAPSHOT.meta.referenceDate)} — editável na matriz)</span></p>`;
+  return `<p class="psub" style="margin-top:8px;">${partes.join(' · ')} <span style="color:var(--ink-faint)">(${ControleCargas.esc(dia)} — editável na matriz)</span></p>`;
 },
 });
 

@@ -1488,6 +1488,66 @@ Complementa a divisão de código da seção 4 — juntas atacam a causa dos con
       mostra "(2)" e fica azul com ☑; o clique abre o popover estilo Excel com
       as mesmas 5 opções; zero erro de JS.
 
+- **[2026-09-24, pedido do usuário: "precisamos implementar seleção de célula
+  na matriz, onde eu possa ver o comentário, criar, editar, mudar o
+  responsável" + "quero que continuar o painel lateral de Responsável e
+  comentários e a seleção dele seja dinâmica. Caso click uma vez, aparece o
+  comentário editável nele. Caso click novamente na celula, aparece todas
+  informações"] SELEÇÃO DE CÉLULA + ANOTAÇÃO POR DIA + EDIÇÃO DE COMENTÁRIO.**
+  Arquivo novo `static/js/controle_cargas/selecao_celula.js` (CLAUDE.md §4).
+  - **Clique em 2 tempos** (`wireRowClicks`, paineis.js): o 1º SELECIONA a
+    célula (anel azul `--filtro-sel`, via `outline` — os 4 cantos e a borda já
+    estão ocupados pelos badges, então borda/box-shadow brigariam com eles); o
+    2º clique na MESMA célula abre o painel de 9 seções, que era o que o
+    clique fazia sozinho antes. `wname` (nome da linha) continua abrindo o
+    painel direto.
+  - **As 2 colunas da direita viraram "painel lateral" da célula**: com uma
+    célula selecionada, Responsável e Comentário sobre atuação daquela LINHA
+    passam a mostrar e gravar a anotação **do dia da célula**, não mais a da
+    data de referência (`dataAnotacaoDaLinha`). Uma tag azul com o dia (e um
+    "×" pra voltar pra referência) aparece na célula Responsável — sem a tag,
+    a pessoa não teria como saber que está escrevendo pra outro dia.
+  - **Anotação por dia foi decisão explícita do usuário** (perguntei antes: a
+    outra opção era continuar sempre na data de referência). Não exigiu
+    migração nem mudança de backend: a chave sempre foi
+    (targetType, targetId, data) — `_chave_anotacao`, app.py — e nada nunca
+    obrigou essa data a ser a de referência; mudou só QUAL data a tela manda.
+    Quem não seleciona nada continua editando a referência, como sempre.
+  - **O que era "só na referência" virou "por dia"** em `atuacaoTextoNaData`/
+    `atuacaoResponsavelNaData`/`anotacaoExisteNaData` (anotacoes.js) e no
+    resumo do painel. Esse trio é o que faz a anotação de outro dia APARECER
+    na grade: sem isso, o ponto azul só existiria na coluna de referência e a
+    anotação gravada no dia 15 ficaria invisível — que era justamente o risco
+    levantado ao propor a mudança.
+  - **Sem repintar a matriz a cada clique**: `selecionarCelula()` troca só o
+    anel das 2 células envolvidas e redesenha as 2 `<td>` de anotação das
+    linhas afetadas (`redesenharColunasAnotacao`, que achou a linha por um
+    `data-rid` novo na `<tr>`). `buildMatrix()` a cada clique repintaria ~1000
+    linhas e faria a grade piscar. Os inputs recriados são religados por
+    `ligarInputAnotacao()` — extraída de `wireColunasAnotacao()` de propósito:
+    chamar a função inteira duplicaria o listener de todas as outras linhas.
+  - **Editar comentário** (regra escolhida pelo usuário: "qualquer um edita,
+    com rastro"): rota nova `PATCH /api/comments/<id>` (app.py) muda texto,
+    severidade, vigência e `resolved`; **nunca** sobrescreve o `author`
+    original — quem editou entra em `editedBy` e o `updatedAt` é recarimbado.
+    Esse `updatedAt` é, de graça, o que o sincronizador de 60s já usa pra
+    detectar novidade (`assinaturaComentarios`, sincronizacao.js), então a
+    edição chega sozinha na tela do colega. Na tela: botão "editar" em cada
+    comentário do painel, abrindo um formulário inline
+    (`formularioEdicaoComentarioHtml` + `wireEdicaoComentarioPainel`).
+  - **Verificado** (Playwright, 25 verificações, contra um servidor ISOLADO na
+    porta 5052 com `CONTROLECARGAS_DATA_DIR` apontando pra uma pasta
+    temporária — nenhum byte escrito nos arquivos do time): sem seleção o
+    campo aponta pra referência e não há tag; o 1º clique marca a célula, NÃO
+    abre painel, e o campo passa a apontar pro dia da célula (a outra linha
+    fica na referência); digitar + Salvar grava na chave
+    `wallet|<id>|<dia da célula>` e NÃO na da referência; o ponto azul passa a
+    aparecer na célula do dia certo e não na de referência; o 2º clique abre o
+    painel focado nesse dia; o comentário existente é editado pelo painel
+    (texto e severidade mudam, `author` preservado, `editedBy` carimbado,
+    sem duplicar registro); Esc e o "×" da tag voltam a linha pra referência;
+    zero erro de JS.
+
 ---
 
 ## Checklist rápido (antes de considerar uma tarefa pronta)

@@ -15,8 +15,12 @@ e o CLAUDE.md atualizado). O que ESTE arquivo faz:
   2) Serve um allowlist de arquivos avulsos na raiz do protótipo (hoje só
      `snapshot.json`) — nunca um diretório inteiro, pra não expor
      `data/alert_comments.json` nem o código-fonte por acidente.
-  3) `GET /api/comments` / `POST /api/comments` — comentários de alerta
-     (persistidos em data/alert_comments.json, nunca no Mongo).
+  3) `GET /api/comments` / `POST /api/comments` / `PATCH
+     /api/comments/<id>` — comentários de alerta (persistidos em
+     data/alert_comments.json, nunca no Mongo). O PATCH [2026-09-24, pedido
+     do usuário] edita texto/severidade/vigência/resolved de um comentário
+     que já existe, preservando o autor original e carimbando
+     updatedAt/editedBy.
   3b) [2026-07-24, pedido do usuário] `GET /api/annotations` / `POST
      /api/annotations` — colunas "Responsável"/"Comentário sobre atuação" da
      grade (persistidas em data/wallet_annotations.json, nunca no Mongo),
@@ -940,6 +944,71 @@ def post_comments():
         _save_comments(comments)
 
     return jsonify({"comment": comment}), 201
+
+
+@app.route("/api/comments/<comment_id>", methods=["PATCH"])
+def patch_comment(comment_id):
+    """Contexto:
+    Edita 1 comentário já existente — texto, severidade, vigência e/ou
+    `resolved` [2026-09-24, pedido do usuário: "seleção de célula na matriz,
+    onde eu possa ver o comentário, criar, editar"; regra escolhida por ele:
+    "qualquer um edita, com rastro"]. Body JSON com os campos a mudar (os
+    ausentes ficam como estão). Retorna {"comment": {...}} (200),
+    {"error": ...} (400) ou 404 se o id não existir.
+
+    O autor ORIGINAL nunca é sobrescrito: quem edita entra em `editedBy` e o
+    `updatedAt` é reescrito — que é, de quebra, o campo que o sincronizador
+    de 60s da tela já usa pra perceber mudança e trazer a edição pro colega
+    sozinho (assinaturaComentarios, sincronizacao.js).
+
+    Pseudocódigo:
+      1. Lê o body e valida SÓ os campos presentes (severity/text/resolved e
+         a vigência); acumula todos os erros antes de responder.
+      2. Sob o mesmo lock da criação, lê a lista, acha o id; não achou -> 404.
+      3. Aplica os campos presentes, corrige validTo < validFrom, carimba
+         updatedAt/editedBy e salva a lista inteira.
+    """
+    body = request.get_json(force=True, silent=True) or {}
+
+    errors = []
+    if "severity" in body and body["severity"] not in VALID_SEVERITIES:
+        errors.append("severity deve ser 'green', 'yellow' ou 'red'")
+    if "text" in body and not (body.get("text") or "").strip():
+        errors.append("text não pode ficar vazio")
+    if "resolved" in body and not isinstance(body["resolved"], bool):
+        errors.append("resolved deve ser true/false")
+    for campo in ("validFrom", "validTo"):
+        if campo in body:
+            erro = _validar_data_iso(body.get(campo) or "", campo)
+            if erro:
+                errors.append(erro)
+    if errors:
+        return jsonify({"error": "; ".join(errors)}), 400
+
+    with _comments_lock:
+        comments = _load_comments()
+        alvo = next((c for c in comments if c.get("id") == comment_id), None)
+        if alvo is None:
+            return jsonify({"error": f"comentário {comment_id} não encontrado"}), 404
+
+        if "severity" in body:
+            alvo["severity"] = body["severity"]
+        if "text" in body:
+            alvo["text"] = body["text"].strip()
+        if "resolved" in body:
+            alvo["resolved"] = body["resolved"]
+        if "validFrom" in body:
+            alvo["validFrom"] = body["validFrom"]
+        if "validTo" in body:
+            alvo["validTo"] = body["validTo"]
+        if alvo.get("validTo") and alvo.get("validFrom") and alvo["validTo"] < alvo["validFrom"]:
+            alvo["validTo"] = alvo["validFrom"]
+
+        alvo["updatedAt"] = dt.datetime.now().isoformat(timespec="seconds")
+        alvo["editedBy"] = (os.environ.get("USERNAME") or "desconhecido").lower()
+        _save_comments(comments)
+
+    return jsonify({"comment": alvo})
 
 
 @app.route("/api/annotations", methods=["GET"])
