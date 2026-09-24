@@ -1407,6 +1407,35 @@ Complementa a divisão de código da seção 4 — juntas atacam a causa dos con
     "☑ " no ligado; `aria-pressed` acompanhando; ligado com anel e
     `font-weight:750`; chip de empresa com "✓ "; no escuro o ligado continua
     preenchido e com anel; zero erro de JS.
+  - **[AMPLIADO 2026-09-24, pedido do usuário: "novo filtro, todos com
+    divergencia de rentabilidade só na Pauta. Mude essa cor rosa"]** 3º filtro
+    geral, **"Todos com Divergência na Pauta"** — e ele NÃO é a soma dos dois
+    primeiros: é mais estreito, exige os dois badges na **MESMA célula**
+    (divergência no próprio dia da pauta). Os dois alertas são overlays
+    independentes da mesma célula (`compute_overlays`, snapshot_builder.py),
+    então isso é checável sem dado novo.
+    - O modelo de filtro virou `REQUISITOS_FILTRO_GERAL`: lista de requisitos,
+      cada um com os overlays aceitáveis — **OU dentro do requisito, E entre
+      requisitos, e o E é dentro da mesma célula**
+      (`celulaAtendeRequisitos()` + `linhaTemCelulaQueAtende()`, que
+      substituíram `linhaTemOverlayNaJanela()`). Os 2 filtros antigos viraram
+      um requisito só cada um — comportamento idêntico ao de antes. Entre
+      chips marcados continua valendo a UNIÃO.
+    - Cada chip ganhou `AJUDA_FILTRO_GERAL` no `title`, porque a diferença
+      entre "tem os dois (em dias quaisquer)" e "tem os dois no mesmo dia" não
+      se lê no rótulo.
+    - **Cor do selecionado deixou de ser o fúcsia** (`--overlay-pauta`), que é
+      o do badge Pauta: virou token próprio `--filtro-sel` (azul #1d4ed8
+      claro / #60a5fa escuro, nos 4 blocos de tema). Separa os assuntos — o
+      fúcsia continua significando "pauta" na matriz e no contorno do Excel, o
+      azul significa "este filtro está ligado" — e fica fora da escala de
+      gravidade (verde/âmbar/vermelho) e do violeta de "Comprada".
+    - **Verificado** (Playwright, 11 verificações, 2 temas): 3 chips na faixa;
+      o novo pega SÓ a carteira com os dois badges no mesmo dia e ignora a que
+      tem um em cada dia; os 2 filtros antigos devolvem exatamente o que
+      devolviam; união preservada ao marcar mais de um; chip ligado em
+      `rgb(29,78,216)` no claro e `rgb(96,165,250)` no escuro, com o anel na
+      cor nova; `--overlay-pauta` intacto em `#c026d3`; zero erro de JS.
 
 ---
 

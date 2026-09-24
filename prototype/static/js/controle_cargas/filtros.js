@@ -40,6 +40,8 @@ Object.assign(ControleCargas, {
 // janela?". Os dois SOMAM quando marcados juntos (união, não interseção —
 // ver linhaPassaNosFiltrosGerais): marcar os dois é pedir a lista de trabalho
 // do dia inteira, não o punhado que tem os dois alertas ao mesmo tempo.
+// Quem quer JUSTAMENTE esse punhado tem o 3º filtro, "Divergência na Pauta",
+// que é E dentro da MESMA célula [2026-09-24, pedido do usuário].
 // [2026-09-11, relato do usuário: "às vezes fica em data antiga"]
 // sequenciaAtualizacao / sincronizacaoDataInicial são estado de CONCORRÊNCIA do
 // botão Atualizar (atualizar.js): a tela dispara /api/atualizar de 4 lugares
@@ -56,7 +58,7 @@ Object.assign(ControleCargas, {
 // fica no state só pra nunca existir mais de um timer de pé ao mesmo tempo.
 state: { view:'wallets', sort:'priority', sortDir:1, frozen:null, company:null,
               filtroValoresColuna: {responsavel:null, comentarioAtuacao:null, institution:null, loadModel:null, statusRef:null},
-              filtrosGerais: {divergencia:false, pauta:false},
+              filtrosGerais: {divergencia:false, pauta:false, divergenciaNaPauta:false},
               search:'', showBloco3:false, focusDate:null,
               sequenciaAtualizacao:0, sincronizacaoDataInicial:null,
               timerProgresso:null },
@@ -104,33 +106,66 @@ applyFilters(rows, isWallets, skipColumn){
   });
 },
 
-// Overlays da célula que cada filtro geral procura — mesmos nomes que
+// O que cada filtro geral exige de UMA MESMA célula — nomes iguais aos que
 // snapshot_builder.py escreve em cells[].ov e que a legenda mostra:
 // 'div'/'div_strong' são o badge "Rent" (respeitam os 2 campos de limiar da
-// toolbar) e 'pauta' é o badge fúcsia "Pauta" [2026-09-24, pedido do usuário].
-OVERLAYS_FILTRO_GERAL: {
-  divergencia: ['div', 'div_strong'],
-  pauta: ['pauta'],
+// toolbar) e 'pauta' é o badge "Pauta" [2026-09-24, pedido do usuário].
+//
+// Formato: lista de REQUISITOS; cada requisito é uma lista de overlays
+// aceitáveis. Dentro do requisito vale OU, entre requisitos vale E — e o E é
+// dentro da MESMA célula, que é o que diferencia "tem divergência e tem pauta
+// (em dias quaisquer)" de "tem divergência NO dia da pauta" [2026-09-24,
+// pedido do usuário: "novo filtro, todos com divergencia de rentabilidade só
+// na Pauta"].
+REQUISITOS_FILTRO_GERAL: {
+  divergencia: [['div', 'div_strong']],
+  pauta: [['pauta']],
+  divergenciaNaPauta: [['div', 'div_strong'], ['pauta']],
 },
 
 // Rótulo de cada filtro geral no chip da toolbar (ordem de exibição).
 ROTULOS_FILTRO_GERAL: {
   divergencia: 'Todos com Divergência de Rentabilidade',
   pauta: 'Todos Pauta',
+  divergenciaNaPauta: 'Todos com Divergência na Pauta',
+},
+
+// Explicação de cada chip (title), pra ninguém confundir o 3º com a soma dos
+// 2 primeiros — ele é mais estreito: exige os dois alertas no MESMO dia.
+AJUDA_FILTRO_GERAL: {
+  divergencia: 'Linhas com o badge Rent (divergência Rent Contrib × NAV, pelos limiares da toolbar) em QUALQUER dia do range.',
+  pauta: 'Linhas com o badge Pauta (dia exato da Defasagem) em QUALQUER dia do range.',
+  divergenciaNaPauta: 'Mais estreito que os outros dois: exige o badge Rent e o badge Pauta na MESMA célula — divergência no próprio dia da pauta.',
 },
 
 /* Contexto:
-   Diz se a linha tem algum dos `overlays` procurados em QUALQUER dia da
-   janela — é o que diferencia os filtros gerais dos filtros de cabeçalho,
-   que olham um dia só [2026-09-24, pedido do usuário: "Capturar todos no
-   range de datas"]. Usada por linhaPassaNosFiltrosGerais(). Serve igual pra
-   carteira e pra agrupamento (os dois têm `cells` com `ov`). Retorna bool.
+   Diz se UMA célula atende a todos os requisitos de um filtro geral (ver
+   REQUISITOS_FILTRO_GERAL: OU dentro do requisito, E entre requisitos).
+   Usada por linhaTemCelulaQueAtende(). Retorna bool.
+
+   Pseudocódigo:
+     1. Lê os overlays da célula (ausentes = lista vazia).
+     2. Todo requisito precisa ter pelo menos 1 overlay presente nela. */
+celulaAtendeRequisitos(celula, requisitos){
+  const overlays = (celula && celula.ov) || [];
+  return requisitos.every(aceitos=> aceitos.some(o=> overlays.includes(o)));
+},
+
+/* Contexto:
+   Diz se a linha tem ALGUMA célula da janela que atende aos requisitos — é o
+   que diferencia os filtros gerais dos filtros de cabeçalho, que olham um dia
+   só [2026-09-24, pedido do usuário: "Capturar todos no range de datas"].
+   Usada por linhaPassaNosFiltrosGerais(). Serve igual pra carteira e pra
+   agrupamento (os dois têm `cells` com `ov`). Retorna bool.
+
+   Repare que o E é DENTRO da célula: "divergência na pauta" exige os dois
+   badges no mesmo dia, não um alerta num dia e outro em outro.
 
    Pseudocódigo:
      1. Percorre as células da linha (a janela inteira, em ordem).
-     2. Basta uma célula com um dos overlays procurados pra devolver true. */
-linhaTemOverlayNaJanela(r, overlays){
-  return (r.cells || []).some(c=> (c.ov || []).some(o=> overlays.includes(o)));
+     2. Basta uma que atenda a todos os requisitos pra devolver true. */
+linhaTemCelulaQueAtende(r, requisitos){
+  return (r.cells || []).some(c=> ControleCargas.celulaAtendeRequisitos(c, requisitos));
 },
 
 /* Contexto:
@@ -152,7 +187,7 @@ linhaPassaNosFiltrosGerais(r){
     .filter(chave=> ControleCargas.state.filtrosGerais[chave]);
   if(!marcados.length) return true;
   return marcados.some(chave=>
-    ControleCargas.linhaTemOverlayNaJanela(r, ControleCargas.OVERLAYS_FILTRO_GERAL[chave]));
+    ControleCargas.linhaTemCelulaQueAtende(r, ControleCargas.REQUISITOS_FILTRO_GERAL[chave]));
 },
 
 /* Contexto:
@@ -345,7 +380,8 @@ buildFilters(){
   let html = '<span class="filtros-grupo"><span class="filtros-grupo-rotulo" title="Filtros que olham a janela inteira, não uma data só">Alertas na janela</span>';
   Object.keys(ControleCargas.ROTULOS_FILTRO_GERAL).forEach(chave=>{
     const ligado = ControleCargas.state.filtrosGerais[chave];
-    html += `<span class="chip chip-geral${ligado?' on':''}" data-geral="${chave}" role="button" aria-pressed="${ligado}" tabindex="0" title="Mostra as linhas com esse alerta em QUALQUER dia do range (${janela}). Marcando os dois, a grade mostra quem tem um OU o outro.">${ControleCargas.esc(ControleCargas.ROTULOS_FILTRO_GERAL[chave])}</span>`;
+    const ajuda = `${ControleCargas.AJUDA_FILTRO_GERAL[chave]} Range em tela: ${janela}. Marcando mais de um, a grade mostra quem atende a QUALQUER um deles.`;
+    html += `<span class="chip chip-geral${ligado?' on':''}" data-geral="${chave}" role="button" aria-pressed="${ligado}" tabindex="0" title="${ControleCargas.escAttr(ajuda)}">${ControleCargas.esc(ControleCargas.ROTULOS_FILTRO_GERAL[chave])}</span>`;
   });
   html += '</span><span class="filtros-divisor"></span>';
 

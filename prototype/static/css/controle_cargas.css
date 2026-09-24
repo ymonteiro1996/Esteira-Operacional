@@ -10,6 +10,7 @@
   --accent:#3d5c4e;
   --accent-ink:#eef4f0;
   --accent-wash:rgba(61,92,78,.22);
+  --filtro-sel:#1d4ed8; --filtro-sel-ink:#ffffff; --filtro-sel-wash:rgba(29,78,216,.22);
   --focus:#6b7280;
 
   --state-p-bg:#dcfce7;   --state-p-fg:#15803d;
@@ -103,6 +104,7 @@
     --surface:#14171b; --surface-raised:#1b1f24; --surface-sunk:#0f1215;
     --ink:#e7e9e4; --ink-muted:#a1a89d; --ink-faint:#6b7268; --border:#2c322d;
     --accent:#7fae95; --accent-ink:#0f1a14; --accent-wash:rgba(127,174,149,.32); --focus:#9ca3af;
+    --filtro-sel:#60a5fa; --filtro-sel-ink:#0b1220; --filtro-sel-wash:rgba(96,165,250,.30);
     --state-p-bg:#0f2e1c;   --state-p-fg:#5fd894;
     /* rodada 7: fundo = só estágio também no dark — Unp âmbar-oliva escuro,
        Pro verde-petróleo. Validado com validate_palette.py (surface #14171b):
@@ -131,6 +133,7 @@
   --surface:#14171b; --surface-raised:#1b1f24; --surface-sunk:#0f1215;
   --ink:#e7e9e4; --ink-muted:#a1a89d; --ink-faint:#6b7268; --border:#2c322d;
   --accent:#7fae95; --accent-ink:#0f1a14; --accent-wash:rgba(127,174,149,.32); --focus:#9ca3af;
+  --filtro-sel:#60a5fa; --filtro-sel-ink:#0b1220; --filtro-sel-wash:rgba(96,165,250,.30);
   --state-p-bg:#0f2e1c;   --state-p-fg:#5fd894;
   /* rodada 7: espelho exato do bloco @media dark acima — manter em sincronia. */
   --state-unp-bg:#6b4f0d;  --state-unp-fg:#fbd77e;
@@ -149,6 +152,7 @@
   --surface:#f6f7f5; --surface-raised:#ffffff; --surface-sunk:#eef0ec;
   --ink:#1c211d; --ink-muted:#5b635a; --ink-faint:#8a9187; --border:#dadedb;
   --accent:#3d5c4e; --accent-ink:#eef4f0; --accent-wash:rgba(61,92,78,.22); --focus:#6b7280;
+  --filtro-sel:#1d4ed8; --filtro-sel-ink:#ffffff; --filtro-sel-wash:rgba(29,78,216,.22);
   --state-p-bg:#dcfce7;   --state-p-fg:#15803d;
   /* rodada 7: espelho exato do :root claro acima — manter em sincronia. */
   --state-unp-bg:#fde68a;  --state-unp-fg:#78350f;
@@ -784,12 +788,18 @@ td.col-cust, th.hdr-cust{
 .filtros-divisor{width:1px;align-self:stretch;min-height:22px;background:var(--border);margin:0 2px;}
 
 /* Toggle geral: DESLIGADO é neutro como qualquer chip (o ligado é que tem
-   que saltar); a caixinha ☐/☑ diz o estado antes mesmo da cor. */
+   que saltar); a caixinha ☐/☑ diz o estado antes mesmo da cor.
+   [REVISADO 2026-09-24, pedido do usuário: "Mude essa cor rosa"] O ligado
+   usava --overlay-pauta (o fúcsia do badge Pauta). Agora tem token próprio
+   (--filtro-sel, azul): o fúcsia continua significando "pauta" DENTRO da
+   matriz e no Excel, e o azul significa "este filtro está ligado" — dois
+   assuntos diferentes, duas cores diferentes. Azul também fica fora da
+   escala de gravidade (verde/âmbar/vermelho) e do violeta de "Comprada". */
 .chip-geral::before{content:'☐ ';font-size:13px;line-height:1;}
 .chip-geral.on::before{content:'☑ ';}
 .chip-geral.on{
-  background:var(--overlay-pauta);color:var(--overlay-pauta-ink);
-  border-color:var(--overlay-pauta);box-shadow:0 0 0 3px var(--overlay-pauta-wash);
+  background:var(--filtro-sel);color:var(--filtro-sel-ink);
+  border-color:var(--filtro-sel);box-shadow:0 0 0 3px var(--filtro-sel-wash);
 }
 
 /* Rodapé de diagnóstico (diagnostico.js) — sempre visível [2026-09-22,
