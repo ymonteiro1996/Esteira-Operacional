@@ -787,20 +787,29 @@ td.col-cust, th.hdr-cust{
 /* Separador entre o grupo e os chips de empresa — barra fina, não texto. */
 .filtros-divisor{width:1px;align-self:stretch;min-height:22px;background:var(--border);margin:0 2px;}
 
-/* Toggle geral: DESLIGADO é neutro como qualquer chip (o ligado é que tem
-   que saltar); a caixinha ☐/☑ diz o estado antes mesmo da cor.
-   [REVISADO 2026-09-24, pedido do usuário: "Mude essa cor rosa"] O ligado
-   usava --overlay-pauta (o fúcsia do badge Pauta). Agora tem token próprio
-   (--filtro-sel, azul): o fúcsia continua significando "pauta" DENTRO da
-   matriz e no Excel, e o azul significa "este filtro está ligado" — dois
-   assuntos diferentes, duas cores diferentes. Azul também fica fora da
-   escala de gravidade (verde/âmbar/vermelho) e do violeta de "Comprada". */
-.chip-geral::before{content:'☐ ';font-size:13px;line-height:1;}
-.chip-geral.on::before{content:'☑ ';}
-.chip-geral.on{
-  background:var(--filtro-sel);color:var(--filtro-sel-ink);
-  border-color:var(--filtro-sel);box-shadow:0 0 0 3px var(--filtro-sel-wash);
+/* Botão do filtro de Pauta na faixa de filtros (botaoFiltroPautaHtml,
+   filtros.js) — [2026-09-24, pedido do usuário: "um filtro só na pauta que eu
+   consiga selecionar o Status Pauta"]. É um .th-filter-btn de verdade (o
+   clique cai no handler das colunas da grade e abre o MESMO popover), só que
+   com cara de chip em vez do ▾ minúsculo do cabeçalho. Substituiu os 3 chips
+   de "filtros gerais" que existiram por algumas horas no mesmo dia. */
+.th-filter-btn.chip-filtro{
+  font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px;
+  border:1px solid var(--border);background:var(--surface-sunk);color:var(--ink-muted);
+  width:auto;height:auto;line-height:1.3;cursor:pointer;
 }
+.th-filter-btn.chip-filtro::before{content:'☐ ';font-size:13px;}
+.th-filter-btn.chip-filtro.active::before{content:'☑ ';}
+/* Ligado usa o azul de seleção de filtro (--filtro-sel), NUNCA o fúcsia do
+   badge Pauta: fúcsia significa "pauta" na matriz, azul significa "filtro
+   ligado" [2026-09-24, pedido do usuário: "Mude essa cor rosa"]. */
+.th-filter-btn.chip-filtro.active{
+  background:var(--filtro-sel);color:var(--filtro-sel-ink);
+  border-color:var(--filtro-sel);font-weight:750;
+  box-shadow:0 0 0 3px var(--filtro-sel-wash);
+}
+.th-filter-btn.chip-filtro:hover{filter:brightness(0.97);}
+.th-filter-btn.chip-filtro:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
 
 /* Rodapé de diagnóstico (diagnostico.js) — sempre visível [2026-09-22,
    decisão do usuário], discreto no estado normal e em faixa de alerta quando

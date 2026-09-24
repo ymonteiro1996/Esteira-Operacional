@@ -1436,6 +1436,57 @@ Complementa a divisão de código da seção 4 — juntas atacam a causa dos con
       devolviam; união preservada ao marcar mais de um; chip ligado em
       `rgb(29,78,216)` no claro e `rgb(96,165,250)` no escuro, com o anel na
       cor nova; `--overlay-pauta` intacto em `#c026d3`; zero erro de JS.
+  - **[SUBSTITUÍDO horas depois, no mesmo 2026-09-24, pedido do usuário:
+    "estude um filtro melhor, um filtro só na pauta que eu consiga selecionar
+    o Status Pauta: Todos filtros que usamos nas datas. Ai vamos tirar essas
+    seleções de todos com divergencia de rentabilidade e todos pauta"]** Os 3
+    chips saíram inteiros (com `filtrosGerais`, `REQUISITOS_FILTRO_GERAL`,
+    `celulaAtendeRequisitos`, `linhaTemCelulaQueAtende`,
+    `linhaPassaNosFiltrosGerais` e `alternarFiltroGeral`) e deram lugar a **um
+    filtro só: "Status na Pauta"**. Eram 3 atalhos fixos; o filtro novo é o
+    conjunto inteiro de opções — inclusive o que o chip "Divergência na Pauta"
+    fazia (marcar "Problema Rent"), e ainda cruzável com Unp/Pro/Pub/∅/Agd,
+    Carga Mensal e "Sem pauta na janela".
+    - **Coluna VIRTUAL `statusPauta`** (`COLUNA_PAUTA`, filtro_cabecalho.js):
+      não existe cabeçalho "Pauta" na grade, porque o dia da pauta é a
+      Defasagem de CADA carteira — muda linha a linha. `celulaDaColunaDia()`
+      passou a resolver essa coluna procurando a célula com o badge `pauta`
+      em vez de uma data fixa; o resto (tags, popover, cascata, ordenação por
+      gravidade) é reaproveitado sem uma linha nova.
+    - **Zero segunda implementação de filtro**: `botaoFiltroPautaHtml()`
+      (filtros.js) emite um `.th-filter-btn` **de verdade**, com
+      `data-filtro-coluna="statusPauta"` — o clique cai no
+      `wireFiltrosCabecalho()` que já existia e abre o MESMO popover das
+      colunas de data. O CSS só troca a aparência (`.th-filter-btn.chip-filtro`
+      vira chip, com ☐/☑ e o azul `--filtro-sel` quando ativo) e o rótulo
+      mostra quantos valores estão marcados.
+    - **Tag `Sem pauta na janela`** (`TAG_SEM_PAUTA`): sem ela, carteira sem
+      dia de pauta na janela ficaria sem tag nenhuma e sumiria de qualquer
+      seleção — agora é uma opção explícita (e ranqueada por último).
+    - **Correção que veio junto**: a tag "Problema Rent" das colunas de dia
+      usava `div.bp > 2`, um limiar FIXO escrito antes de os 2 campos de
+      limiar da toolbar existirem — marcava célula sem badge quando o usuário
+      mexia neles. Agora usa o overlay `div`/`div_strong`, exatamente o que
+      pinta o badge: filtrar por "Problema Rent" devolve o que a pessoa VÊ
+      marcado. Vale pra `statusRef` e `statusDia:<data>` também.
+    - **O que se perdeu, de propósito**: não há mais um atalho para
+      "divergência em QUALQUER dia da janela" — o filtro novo olha só a célula
+      da pauta, e as colunas de data olham um dia cada. Foi o pedido explícito
+      ("vamos tirar essas seleções"); se fizer falta, o caminho de volta é
+      reintroduzir 1 chip, não os 3.
+    - **`/api/atualizar` limpa o filtro novo** junto com os de data
+      (atualizar.js): a célula do badge Pauta muda de lugar — ou some — quando
+      a janela muda.
+    - **Verificado** (Playwright, 14 verificações, snapshot sintético com a
+      pauta em 4 dias diferentes): os 3 chips sumiram e sobrou 1 botão; a
+      lista oferece `Unp/Pub/Problema Rent/Carga Mensal/Sem pauta na janela`
+      com as contagens certas; "Unp" pega as pautas dos dias 10, 11 e 16 (dias
+      diferentes, mesma seleção); "Pub" pega só a publicada no dia da pauta;
+      "Problema Rent" pega só a que tem o BADGE (a carteira com `tt.div.bp=6`
+      sem overlay — que o limiar fixo antigo marcaria — fica de fora); "Sem
+      pauta na janela" isola a carteira sem pauta; 2 tags somam; o botão
+      mostra "(2)" e fica azul com ☑; o clique abre o popover estilo Excel com
+      as mesmas 5 opções; zero erro de JS.
 
 ---
 

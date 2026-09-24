@@ -564,6 +564,9 @@ enviarAtualizacao(){
       ControleCargas.state.filtroValoresColuna.statusRef = null;
       ControleCargas.state.filtroValoresColuna.responsavel = null;
       ControleCargas.state.filtroValoresColuna.comentarioAtuacao = null;
+      // [2026-09-24] o filtro da Pauta lê a célula do badge Pauta, que muda
+      // de lugar (ou some) quando a janela muda — sai junto com os de data.
+      ControleCargas.state.filtroValoresColuna[ControleCargas.COLUNA_PAUTA] = null;
       // [2026-09-24] filtros das demais colunas de dia (statusDia:<data>)
       // também saem — a janela pode ter mudado e "Pauta" depende de hoje.
       Object.keys(ControleCargas.state.filtroValoresColuna)

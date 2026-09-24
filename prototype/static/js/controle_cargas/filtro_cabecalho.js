@@ -30,6 +30,16 @@
    (PREFIXO_COLUNA_DIA). As colunas de dia oferecem também as tags "Pauta
    do dia" (célula com o badge Pauta) e "Carga Mensal" (carteira com
    Periodicidade M).
+
+   [AMPLIADO 2026-09-24, pedido do usuário: "estude um filtro melhor, um
+   filtro só na pauta que eu consiga selecionar o Status Pauta: Todos filtros
+   que usamos nas datas"] Coluna VIRTUAL `statusPauta` (COLUNA_PAUTA): não há
+   cabeçalho "Pauta" na grade — o dia da pauta é a Defasagem de CADA carteira,
+   muda linha a linha —, mas ela se comporta como as colunas de data em tudo
+   o mais (mesmas tags, mesmo popover, mesma cascata). O controle dela mora na
+   faixa de filtros (botaoFiltroPautaHtml, filtros.js), que emite um
+   `.th-filter-btn` de verdade pra cair no handler daqui. Quem não tem dia de
+   pauta na janela recebe a tag TAG_SEM_PAUTA, pra continuar selecionável.
 */
 Object.assign(ControleCargas, {
 // coluna -> rótulo exibido no popover/título do botão ▾.
@@ -45,9 +55,23 @@ FILTRO_CABECALHO_COLUNAS: {
 // segue com `statusRef`) — ex.: "statusDia:2026-09-22" [2026-09-24].
 PREFIXO_COLUNA_DIA: 'statusDia:',
 
+// [2026-09-24, pedido do usuário: "estude um filtro melhor, um filtro só na
+// pauta que eu consiga selecionar o Status Pauta: Todos filtros que usamos
+// nas datas"] Coluna VIRTUAL: não existe cabeçalho `Pauta` na grade — o dia
+// da pauta muda de carteira pra carteira (é a Defasagem de cada uma). O
+// filtro mora na faixa de filtros (buildFilters, filtros.js) e reaproveita
+// 100% do popover das colunas de data; o que muda é só QUAL célula da linha
+// ele lê: a que tem o badge Pauta, em vez de uma data fixa.
+COLUNA_PAUTA: 'statusPauta',
+
+// Tag de quem não tem dia de pauta dentro da janela em tela — precisa
+// existir como valor selecionável, senão essas linhas ficariam sem nenhuma
+// tag e sumiriam sempre que o filtro fosse usado.
+TAG_SEM_PAUTA: 'Sem pauta na janela',
+
 // tags de coluna de dia que não são sigla de estado — entram na lista do
 // filtro depois dos estados, nesta ordem [2026-09-24].
-TAGS_EXTRAS_COLUNA_DIA: ['Pauta do dia', 'Problema Rent', 'Comprada', 'Carga Mensal'],
+TAGS_EXTRAS_COLUNA_DIA: ['Pauta do dia', 'Problema Rent', 'Comprada', 'Carga Mensal', 'Sem pauta na janela'],
 
 /* Contexto:
    Chave de filtro de uma coluna de dia do cabeçalho — `statusRef` na data
@@ -71,7 +95,9 @@ chaveFiltroColunaDia(data, refDate){
    Pseudocódigo:
      1. 'statusRef' ou começa com PREFIXO_COLUNA_DIA -> true. */
 isColunaDia(coluna){
-  return coluna === 'statusRef' || coluna.startsWith(ControleCargas.PREFIXO_COLUNA_DIA);
+  return coluna === 'statusRef'
+      || coluna === ControleCargas.COLUNA_PAUTA
+      || coluna.startsWith(ControleCargas.PREFIXO_COLUNA_DIA);
 },
 
 /* Contexto:
@@ -85,6 +111,7 @@ isColunaDia(coluna){
      3. Senão -> string vazia. */
 rotuloColunaFiltro(coluna){
   if(ControleCargas.FILTRO_CABECALHO_COLUNAS[coluna]) return ControleCargas.FILTRO_CABECALHO_COLUNAS[coluna];
+  if(coluna === ControleCargas.COLUNA_PAUTA) return 'Status na Pauta';
   if(ControleCargas.isColunaDia(coluna)){
     return `Status (${ControleCargas.fmtDM(coluna.slice(ControleCargas.PREFIXO_COLUNA_DIA.length))})`;
   }
@@ -102,6 +129,11 @@ rotuloColunaFiltro(coluna){
 celulaDaColunaDia(coluna, r){
   const cells = r.cells || [];
   if(coluna === 'statusRef') return cells.length ? cells[cells.length-1] : null;
+  // [2026-09-24] Coluna virtual da Pauta: o dia é o da Defasagem de CADA
+  // carteira, então a célula é procurada pelo badge, não por data fixa.
+  if(coluna === ControleCargas.COLUNA_PAUTA){
+    return cells.find(c=> (c.ov||[]).includes('pauta')) || null;
+  }
   const data = coluna.slice(ControleCargas.PREFIXO_COLUNA_DIA.length);
   return ControleCargas.cellByDate(r)[data] || null;
 },
@@ -113,19 +145,32 @@ celulaDaColunaDia(coluna, r){
    pras demais datas]. Retorna array de strings (≥1).
 
    Pseudocódigo:
+     0. [2026-09-24] Coluna da Pauta sem célula de pauta na janela -> 1 tag
+        só, TAG_SEM_PAUTA (senão a linha ficaria sem tag nenhuma e sumiria
+        de qualquer seleção).
      1. Sigla do estado da célula (STATES[...].letter; "—" sem célula).
-     2. Badge Pauta na célula -> "Pauta do dia".
-     3. Divergência Rent×NAV > 2bp na célula -> "Problema Rent".
+     2. Badge Pauta na célula -> "Pauta do dia" (na coluna da Pauta não, que
+        ali TODA linha listada tem o badge — seria uma opção que não separa
+        nada).
+     3. Badge Rent na célula -> "Problema Rent". [REVISADO 2026-09-24] Era
+        `div.bp > 2` — um limiar fixo, escrito antes de os 2 campos de limiar
+        da toolbar existirem, que marcava célula SEM badge quando o usuário
+        mexia neles. Agora usa o overlay 'div'/'div_strong', exatamente o que
+        pinta o badge na tela: filtrar por "Problema Rent" passa a devolver
+        as células que a pessoa VÊ marcadas.
      4. Só na Ref, carteira aguardando explosão -> "Comprada" (o sinal é
         calculado só pra data de referência, snapshot_builder.py).
      5. Carteira com Periodicidade M -> "Carga Mensal". */
 tagsColunaDia(coluna, isWallets, r){
   const celula = ControleCargas.celulaDaColunaDia(coluna, r);
+  const ehColunaPauta = coluna === ControleCargas.COLUNA_PAUTA;
+  if(ehColunaPauta && !celula) return [ ControleCargas.TAG_SEM_PAUTA ];
+
   const st = celula ? ControleCargas.STATES[celula.s] : null;
+  const overlays = (celula && celula.ov) || [];
   const tags = [ st ? st.letter : '—' ];
-  if(celula && (celula.ov||[]).includes('pauta')) tags.push('Pauta do dia');
-  const div = celula && celula.tt && celula.tt.div;
-  if(div && div.bp > 2) tags.push('Problema Rent');
+  if(!ehColunaPauta && overlays.includes('pauta')) tags.push('Pauta do dia');
+  if(overlays.includes('div') || overlays.includes('div_strong')) tags.push('Problema Rent');
   if(coluna === 'statusRef' && isWallets && r.aguardandoExplosao) tags.push('Comprada');
   if(isWallets && r.monthly) tags.push('Carga Mensal');
   return tags;

@@ -31,17 +31,18 @@ Object.assign(ControleCargas, {
 // [2026-09-24] Além das chaves fixas abaixo, cada coluna de dia não-Ref
 // ganha chave dinâmica "statusDia:YYYY-MM-DD" quando filtrada (criada no OK
 // do popover) — applyFilters() já percorre todas as chaves presentes.
-// [2026-09-24, pedido do usuário: "quero dois filtros Gerais, Selecionar
-// Todos Com Divergencia de Rentabilidade e selecionar Todos Pauta, posso
-// selecionar esses dois filtros juntos. Capturar todos no range de datas"]
-// filtrosGerais é o 1º filtro que NÃO olha uma data só: os do cabeçalho
-// (statusRef/statusDia:<data>) perguntam "como esta carteira está NESTE
-// dia?", e estes perguntam "esta carteira teve o alerta em QUALQUER dia da
-// janela?". Os dois SOMAM quando marcados juntos (união, não interseção —
-// ver linhaPassaNosFiltrosGerais): marcar os dois é pedir a lista de trabalho
-// do dia inteira, não o punhado que tem os dois alertas ao mesmo tempo.
-// Quem quer JUSTAMENTE esse punhado tem o 3º filtro, "Divergência na Pauta",
-// que é E dentro da MESMA célula [2026-09-24, pedido do usuário].
+// [2026-09-24, pedido do usuário: "estude um filtro melhor, um filtro só na
+// pauta que eu consiga selecionar o Status Pauta: Todos filtros que usamos
+// nas datas. Ai vamos tirar essas seleções de todos com divergencia de
+// rentabilidade e todos pauta"] `statusPauta` é uma coluna VIRTUAL: não há
+// cabeçalho "Pauta" na grade (o dia da pauta é a Defasagem de CADA carteira,
+// muda linha a linha), mas ela se comporta como as colunas de data em tudo o
+// mais — mesmas tags, mesmo popover, mesma cascata. Substituiu os 3 chips de
+// "filtros gerais" (divergência / pauta / divergência na pauta) que existiram
+// por algumas horas no mesmo dia: eles eram 3 atalhos fixos, este é o filtro
+// inteiro ("Problema Rent" marcado na coluna da Pauta = o que o chip
+// "Divergência na Pauta" fazia, e ainda dá pra cruzar com Unp/Pro/Pub, Carga
+// Mensal, etc.).
 // [2026-09-11, relato do usuário: "às vezes fica em data antiga"]
 // sequenciaAtualizacao / sincronizacaoDataInicial são estado de CONCORRÊNCIA do
 // botão Atualizar (atualizar.js): a tela dispara /api/atualizar de 4 lugares
@@ -57,8 +58,7 @@ Object.assign(ControleCargas, {
 // /api/atualizar/progresso enquanto o Atualizar está no ar (progresso.js) —
 // fica no state só pra nunca existir mais de um timer de pé ao mesmo tempo.
 state: { view:'wallets', sort:'priority', sortDir:1, frozen:null, company:null,
-              filtroValoresColuna: {responsavel:null, comentarioAtuacao:null, institution:null, loadModel:null, statusRef:null},
-              filtrosGerais: {divergencia:false, pauta:false, divergenciaNaPauta:false},
+              filtroValoresColuna: {responsavel:null, comentarioAtuacao:null, institution:null, loadModel:null, statusRef:null, statusPauta:null},
               search:'', showBloco3:false, focusDate:null,
               sequenciaAtualizacao:0, sincronizacaoDataInicial:null,
               timerProgresso:null },
@@ -75,8 +75,7 @@ state: { view:'wallets', sort:'priority', sortDir:1, frozen:null, company:null,
    cascata" do AutoFilter do Excel). Retorna a lista filtrada (nova array).
 
    Pseudocódigo:
-     1. Para cada linha, descarta se a empresa selecionada não bate, ou se
-        ela não passa nos filtros gerais (linhaPassaNosFiltrosGerais).
+     1. Para cada linha, descarta se a empresa selecionada não bate.
      2. Pra cada coluna com filtro "estilo Excel" ativo
         (state.filtroValoresColuna — responsavel/comentarioAtuacao/
         institution/loadModel/statusRef), descarta a linha se NENHUMA das
@@ -90,7 +89,6 @@ state: { view:'wallets', sort:'priority', sortDir:1, frozen:null, company:null,
 applyFilters(rows, isWallets, skipColumn){
   return rows.filter(r=>{
     if(ControleCargas.state.company && r.company !== ControleCargas.state.company) return false;
-    if(!ControleCargas.linhaPassaNosFiltrosGerais(r)) return false;
     for(const coluna of Object.keys(ControleCargas.state.filtroValoresColuna)){
       if(coluna === skipColumn) continue;
       const permitidos = ControleCargas.state.filtroValoresColuna[coluna];
@@ -104,108 +102,6 @@ applyFilters(rows, isWallets, skipColumn){
     }
     return true;
   });
-},
-
-// O que cada filtro geral exige de UMA MESMA célula — nomes iguais aos que
-// snapshot_builder.py escreve em cells[].ov e que a legenda mostra:
-// 'div'/'div_strong' são o badge "Rent" (respeitam os 2 campos de limiar da
-// toolbar) e 'pauta' é o badge "Pauta" [2026-09-24, pedido do usuário].
-//
-// Formato: lista de REQUISITOS; cada requisito é uma lista de overlays
-// aceitáveis. Dentro do requisito vale OU, entre requisitos vale E — e o E é
-// dentro da MESMA célula, que é o que diferencia "tem divergência e tem pauta
-// (em dias quaisquer)" de "tem divergência NO dia da pauta" [2026-09-24,
-// pedido do usuário: "novo filtro, todos com divergencia de rentabilidade só
-// na Pauta"].
-REQUISITOS_FILTRO_GERAL: {
-  divergencia: [['div', 'div_strong']],
-  pauta: [['pauta']],
-  divergenciaNaPauta: [['div', 'div_strong'], ['pauta']],
-},
-
-// Rótulo de cada filtro geral no chip da toolbar (ordem de exibição).
-ROTULOS_FILTRO_GERAL: {
-  divergencia: 'Todos com Divergência de Rentabilidade',
-  pauta: 'Todos Pauta',
-  divergenciaNaPauta: 'Todos com Divergência na Pauta',
-},
-
-// Explicação de cada chip (title), pra ninguém confundir o 3º com a soma dos
-// 2 primeiros — ele é mais estreito: exige os dois alertas no MESMO dia.
-AJUDA_FILTRO_GERAL: {
-  divergencia: 'Linhas com o badge Rent (divergência Rent Contrib × NAV, pelos limiares da toolbar) em QUALQUER dia do range.',
-  pauta: 'Linhas com o badge Pauta (dia exato da Defasagem) em QUALQUER dia do range.',
-  divergenciaNaPauta: 'Mais estreito que os outros dois: exige o badge Rent e o badge Pauta na MESMA célula — divergência no próprio dia da pauta.',
-},
-
-/* Contexto:
-   Diz se UMA célula atende a todos os requisitos de um filtro geral (ver
-   REQUISITOS_FILTRO_GERAL: OU dentro do requisito, E entre requisitos).
-   Usada por linhaTemCelulaQueAtende(). Retorna bool.
-
-   Pseudocódigo:
-     1. Lê os overlays da célula (ausentes = lista vazia).
-     2. Todo requisito precisa ter pelo menos 1 overlay presente nela. */
-celulaAtendeRequisitos(celula, requisitos){
-  const overlays = (celula && celula.ov) || [];
-  return requisitos.every(aceitos=> aceitos.some(o=> overlays.includes(o)));
-},
-
-/* Contexto:
-   Diz se a linha tem ALGUMA célula da janela que atende aos requisitos — é o
-   que diferencia os filtros gerais dos filtros de cabeçalho, que olham um dia
-   só [2026-09-24, pedido do usuário: "Capturar todos no range de datas"].
-   Usada por linhaPassaNosFiltrosGerais(). Serve igual pra carteira e pra
-   agrupamento (os dois têm `cells` com `ov`). Retorna bool.
-
-   Repare que o E é DENTRO da célula: "divergência na pauta" exige os dois
-   badges no mesmo dia, não um alerta num dia e outro em outro.
-
-   Pseudocódigo:
-     1. Percorre as células da linha (a janela inteira, em ordem).
-     2. Basta uma que atenda a todos os requisitos pra devolver true. */
-linhaTemCelulaQueAtende(r, requisitos){
-  return (r.cells || []).some(c=> ControleCargas.celulaAtendeRequisitos(c, requisitos));
-},
-
-/* Contexto:
-   Aplica os filtros gerais da toolbar (state.filtrosGerais) a 1 linha —
-   chamada por applyFilters() antes dos filtros de coluna. Retorna bool
-   (true = a linha continua na grade).
-
-   Os dois filtros SOMAM quando marcados juntos: a linha passa se tiver
-   divergência OU pauta em qualquer dia da janela [2026-09-24, pedido do
-   usuário: "posso selecionar esses dois filtros juntos"]. União, não
-   interseção — marcar os dois é montar a lista de trabalho do dia (tudo que
-   pede atenção), não isolar o punhado que tem os dois alertas juntos.
-
-   Pseudocódigo:
-     1. Nenhum filtro geral marcado -> passa (comportamento de sempre).
-     2. Marcado(s) -> passa se casar com PELO MENOS UM deles. */
-linhaPassaNosFiltrosGerais(r){
-  const marcados = Object.keys(ControleCargas.state.filtrosGerais)
-    .filter(chave=> ControleCargas.state.filtrosGerais[chave]);
-  if(!marcados.length) return true;
-  return marcados.some(chave=>
-    ControleCargas.linhaTemCelulaQueAtende(r, ControleCargas.REQUISITOS_FILTRO_GERAL[chave]));
-},
-
-/* Contexto:
-   Liga/desliga 1 filtro geral (clique no chip da toolbar) e redesenha a
-   grade. Chamada pelos handlers ligados em buildFilters(). Não retorna nada.
-
-   Pseudocódigo:
-     1. Inverte o estado do filtro pedido.
-     2. Descongela a ordem (a lista mudou de tamanho; manter a ordem
-        congelada mostraria linhas que o filtro acabou de tirar).
-     3. Sincroniza os chips e reconstrói a matriz da aba visível. */
-alternarFiltroGeral(chave){
-  ControleCargas.state.filtrosGerais[chave] = !ControleCargas.state.filtrosGerais[chave];
-  ControleCargas.state.frozen = null;
-  const badge = document.getElementById('freeze-badge');
-  if(badge) badge.style.display = 'none';
-  ControleCargas.refreshFilterUI();
-  ControleCargas.buildMatrix();
 },
 
 /* Contexto:
@@ -372,18 +268,14 @@ buildFilters(){
   const el = document.getElementById('filters');
   const companies = ControleCargas.SNAPSHOT.meta.companies;
 
-  // [2026-09-24, pedido do usuário] Filtros GERAIS — não são por empresa nem
-  // por dia: varrem a janela inteira (ver linhaPassaNosFiltrosGerais). Vêm
-  // PRIMEIRO, num grupo com moldura: com 20 empresas na faixa, eles sumiam no
-  // meio da lista [REVISADO no mesmo dia: "melhore a cor de seleção e layout"].
-  const janela = `${ControleCargas.SNAPSHOT.meta.window[0]} a ${ControleCargas.SNAPSHOT.meta.referenceDate}`;
-  let html = '<span class="filtros-grupo"><span class="filtros-grupo-rotulo" title="Filtros que olham a janela inteira, não uma data só">Alertas na janela</span>';
-  Object.keys(ControleCargas.ROTULOS_FILTRO_GERAL).forEach(chave=>{
-    const ligado = ControleCargas.state.filtrosGerais[chave];
-    const ajuda = `${ControleCargas.AJUDA_FILTRO_GERAL[chave]} Range em tela: ${janela}. Marcando mais de um, a grade mostra quem atende a QUALQUER um deles.`;
-    html += `<span class="chip chip-geral${ligado?' on':''}" data-geral="${chave}" role="button" aria-pressed="${ligado}" tabindex="0" title="${ControleCargas.escAttr(ajuda)}">${ControleCargas.esc(ControleCargas.ROTULOS_FILTRO_GERAL[chave])}</span>`;
-  });
-  html += '</span><span class="filtros-divisor"></span>';
+  // [2026-09-24, pedido do usuário] Filtro da PAUTA — mesmo popover das
+  // colunas de data (.th-filter-btn + data-filtro-coluna, ligado por
+  // wireFiltrosCabecalho), só que a célula lida é a do badge Pauta de cada
+  // carteira em vez de uma data fixa. Fica na frente da faixa, num grupo
+  // próprio, pra não se perder no meio de 20 chips de empresa.
+  let html = '<span class="filtros-grupo"><span class="filtros-grupo-rotulo" title="Filtra pelo dia da Defasagem de cada carteira (o dia com o badge Pauta), com as mesmas opções das colunas de data">Pauta</span>'
+           + ControleCargas.botaoFiltroPautaHtml()
+           + '</span><span class="filtros-divisor"></span>';
 
   const empresaLigada = (valor)=> ControleCargas.state.company === valor;
   html += `<span class="chip ${empresaLigada(null)?'on':''}" data-company="" role="button" aria-pressed="${empresaLigada(null)}" tabindex="0">Todas as empresas</span>`;
@@ -403,9 +295,32 @@ buildFilters(){
       ControleCargas.refreshFilterUI(); ControleCargas.buildMatrix();
     });
   });
-  el.querySelectorAll('.chip[data-geral]').forEach(chip=>{
-    chip.addEventListener('click', ()=> ControleCargas.alternarFiltroGeral(chip.dataset.geral));
-  });
+},
+
+/* Contexto:
+   Monta o botão "Status na Pauta ▾" da faixa de filtros — o único controle
+   do filtro de Pauta [2026-09-24, pedido do usuário: "um filtro só na pauta
+   que eu consiga selecionar o Status Pauta: Todos filtros que usamos nas
+   datas"]. Chamada por buildFilters(). Retorna string HTML.
+
+   De propósito carrega a classe `th-filter-btn` e o `data-filtro-coluna` das
+   colunas da grade: é o que faz o clique cair no handler que já existe
+   (wireFiltrosCabecalho, filtro_cabecalho.js) e abrir o MESMO popover, sem
+   uma segunda implementação de filtro na tela.
+
+   Pseudocódigo:
+     1. Lê o filtro atual da coluna virtual (null = sem filtro).
+     2. Com filtro ativo, mostra quantos valores estão marcados no rótulo e
+        liga a classe "active" (cor de selecionado).
+     3. Devolve o botão com o rótulo + "▾". */
+botaoFiltroPautaHtml(){
+  const escolhidos = ControleCargas.state.filtroValoresColuna[ControleCargas.COLUNA_PAUTA];
+  const ativo = escolhidos != null;
+  const sufixo = ativo ? ` (${escolhidos.size})` : '';
+  const ajuda = ativo
+    ? 'Filtrando o dia da pauta de cada carteira. Clique para mudar ou limpar.'
+    : 'Filtra pelo dia da Defasagem de cada carteira (o do badge Pauta): estado (Unp/Pro/Pub/∅/Agd), Problema Rent, Carga Mensal e "Sem pauta na janela" — as mesmas opções das colunas de data.';
+  return `<button type="button" class="th-filter-btn chip-filtro${ativo?' active':''}" data-filtro-coluna="${ControleCargas.COLUNA_PAUTA}" title="${ControleCargas.escAttr(ajuda)}">Status na Pauta${sufixo} ▾</button>`;
 },
 
 /* Contexto:
@@ -417,18 +332,13 @@ buildFilters(){
    Pseudocódigo:
      1. Para cada chip de empresa, liga "on" só no que corresponde ao filtro
         corrente.
-     2. Para cada chip de filtro geral, liga "on" conforme state.filtrosGerais
-        [2026-09-24].
-     3. Mantém o aria-pressed de cada chip em dia com a classe — é o que um
-        leitor de tela anuncia, e o que sobra quando a cor não basta. */
+     2. Mantém o aria-pressed de cada chip em dia com a classe — é o que um
+        leitor de tela anuncia, e o que sobra quando a cor não basta.
+        (O botão do filtro de Pauta não passa por aqui: quem o redesenha é
+        buildFilters(), chamado pelo buildMatrix() de depois do OK/Limpar.) */
 refreshFilterUI(){
   document.querySelectorAll('.chip[data-company]').forEach(chip=>{
     const ligado = (chip.dataset.company||null) === ControleCargas.state.company;
-    chip.classList.toggle('on', ligado);
-    chip.setAttribute('aria-pressed', ligado);
-  });
-  document.querySelectorAll('.chip[data-geral]').forEach(chip=>{
-    const ligado = !!ControleCargas.state.filtrosGerais[chip.dataset.geral];
     chip.classList.toggle('on', ligado);
     chip.setAttribute('aria-pressed', ligado);
   });
