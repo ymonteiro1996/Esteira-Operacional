@@ -877,6 +877,11 @@ def buscar_issues_detail(wallet_ids, data_inicial, data_final, timings=None):
     from utils.datas import CalendarioDiasUteis
     datas = CalendarioDiasUteis().sequencia_dias_uteis(data_inicial, data_final)
 
+    # [2026-09-24] Esta busca roda dentro da etapa 4 e faz 1 fan-out por data
+    # — sem declarar passos, a barra de % da tela ficava congelada durante
+    # ela (ver PESO_ETAPAS em progresso_atualizacao.py).
+    progresso_atualizacao.definir_total_passos(len(datas))
+
     for data in datas:
         def _buscar_status_empresa(company_id, _data=data):
             return get_preprocessing_status(company_id=company_id, position_date=_data)
@@ -885,6 +890,7 @@ def buscar_issues_detail(wallet_ids, data_inicial, data_final, timings=None):
         carteiras_com_unprocessed = ({doc["walletId"] for doc in cacheado["unp"]}
                                       if cacheado is not None else None)
 
+        progresso_atualizacao.passo_concluido()
         for company_id, status in _fan_out_por_empresa(list(carteiras_por_empresa.keys()), _buscar_status_empresa).items():
             if not isinstance(status, dict):
                 continue

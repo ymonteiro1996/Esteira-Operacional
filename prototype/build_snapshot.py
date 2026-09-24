@@ -277,6 +277,16 @@ def _montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=Fals
         print(f"      janela DEFAULT (5du/D-{GRID_REFERENCE_LAG_DU}): {janela[0]}..{janela[-1]} ({len(janela)} du)")
     data_extra_gate_sequencia = calendario.deslocar(janela[0], -1)  # 1du a mais p/ checar gate de sequência do 1º dia visível
 
+    # [2026-09-24, pedido do usuário: "barra de % do atualizando e tempo
+    # faltante... sempre com base da seleção da empresa ou todas empresas"]
+    # Só aqui o escopo está completo: a empresa (ou "todas") já veio por
+    # argumento, o nº de datas acabou de ser resolvido. É esse par que define
+    # o tamanho do trabalho — e, por isso, contra quais execuções anteriores o
+    # tempo restante é estimado (progresso_atualizacao._duracao_tipica).
+    progresso_atualizacao.definir_escopo(
+        f"{company_id or 'todas'}|{len(janela)}",
+        f"{nome_empresa_filtro or 'todas as empresas'} · {len(janela)} datas")
+
     todas_datas_pedidas = [data_extra_gate_sequencia] + janela
     # Sem `passos_total` aqui de propósito: quem sabe quantas consultas esta
     # etapa vai fazer é o fan-out de db.py (data × empresa × tipo), que

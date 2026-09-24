@@ -184,11 +184,20 @@ colunasAnotacaoHtml(targetType, targetId){
   const {responsavel, comentarioAtuacao} = ControleCargas.annotationAtual(targetType, targetId, data);
   const sev = ControleCargas.cellCommentSeverity(targetType, targetId, data);
   const classeSev = sev ? ` sev-${sev}` : '';
-  // Tag só quando a linha NÃO está na data de referência: é o aviso de que o
-  // que se digita aqui vale para outro dia (e o "×" volta para a referência).
-  const tagData = data === refDate ? '' :
-    `<span class="anot-data-tag" title="Editando a anotação do dia ${ControleCargas.escAttr(data)} (célula selecionada), não a da data de referência ${ControleCargas.escAttr(refDate)}">${ControleCargas.esc(ControleCargas.fmtDM(data))}`
-    + `<button type="button" class="anot-data-x" data-acao="limpar-selecao-celula" title="Voltar a editar a data de referência">×</button></span>`;
+  // Tag sempre que a linha tem célula selecionada — inclusive quando o dia
+  // selecionado É a data de referência [REVISADO 2026-09-24, pedido do
+  // usuário: "aparecer a data no campo responsável mesmo que seja selecionada
+  // célula na D-1"]: a 1ª versão só mostrava a tag quando o dia era diferente
+  // da referência, então clicar na coluna de referência (hoje D-1) não
+  // mostrava data nenhuma — justo a coluna mais usada. Sem seleção, nenhuma
+  // tag: seriam 1000 tags repetindo a mesma data.
+  const selecionada = ControleCargas.linhaTemCelulaSelecionada(targetId);
+  const ajudaTag = data === refDate
+    ? `Editando a anotação de ${data} (célula selecionada) — que é a data de referência do grid`
+    : `Editando a anotação do dia ${data} (célula selecionada), não a da data de referência ${refDate}`;
+  const tagData = !selecionada ? '' :
+    `<span class="anot-data-tag${data === refDate ? ' na-referencia' : ''}" title="${ControleCargas.escAttr(ajudaTag)}">${ControleCargas.esc(ControleCargas.fmtDM(data))}`
+    + `<button type="button" class="anot-data-x" data-acao="limpar-selecao-celula" title="Tirar a seleção (as duas colunas voltam a editar a data de referência)">×</button></span>`;
   const atributos = `data-target-type="${targetType}" data-target-id="${ControleCargas.escAttr(targetId)}" data-data="${ControleCargas.escAttr(data)}"`;
   return `<td class="col-anotacao${classeSev}">${tagData}<input type="text" class="anot-input anot-responsavel" ${atributos} value="${ControleCargas.escAttr(responsavel)}" placeholder="—"></td>` +
          `<td class="col-anotacao col-anotacao-comentario${classeSev}"><input type="text" class="anot-input anot-comentario" ${atributos} value="${ControleCargas.escAttr(comentarioAtuacao)}" placeholder="Comentário sobre atuação..."></td>`;

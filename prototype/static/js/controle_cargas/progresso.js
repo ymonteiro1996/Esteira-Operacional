@@ -10,35 +10,117 @@
    lentidão.
 
    Este arquivo só LÊ e MOSTRA: consulta GET /api/atualizar/progresso (app.py)
-   de 2 em 2 segundos enquanto o fetch do Atualizar não voltou, e escreve o
-   andamento no mesmo .atualizar-msg que já existia. Nenhuma decisão de
+   de 2 em 2 segundos enquanto o fetch do Atualizar não voltou. [REVISADO
+   2026-09-24, pedido do usuário: "conseguimos criar uma barra de % do
+   atualizando e tempo faltante? Sempre com base da seleção da empresa ou
+   todas empresas"] O andamento saiu do texto solto na .atualizar-msg e virou
+   uma BARRA (#atualizar-barra) com percentual, etapa, consultas feitas,
+   tempo restante estimado e o escopo (empresa escolhida × nº de datas) — a
+   .atualizar-msg ficou reservada pro resultado final e pros erros. O
+   percentual e o tempo restante vêm prontos do servidor
+   (progresso_atualizacao.py): é lá que estão os pesos por etapa e o
+   histórico por escopo. Nenhuma decisão de
    negócio, nenhuma chamada à API Beehus, e nenhuma falha aqui pode atrapalhar
    o Atualizar em si (todo erro de rede é engolido — ver acompanharProgresso).
 */
 Object.assign(ControleCargas, {
 
 /* Contexto:
-   Traduz um dict de /api/atualizar/progresso na frase curta que aparece ao
-   lado do botão. Chamada a cada resposta do polling. Retorna string (vazia
-   quando não há execução em curso, pra não escrever nada por cima da
-   mensagem final de sucesso/erro).
+   Formata uma duração em segundos como "4min 12s" / "48s" — usada nos dois
+   tempos que a barra mostra (o que falta e o que já passou). Retorna string.
+
+   Pseudocódigo:
+     1. Arredonda e separa minutos e segundos.
+     2. Sem minutos, devolve só os segundos. */
+formatarDuracaoCurta(segundos){
+  const total = Math.max(0, Math.round(segundos || 0));
+  const minutos = Math.floor(total / 60);
+  return minutos ? `${minutos}min ${total % 60}s` : `${total}s`;
+},
+
+/* Contexto:
+   Frase do tempo que falta — o "tempo faltante" pedido pelo usuário
+   [2026-09-24]. Chamada por renderizarBarraProgresso(). Retorna string.
+
+   Diz também DE ONDE veio o número, porque as duas fontes merecem confiança
+   diferente: "estimativa" quando ainda é o histórico de execuções anteriores
+   do mesmo escopo (a execução mal começou), sem ressalva quando já é o ritmo
+   medido nesta execução (ver _segundos_restantes, progresso_atualizacao.py).
+
+   Pseudocódigo:
+     1. Servidor ainda sem estimativa -> "calculando o tempo restante...".
+     2. Com estimativa -> "faltam ~Xmin Ys" (+ " (estimativa)" quando vem do
+        histórico). */
+textoTempoRestante(progresso){
+  if(progresso.segundosRestantes == null) return 'calculando o tempo restante…';
+  const base = progresso.baseEstimativa === 'historico' ? ' (estimativa)' : '';
+  return `faltam ~${ControleCargas.formatarDuracaoCurta(progresso.segundosRestantes)}${base}`;
+},
+
+/* Contexto:
+   Traduz um dict de /api/atualizar/progresso na frase que acompanha a barra.
+   Chamada por renderizarBarraProgresso(). Retorna string (vazia quando não há
+   execução em curso).
+
+   [2026-09-24, pedido do usuário: "quero só status % e tempo Total Restante,
+   tempo passado também"] São só esses 3 números — o % vai no começo da linha
+   (renderizarBarraProgresso), aqui ficam os 2 tempos. A etapa "[n/6]", o
+   título dela e a contagem de consultas SAÍRAM da tela de propósito: eram
+   detalhe de implementação do build, não informação de quem espera. O
+   servidor continua publicando tudo isso em /api/atualizar/progresso (e o
+   console do servidor continua imprimindo), então dá pra voltar a mostrar sem
+   mexer no backend.
 
    Pseudocódigo:
      1. Sem execução em curso -> string vazia.
-     2. Monta o prefixo "Atualizando… [etapa/total] título".
-     3. Quando a etapa declarou sub-passos, acrescenta "— feitos/total
-        consultas" (hoje só a etapa 3, a longa).
-     4. Acrescenta há quanto tempo a execução começou, em minutos e segundos. */
+     2. Junta "faltam ~X" e "decorrido Y". */
 textoProgressoAtualizacao(progresso){
   if(!progresso || !progresso.emAndamento) return '';
-  let texto = `Atualizando… [${progresso.etapa}/${progresso.etapasTotal}] ${progresso.titulo}`;
-  if(progresso.passosTotal > 0){
-    texto += ` — ${progresso.passosFeitos}/${progresso.passosTotal} consultas`;
+  return `${ControleCargas.textoTempoRestante(progresso)} · decorrido ${ControleCargas.formatarDuracaoCurta(progresso.segundos)}`;
+},
+
+/* Contexto:
+   Desenha a barra: largura do preenchimento = percentual do servidor, e a
+   frase ao lado [2026-09-24, pedido do usuário: "barra de % do atualizando e
+   tempo faltante"]. Chamada a cada resposta do polling. Não retorna nada.
+
+   Pseudocódigo:
+     1. Sem os elementos no DOM (HTML antigo em cache) -> sai sem erro.
+     2. Sem execução em curso -> esconde a barra.
+     3. Mostra a barra, ajusta largura/aria e escreve "NN% · <frase>". */
+renderizarBarraProgresso(progresso){
+  const barra = document.getElementById('atualizar-barra');
+  const preenchida = document.getElementById('atualizar-barra-preenchida');
+  const texto = document.getElementById('atualizar-barra-texto');
+  if(!barra || !preenchida || !texto) return;
+
+  if(!progresso || !progresso.emAndamento){
+    ControleCargas.esconderBarraProgresso();
+    return;
   }
-  const segundos = Math.max(0, Math.round(progresso.segundos || 0));
-  const minutos = Math.floor(segundos / 60);
-  texto += ` · há ${minutos ? minutos + 'min ' : ''}${segundos % 60}s`;
-  return texto;
+  const pct = Math.max(0, Math.min(100, progresso.percentual || 0));
+  barra.hidden = false;
+  preenchida.style.width = `${pct}%`;
+  const trilha = document.getElementById('atualizar-barra-trilha');
+  if(trilha) trilha.setAttribute('aria-valuenow', Math.round(pct));
+  texto.textContent = `${pct.toFixed(0)}% · ${ControleCargas.textoProgressoAtualizacao(progresso)}`;
+},
+
+/* Contexto:
+   Esconde a barra e zera o preenchimento — chamada quando o Atualizar termina
+   (pararAcompanhamentoProgresso) e quando o servidor diz que não há execução
+   em curso. Não retorna nada.
+
+   Pseudocódigo:
+     1. Sem os elementos no DOM, sai sem erro.
+     2. Esconde e zera (a próxima execução começa do zero, não da largura
+        que ficou da anterior). */
+esconderBarraProgresso(){
+  const barra = document.getElementById('atualizar-barra');
+  const preenchida = document.getElementById('atualizar-barra-preenchida');
+  if(!barra || !preenchida) return;
+  barra.hidden = true;
+  preenchida.style.width = '0%';
 },
 
 /* Contexto:
@@ -52,13 +134,13 @@ textoProgressoAtualizacao(progresso){
      1. Para qualquer acompanhamento anterior que ainda esteja de pé.
      2. A cada 2s, busca GET /api/atualizar/progresso.
      3. Se este pedido já ficou obsoleto, para o polling e não escreve nada.
-     4. Com texto a mostrar, escreve em .atualizar-msg.
+     4. Desenha a barra com o que voltou (renderizarBarraProgresso)
+        [2026-09-24 — antes o andamento ia como texto na .atualizar-msg, que
+        agora fica reservada pro resultado final/erro].
      5. Qualquer erro de rede é ignorado de propósito — o progresso é
         enfeite, e a resposta do próprio /api/atualizar é quem manda. */
 acompanharProgresso(estaObsoleto){
   ControleCargas.pararAcompanhamentoProgresso();
-  const msgEl = document.getElementById('atualizar-msg');
-  if(!msgEl) return;
 
   ControleCargas.state.timerProgresso = setInterval(()=>{
     fetch('/api/atualizar/progresso')
@@ -68,8 +150,7 @@ acompanharProgresso(estaObsoleto){
           ControleCargas.pararAcompanhamentoProgresso();
           return;
         }
-        const texto = ControleCargas.textoProgressoAtualizacao(progresso);
-        if(texto) msgEl.textContent = texto;
+        ControleCargas.renderizarBarraProgresso(progresso);
       })
       .catch(()=>{});
   }, 2000);
@@ -82,9 +163,11 @@ acompanharProgresso(estaObsoleto){
    não faz nada. Não retorna nada.
 
    Pseudocódigo:
-     1. Sem timer guardado no state, sai.
-     2. Cancela o timer e limpa a referência. */
+     1. Esconde a barra (o Atualizar acabou — ou outro assumiu).
+     2. Sem timer guardado no state, sai.
+     3. Cancela o timer e limpa a referência. */
 pararAcompanhamentoProgresso(){
+  ControleCargas.esconderBarraProgresso();
   if(!ControleCargas.state.timerProgresso) return;
   clearInterval(ControleCargas.state.timerProgresso);
   ControleCargas.state.timerProgresso = null;

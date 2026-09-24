@@ -153,6 +153,19 @@
     <button class="btn" id="btn-atualizar">↻ Atualizar</button>
     <span class="atualizar-msg" id="atualizar-msg"></span>
     <span class="atualizar-timestamp" id="atualizar-timestamp"></span>
+    <!-- [2026-09-24, pedido do usuário: "conseguimos criar uma barra de % do
+         atualizando e tempo faltante? Sempre com base da seleção da empresa
+         ou todas empresas"] Barra do Atualizar: fica escondida até o clique
+         e some quando termina; quem preenche é
+         static/js/controle_cargas/progresso.js com o que
+         GET /api/atualizar/progresso devolve (percentual, tempo restante e o
+         escopo — empresa escolhida × nº de datas). -->
+    <div class="atualizar-barra" id="atualizar-barra" hidden>
+      <div class="atualizar-barra-trilha" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="atualizar-barra-trilha">
+        <div class="atualizar-barra-preenchida" id="atualizar-barra-preenchida"></div>
+      </div>
+      <span class="atualizar-barra-texto" id="atualizar-barra-texto"></span>
+    </div>
   </div>
 
   <div class="panel" id="panel-main">

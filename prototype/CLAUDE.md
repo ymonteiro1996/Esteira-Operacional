@@ -1547,6 +1547,73 @@ Complementa a divisão de código da seção 4 — juntas atacam a causa dos con
     (texto e severidade mudam, `author` preservado, `editedBy` carimbado,
     sem duplicar registro); Esc e o "×" da tag voltam a linha pra referência;
     zero erro de JS.
+  - **[CORRIGIDO no mesmo dia, pedido do usuário: "aparecer a data no campo
+    responsável mesmo que seja selecionada célula na D-1"]** A tag só aparecia
+    quando o dia selecionado era DIFERENTE da data de referência — e como a
+    referência hoje é D-1 (nota de 24/09), clicar na coluna mais usada não
+    mostrava data nenhuma, deixando dúvida sobre o que o campo estava
+    editando. Agora a tag aparece sempre que a linha tem célula selecionada
+    (`linhaTemCelulaSelecionada()`, nova em selecao_celula.js — a condição
+    passou a ser "tem seleção", não "é outra data"); quando o dia É a
+    referência, ela sai em tom neutro (`.anot-data-tag.na-referencia`), porque
+    aí não há nada de excepcional a sinalizar. Sem seleção nenhuma continua
+    sem tag: seriam ~1000 tags repetindo a mesma data.
+
+- **[2026-09-24, pedido do usuário: "conseguimos criar uma barra de % do
+  atualizando e tempo faltante? Sempre com base da seleção da empresa ou todas
+  empresas" + "quero só status % e tempo Total Restante, tempo passado
+  também"] BARRA DE PROGRESSO DO ATUALIZAR.** O andamento já existia desde
+  15/09, mas como texto solto na `.atualizar-msg` ("[3/6] buscando dados da
+  esteira — 37/90 consultas · há 4min 12s"): dizia que estava vivo, não o
+  quanto faltava.
+  - **Percentual com PESO POR ETAPA** (`PESO_ETAPAS`, progresso_atualizacao.py):
+    12/1/70/14/2/1%, medidos nos timings que o próprio build já imprime. As 6
+    etapas não custam o mesmo — a 3 (buscar a esteira) leva 3-4 min dos ~5 —,
+    então uma barra "etapa/6" ficaria parada em 33% por 3 minutos e saltaria
+    pra 100%; pior que não ter barra. Dentro da etapa, interpola pelos
+    sub-passos que ela declarou.
+  - **Etapa 4 passou a declarar passos** (`buscar_issues_detail`, db.py): ela
+    faz 1 fan-out por data e vale 14% — sem os passos, a barra congelava nela.
+  - **Tempo restante, 2 fontes** (`_segundos_restantes`): até 5% concluído usa
+    o HISTÓRICO de execuções anteriores do MESMO escopo (regra de três em cima
+    de 2% erra por minutos, e é justo o começo, quando a pessoa mais olha);
+    daí em diante usa o ritmo MEDIDO nesta execução, que absorve sozinho rate
+    limit pior, rede lenta ou cache quente. A tela marca "(estimativa)" quando
+    o número ainda vem do histórico — as duas fontes não merecem a mesma
+    confiança.
+  - **"Sempre com base da seleção da empresa"**: o escopo é
+    `company_id|nº de datas` (`definir_escopo()`, chamada por
+    `_montar_snapshot()` assim que a janela existe) e é a chave do histórico —
+    a estimativa de "Eté Gestão · 7 datas" nunca é misturada com a de "todas as
+    empresas". O ritmo medido já reflete o escopo por construção: com 1 empresa
+    escolhida, a fila do fan-out (data × empresa × tipo) é ~5x menor. O
+    histórico vive na memória do processo (5 últimas por escopo, mediana — não
+    média, pra um clique que pegou rate limit pesado não dominar); nada vai pro
+    disco, é chute de tempo, não dado do time. Execução que morre no meio NÃO
+    entra no histórico (levou menos que o build real e envenenaria a próxima).
+  - **Na tela** (`#atualizar-barra`, progresso.js): trilha + preenchimento +
+    `NN% · faltam ~Xmin Ys · decorrido Zmin Ws`. Só isso — [pedido do usuário
+    no meio da implementação: "quero só status % e tempo Total Restante, tempo
+    passado também"] a etapa "[n/6]", o título dela e a contagem de consultas
+    saíram da tela (continuam em `/api/atualizar/progresso` e no console do
+    servidor, então voltam sem mexer no backend). A `.atualizar-msg` ficou
+    reservada pro resultado final e pros erros. `role="progressbar"` +
+    `aria-valuenow` acompanhando.
+  - **Pegadinha de CSS que custou 3 verificações vermelhas**: `.atualizar-barra`
+    tem `display:flex`, que VENCE o `display:none` que o navegador dá ao
+    atributo `[hidden]` — a barra nunca sumia. Corrigido com
+    `.atualizar-barra[hidden]{display:none;}`.
+  - **Verificado**: 17 verificações em Python direto no módulo (pesos somando
+    100%; etapa 1 sem passos = 0%; etapa 3 na metade = 48%; etapa 4 com 3/7 =
+    89%; contador nunca passa do total; barra nunca passa de 100%; histórico só
+    de execução completa; escopo diferente não herda histórico de outro; sem
+    sid continua no-op) + 13 na tela via Playwright (barra escondida no início,
+    largura = percentual, texto com os 3 números e SEM etapa/consultas,
+    `aria-valuenow`, "calculando o tempo restante…" sem estimativa,
+    "(estimativa)" quando vem do histórico, some e zera ao terminar).
+    **Não medido contra um Atualizar real** — isso depende do token do dia e de
+    ~5 minutos de API; os pesos vieram dos timings já registrados no log do
+    servidor, e a 1ª execução real é que vai popular o histórico.
 
 ---
 

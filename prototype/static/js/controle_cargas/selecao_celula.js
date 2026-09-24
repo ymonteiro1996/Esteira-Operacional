@@ -41,6 +41,22 @@ celulaEstaSelecionada(view, rid, date){
 },
 
 /* Contexto:
+   Diz se a linha tem uma célula selecionada — qualquer que seja o dia dela,
+   inclusive quando é a própria data de referência. Usada por
+   colunasAnotacaoHtml() (anotacoes.js) pra decidir se mostra a tag do dia
+   [2026-09-24, pedido do usuário: "aparecer a data no campo responsável mesmo
+   que seja selecionada célula na D-1"] — comparar a data com a de referência
+   não bastava: clicando na coluna de referência (hoje D-1) as duas são
+   iguais, e a tag sumia justo na coluna mais usada. Retorna bool.
+
+   Pseudocódigo:
+     1. Sem seleção, ou seleção em outra aba/linha -> false. */
+linhaTemCelulaSelecionada(rid){
+  const sel = ControleCargas.state.celulaSelecionada;
+  return !!sel && sel.view === ControleCargas.state.view && sel.rid === rid;
+},
+
+/* Contexto:
    Data que as colunas Responsável / Comentário sobre atuação de UMA linha
    editam agora: a do dia selecionado, quando a seleção está nessa linha, ou
    a data de referência do grid (comportamento de sempre) quando não está.
