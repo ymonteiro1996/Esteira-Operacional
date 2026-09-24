@@ -1319,6 +1319,73 @@ Complementa a divisão de código da seção 4 — juntas atacam a causa dos con
     novas, escape de HTML, XML bem-formado); .xls aberto no Excel via COM (2 abas,
     acentos corretos, autofiltro e congelamento ativos).
 
+- **[2026-09-24, pedido do usuário: "quero dois filtros Gerais, Selecionar
+  Todos Com Divergencia de Rentabilidade e selecionar Todos Pauta, posso
+  selecionar esses dois filtros juntos. Capturar todos no range de datas.
+  Também quero que o Excel traga os alertas desse Range de datas e não só da
+  data Referencia. Celulas Pauta da matriz do Excel devem ter um contorno
+  diferente"] FILTROS QUE OLHAM A JANELA INTEIRA (tela e Excel).** Até aqui
+  TODO filtro de alerta era por UMA data: os do cabeçalho perguntam "como esta
+  carteira está NESTE dia?" (`statusRef` / `statusDia:<data>`, 29/07 e 24/09) e
+  as colunas de auditoria do Excel só liam a data de referência (decisão de
+  23/07, agora revertida). Quem queria "tudo que teve divergência na semana"
+  tinha que abrir o ▾ de cada dia, um por um.
+  - **2 chips novos na faixa de filtros** (`#filters`, ao lado dos chips de
+    empresa, sob o rótulo "GERAIS:"): "Todos com Divergência de Rentabilidade"
+    (overlays `div`/`div_strong` — o badge "Rent", que respeita os 2 campos de
+    limiar da toolbar) e "Todos Pauta" (overlay `pauta`, badge fúcsia do dia
+    exato da Defasagem). `linhaTemOverlayNaJanela()` varre `cells[].ov` da
+    linha inteira, então basta o alerta existir em QUALQUER dia do range.
+    Servem igual pra Carteiras e Agrupamentos (os dois têm `cells` com `ov`).
+  - **Os dois juntos SOMAM (união, não interseção)** — decisão registrada em
+    `linhaPassaNosFiltrosGerais()`: marcar os dois é montar a lista de trabalho
+    do dia (tudo que pede atenção), não isolar o punhado que tem os dois
+    alertas ao mesmo tempo. Se o time preferir interseção, é trocar o `.some(`
+    por `.every(` nessa função — 1 linha.
+  - **Convivem com os filtros que já existiam**: `applyFilters()` aplica os
+    gerais ANTES dos de coluna, então empresa + ▾ de cabeçalho + busca +
+    gerais se acumulam (E entre os grupos, OU dentro de cada um). Canal visual
+    próprio (contorno/fundo fúcsia, `.chip-geral`) pra não se confundir com os
+    chips de empresa, que usam o verde `--accent` na mesma faixa.
+  - **Excel — colunas de alerta agora cobrem a janela**: `Δ Rent bp`,
+    `Fora de sequência`, `Issues`, `Alertas do Grid` e `Comentário` passaram de
+    "(data de referência)" para "(dd/mm–dd/mm)", com o conteúdo dia a dia
+    dentro da própria célula (`10/09: Rent forte · 15/09: Pauta do dia`), via
+    `montarColunaPorDiaExcel()` — 1 função genérica que recebe "como ler o
+    valor de um dia", em vez de 5 laços iguais. `montarOverlaysCsvExcel()` e
+    `montarComentarioNaDataExcel()` continuam sendo POR DATA (quem varre é a
+    função nova). **Responsável/Comentário sobre atuação continuam por data de
+    referência**: a anotação é gravada por `referenceDate` (anotacoes.js), não
+    existe "a anotação do dia 15" pra listar.
+  - **Células Pauta no Excel ganharam contorno**: cada estilo `st_<estado>`
+    ganhou o gêmeo `st_<estado>_pauta`, com a MESMA pintura de estágio mais um
+    contorno fúcsia grosso (`#C026D3`, o mesmo `--overlay-pauta` da tela;
+    `ss:Weight="3"`). Mantém a separação de canais que a tela já usa — fundo
+    diz o estágio, o contorno/badge diz o alerta. A 1ª linha da planilha
+    (a do "Relatório gerado em") passou a explicar o contorno e o range.
+  - **O Excel já sai filtrado**: `buildExcelXml()` usa `sortedRows()`, que
+    passa por `applyFilters()` — ligar os chips e baixar a planilha entrega só
+    as linhas filtradas, sem nenhum código novo.
+  - **Verificado** (Playwright na tela real, 5050, com snapshot SINTÉTICO
+    injetado por JS — dado real não garante alerta no dia que interessa
+    testar; 21 verificações): chips aparecem/acendem; "divergência" pega a
+    carteira cujo único alerta está no 1º dia da janela (o caso que o filtro
+    por coluna da Ref não pegava); "pauta" idem no meio da janela; os dois
+    juntos devolvem a UNIÃO (3 de 4 carteiras); empresa + gerais continuam se
+    acumulando; no XML do Excel, cabeçalho com `10/09–16/09`, alertas dia a
+    dia (`10/09: Rent forte · 15/09: Pauta do dia`), Δ Rent listando o dia do
+    alerta antigo, estilo `st_wu_pauta` declarado com `ss:Weight="3"` e
+    `#C026D3` e usado exatamente nas 2 células de pauta; zero erro de JS.
+    Conferido à parte, no `snapshot.json` real (1032 carteiras), que o shape
+    que as colunas novas leem é o esperado (`tt.div.bp` numérico, `tt.seq`
+    bool, `tt.issues` string) e que `div`/`div_strong` aparecem de verdade
+    (40 carteiras na janela daquele arquivo).
+  - **Efeito colateral conhecido, aceito**: com janela de 6 du e carteiras que
+    ficam em atraso a semana toda, a coluna "Alertas do Grid" vira uma lista de
+    até 6 itens por carteira — é o que "trazer os alertas do range" significa.
+    Se ficar verboso na prática, o passo seguinte seria agrupar por tipo
+    ("Atraso forte: 27/07, 28/07, …") em vez de listar por dia.
+
 ---
 
 ## Checklist rápido (antes de considerar uma tarefa pronta)

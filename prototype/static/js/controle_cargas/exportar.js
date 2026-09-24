@@ -74,6 +74,15 @@ ssCell(value, opts){
 XML_BG_COMENTARIO: { red:'#FEE2E2', yellow:'#FEF3C7', green:'#DCFCE7' },
 XML_FG_COMENTARIO: { red:'#B91C1C', yellow:'#92400E', green:'#15803D' },
 
+// Contorno das células com badge "Pauta do dia" no Excel [2026-09-24,
+// pedido do usuário: "Celulas Pauta da matriz do Excel devem ter um contorno
+// diferente"]. Fúcsia #C026D3 = o mesmo --overlay-pauta da tela (modo claro),
+// Weight 3 = a linha mais grossa do SpreadsheetML, pra saltar no meio de uma
+// grade cheia de fundos pastel.
+BORDA_PAUTA_XML: ['Left','Top','Right','Bottom']
+  .map(lado=> `<Border ss:Position="${lado}" ss:LineStyle="Continuous" ss:Weight="3" ss:Color="#C026D3"/>`)
+  .join(''),
+
 /* Contexto:
    Monta o bloco <Styles> do XML SpreadsheetML: 1 estilo por estado da
    matriz (fundo/letra do estágio) + 1 por severidade de comentário +
@@ -89,14 +98,23 @@ XML_FG_COMENTARIO: { red:'#B91C1C', yellow:'#92400E', green:'#15803D' },
    Pseudocódigo:
      1. Estilo de cabeçalho (negrito + fundo cinza claro).
      2. 1 estilo por chave de ControleCargas.XML_BG/XML_FG (mesma
-        simbologia da matriz) — usados só nas colunas de dia.
+        simbologia da matriz) — usados só nas colunas de dia — MAIS uma
+        variante "_pauta" de cada um, igual só que com contorno fúcsia
+        [2026-09-24, pedido do usuário].
      3. 1 estilo por severidade de comentário (XML_BG_COMENTARIO/
         XML_FG_COMENTARIO) — usados só nas colunas de identidade (A-D),
         quando a linha tem comentário vigente na data de referência. */
 buildEstilosExcel(){
   let styles = `<Style ss:ID="hdr"><Font ss:Bold="1"/><Interior ss:Color="#EEF0EC" ss:Pattern="Solid"/></Style>`;
   Object.keys(ControleCargas.XML_BG).forEach(k=>{
-    styles += `<Style ss:ID="st_${k}"><Interior ss:Color="${ControleCargas.XML_BG[k]}" ss:Pattern="Solid"/><Font ss:Color="${ControleCargas.XML_FG[k]}" ss:Bold="1"/><Alignment ss:Horizontal="Center"/></Style>`;
+    const pintura = `<Interior ss:Color="${ControleCargas.XML_BG[k]}" ss:Pattern="Solid"/><Font ss:Color="${ControleCargas.XML_FG[k]}" ss:Bold="1"/><Alignment ss:Horizontal="Center"/>`;
+    styles += `<Style ss:ID="st_${k}">${pintura}</Style>`;
+    // [2026-09-24, pedido do usuário: "Celulas Pauta da matriz do Excel devem
+    // ter um contorno diferente"] Mesma pintura de estágio + contorno fúcsia
+    // grosso — o fundo continua dizendo o ESTÁGIO (Unp/Pro/Pub), o contorno
+    // diz "é a pauta do dia", que é como a tela já separa os dois canais
+    // (fundo = estágio, badge = alerta).
+    styles += `<Style ss:ID="st_${k}_pauta">${pintura}${ControleCargas.BORDA_PAUTA_XML}</Style>`;
   });
   Object.keys(ControleCargas.XML_BG_COMENTARIO).forEach(sev=>{
     styles += `<Style ss:ID="cmt_${sev}"><Interior ss:Color="${ControleCargas.XML_BG_COMENTARIO[sev]}" ss:Pattern="Solid"/><Font ss:Color="${ControleCargas.XML_FG_COMENTARIO[sev]}"/></Style>`;
@@ -146,7 +164,10 @@ montarDefasagemExcel(r){
         sobre atuação, SÓ a data de referência — [REVISADO 2026-07-25,
         pedido do usuário: "trazer essas duas colunas para antes da Ult
         Unp"], antes vinham no fim) + últimas datas + auditoria da data de
-        referência (Δ Rent, Sequência, Issues, Alertas do Grid, Comentário).
+        referência (Δ Rent, Sequência, Issues, Alertas do Grid,
+        Comentário) — [REVISADO 2026-09-24, pedido do usuário] essas 5
+        passaram a cobrir a JANELA inteira, dia a dia
+        (montarColunaPorDiaExcel), e o cabeçalho passou a mostrar o range.
      2. Para cada carteira (já ordenada): resolve a severidade do comentário
         vigente NA DATA DE REFERÊNCIA (cellCommentSeverity) e colore as 4
         colunas de identidade (Company/Carteira/WalletID/Instituição) com
@@ -156,9 +177,12 @@ montarDefasagemExcel(r){
         sigla/estilo de cada dia (mesma simbologia da matriz principal) e,
         na mesma linha, a anotação da carteira (annotationAtual,
         anotacoes.js — pendente ou já salva, o que já estiver na tela) + os
-        campos de auditoria lidos só da célula da data de referência
-        (montarOverlaysCsvExcel/montarComentarioNaDataExcel já filtram só
-        nela). */
+        campos de auditoria de CADA dia da janela
+        (montarColunaPorDiaExcel por cima de montarOverlaysCsvExcel/
+        montarComentarioNaDataExcel, que continuam sendo por data).
+     3. Célula de dia com badge Pauta sai com a variante de estilo
+        "st_<estado>_pauta" — mesmo fundo de estágio, mais o contorno fúcsia
+        [2026-09-24, pedido do usuário]. */
 buildAbaMatrizExcel(window_, walletRows){
   const refDate = ControleCargas.SNAPSHOT.meta.referenceDate;
 
@@ -168,14 +192,20 @@ buildAbaMatrizExcel(window_, walletRows){
   // §6). A <Created> do DocumentProperties (buildWorkbookXml) já guardava
   // esse horário, mas só nos metadados do arquivo (invisível ao abrir); esta
   // linha deixa visível na própria planilha.
-  let matrixRows = `<Row><Cell><Data ss:Type="String">Relatório gerado em: ${ControleCargas.formatarDataHoraAgora()}</Data></Cell></Row>`;
+  let matrixRows = `<Row><Cell><Data ss:Type="String">Relatório gerado em: ${ControleCargas.formatarDataHoraAgora()} — células com contorno fúcsia = Pauta do dia (dia exato da Defasagem); as colunas de alerta cobrem toda a janela, dia a dia</Data></Cell></Row>`;
   matrixRows += `<Row>`;
   ['Company','Carteira','WalletID','Instituição','Modelo de Carga','Periodicidade','Defasagem'].forEach(h=> matrixRows += ControleCargas.ssCell(h, {style:'hdr'}));
   window_.forEach(d=> matrixRows += ControleCargas.ssCell(d, {style:'hdr'}));
+  // [2026-09-24, pedido do usuário] As 5 colunas de auditoria passaram a
+  // cobrir a JANELA inteira (dia a dia, na própria célula) em vez de só a
+  // data de referência. Responsável/Comentário sobre atuação continuam por
+  // data de referência: a anotação é gravada por referenceDate (ver
+  // anotacoes.js), não existe "a anotação do dia 15" pra listar.
+  const janela = `${ControleCargas.fmtDM(window_[0])}–${ControleCargas.fmtDM(window_[window_.length-1])}`;
   [`Responsável (${refDate})`,`Comentário sobre atuação (${refDate})`,
-   `Δ Rent bp (${refDate})`,`Fora de sequência (${refDate})`,`Issues (${refDate})`,
-   `Alertas do Grid — Rent/Atraso/Sequência/Issue (${refDate})`,
-   `Comentário (${refDate})`].forEach(h=> matrixRows += ControleCargas.ssCell(h, {style:'hdr'}));
+   `Δ Rent bp (${janela})`,`Fora de sequência (${janela})`,`Issues (${janela})`,
+   `Alertas do Grid — Rent/Atraso/Pauta/Sequência/Issue (${janela})`,
+   `Comentário (${janela})`].forEach(h=> matrixRows += ControleCargas.ssCell(h, {style:'hdr'}));
   matrixRows += `</Row>`;
 
   walletRows.forEach(r=>{
@@ -189,24 +219,54 @@ buildAbaMatrizExcel(window_, walletRows){
       const c = cmap[d];
       const key = c ? c.s : 'notcov';
       const letter = ControleCargas.STATES[key] ? ControleCargas.STATES[key].letter : '—';
-      matrixRows += ControleCargas.ssCell(letter, {style:'st_'+key});
+      // [2026-09-24, pedido do usuário] Célula com badge Pauta usa a variante
+      // de estilo com contorno fúcsia (buildEstilosExcel).
+      const ehPauta = !!(c && (c.ov||[]).includes('pauta'));
+      matrixRows += ControleCargas.ssCell(letter, {style:'st_'+key+(ehPauta?'_pauta':'')});
     });
 
-    const celulaRef = cmap[refDate];
-    const ttRef = (celulaRef && celulaRef.tt) || {};
-    const divRef = ttRef.div ? ttRef.div.bp.toFixed(1) : '';
-    const seqRef = !!ttRef.seq;
-    const issuesTextoRef = ttRef.issues || '';
-    const overlaysCsv = ControleCargas.montarOverlaysCsvExcel(r, refDate);
-    const comentarioNaData = ControleCargas.montarComentarioNaDataExcel(r, refDate);
+    const ttDoDia = (d)=> ((cmap[d] || {}).tt) || {};
+    const divJanela = ControleCargas.montarColunaPorDiaExcel(window_, d=>{
+      const div = ttDoDia(d).div;
+      return div ? div.bp.toFixed(1) : '';
+    });
+    const seqJanela = ControleCargas.montarColunaPorDiaExcel(window_, d=> ttDoDia(d).seq ? 'Sim' : '');
+    const issuesJanela = ControleCargas.montarColunaPorDiaExcel(window_, d=> ttDoDia(d).issues || '');
+    const overlaysJanela = ControleCargas.montarColunaPorDiaExcel(window_, d=> ControleCargas.montarOverlaysCsvExcel(r, d));
+    const comentariosJanela = ControleCargas.montarColunaPorDiaExcel(window_, d=> ControleCargas.montarComentarioNaDataExcel(r, d));
     const anotacao = ControleCargas.annotationAtual('wallet', r.walletId);
 
     matrixRows += ControleCargas.ssCell(anotacao.responsavel) + ControleCargas.ssCell(anotacao.comentarioAtuacao);
-    matrixRows += ControleCargas.ssCell(divRef) + ControleCargas.ssCell(seqRef?'Sim':'Não') + ControleCargas.ssCell(issuesTextoRef);
-    matrixRows += ControleCargas.ssCell(overlaysCsv) + ControleCargas.ssCell(comentarioNaData);
+    matrixRows += ControleCargas.ssCell(divJanela) + ControleCargas.ssCell(seqJanela) + ControleCargas.ssCell(issuesJanela);
+    matrixRows += ControleCargas.ssCell(overlaysJanela) + ControleCargas.ssCell(comentariosJanela);
     matrixRows += `</Row>`;
   });
   return matrixRows;
+},
+
+/* Contexto:
+   Junta numa célula só o valor de CADA dia da janela que tiver conteúdo, no
+   formato "dd/mm: valor · dd/mm: valor" — a forma de as colunas de auditoria
+   do Excel deixarem de ser só da data de referência [2026-09-24, pedido do
+   usuário: "quero que o Excel traga os alertas desse Range de datas e não só
+   da data Referencia"; reverte a decisão de 2026-07-23, que tinha estreitado
+   essas colunas pra 1 data]. Genérica de propósito: recebe a função que sabe
+   ler o valor de um dia, então serve pras 5 colunas (Δ Rent, sequência,
+   issues, alertas do grid, comentário) sem repetir o laço. Usada por
+   buildAbaMatrizExcel(). Retorna string (vazia quando nenhum dia tem valor).
+
+   Pseudocódigo:
+     1. Para cada data da janela, pede o valor do dia.
+     2. Descarta os dias sem valor (a célula não vira uma lista de vazios).
+     3. Prefixa cada valor com o dia (dd/mm) e junta com " · ". */
+montarColunaPorDiaExcel(window_, valorDoDia){
+  return window_
+    .map(data=>{
+      const valor = valorDoDia(data);
+      return valor ? `${ControleCargas.fmtDM(data)}: ${valor}` : '';
+    })
+    .filter(Boolean)
+    .join(' · ');
 },
 
 // rótulos legíveis dos overlays da matriz (mesmo vocabulário da legenda,
@@ -225,9 +285,12 @@ OVERLAY_LABELS_EXCEL: {
    também... Rent, Atras, etc"). [REMOVIDO 2026-07-23, pedido do usuário] A
    coluna irmã "Alertas/Avisos" (issues do Mongo, outro vocabulário/fonte)
    saiu do relatório — não desejada no Excel. [REVISADO 2026-07-23, pedido
-   do usuário: só a data de referência, não a janela inteira]. Usada por
-   buildAbaMatrizExcel(). Retorna string (vazia quando a carteira não tem
-   overlay nessa data).
+   do usuário: só a data de referência, não a janela inteira; REVERTIDO
+   2026-09-24, pedido do usuário: "quero que o Excel traga os alertas desse
+   Range de datas e não só da data Referencia" — esta função continua sendo
+   POR DATA; quem varre a janela agora é montarColunaPorDiaExcel(), que a
+   chama uma vez por dia]. Usada por buildAbaMatrizExcel(). Retorna string
+   (vazia quando a carteira não tem overlay nessa data).
 
    Pseudocódigo:
      1. Acha a célula da data pedida (r.cells).

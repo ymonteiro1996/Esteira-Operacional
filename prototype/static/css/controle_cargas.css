@@ -753,6 +753,20 @@ td.col-cust, th.hdr-cust{
    selecionar"]. */
 .chip-dica{font-size:11px;color:var(--ink-faint);align-self:center;}
 
+/* Filtros GERAIS da toolbar (varrem a janela inteira, não uma data) —
+   [2026-09-24, pedido do usuário]. Canal visual próprio (contorno fúcsia,
+   a mesma cor do badge Pauta) pra não se confundir com os chips de empresa,
+   que ficam na mesma faixa e usam o verde do --accent quando ligados. */
+.filtro-geral-sep{
+  font-size:11px;color:var(--ink-faint);align-self:center;margin-left:10px;
+  text-transform:uppercase;letter-spacing:.04em;font-weight:700;
+}
+.chip-geral{border-color:var(--overlay-pauta);color:var(--overlay-pauta);}
+.chip-geral.on{
+  background:var(--overlay-pauta);color:var(--overlay-pauta-ink);
+  border-color:var(--overlay-pauta);
+}
+
 /* Rodapé de diagnóstico (diagnostico.js) — sempre visível [2026-09-22,
    decisão do usuário], discreto no estado normal e em faixa de alerta quando
    a pasta de dados NÃO é a compartilhada do time (o caso em que o colega não

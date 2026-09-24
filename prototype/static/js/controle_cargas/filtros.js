@@ -31,6 +31,15 @@ Object.assign(ControleCargas, {
 // [2026-09-24] Além das chaves fixas abaixo, cada coluna de dia não-Ref
 // ganha chave dinâmica "statusDia:YYYY-MM-DD" quando filtrada (criada no OK
 // do popover) — applyFilters() já percorre todas as chaves presentes.
+// [2026-09-24, pedido do usuário: "quero dois filtros Gerais, Selecionar
+// Todos Com Divergencia de Rentabilidade e selecionar Todos Pauta, posso
+// selecionar esses dois filtros juntos. Capturar todos no range de datas"]
+// filtrosGerais é o 1º filtro que NÃO olha uma data só: os do cabeçalho
+// (statusRef/statusDia:<data>) perguntam "como esta carteira está NESTE
+// dia?", e estes perguntam "esta carteira teve o alerta em QUALQUER dia da
+// janela?". Os dois SOMAM quando marcados juntos (união, não interseção —
+// ver linhaPassaNosFiltrosGerais): marcar os dois é pedir a lista de trabalho
+// do dia inteira, não o punhado que tem os dois alertas ao mesmo tempo.
 // [2026-09-11, relato do usuário: "às vezes fica em data antiga"]
 // sequenciaAtualizacao / sincronizacaoDataInicial são estado de CONCORRÊNCIA do
 // botão Atualizar (atualizar.js): a tela dispara /api/atualizar de 4 lugares
@@ -47,6 +56,7 @@ Object.assign(ControleCargas, {
 // fica no state só pra nunca existir mais de um timer de pé ao mesmo tempo.
 state: { view:'wallets', sort:'priority', sortDir:1, frozen:null, company:null,
               filtroValoresColuna: {responsavel:null, comentarioAtuacao:null, institution:null, loadModel:null, statusRef:null},
+              filtrosGerais: {divergencia:false, pauta:false},
               search:'', showBloco3:false, focusDate:null,
               sequenciaAtualizacao:0, sincronizacaoDataInicial:null,
               timerProgresso:null },
@@ -63,7 +73,8 @@ state: { view:'wallets', sort:'priority', sortDir:1, frozen:null, company:null,
    cascata" do AutoFilter do Excel). Retorna a lista filtrada (nova array).
 
    Pseudocódigo:
-     1. Para cada linha, descarta se a empresa selecionada não bate.
+     1. Para cada linha, descarta se a empresa selecionada não bate, ou se
+        ela não passa nos filtros gerais (linhaPassaNosFiltrosGerais).
      2. Pra cada coluna com filtro "estilo Excel" ativo
         (state.filtroValoresColuna — responsavel/comentarioAtuacao/
         institution/loadModel/statusRef), descarta a linha se NENHUMA das
@@ -77,6 +88,7 @@ state: { view:'wallets', sort:'priority', sortDir:1, frozen:null, company:null,
 applyFilters(rows, isWallets, skipColumn){
   return rows.filter(r=>{
     if(ControleCargas.state.company && r.company !== ControleCargas.state.company) return false;
+    if(!ControleCargas.linhaPassaNosFiltrosGerais(r)) return false;
     for(const coluna of Object.keys(ControleCargas.state.filtroValoresColuna)){
       if(coluna === skipColumn) continue;
       const permitidos = ControleCargas.state.filtroValoresColuna[coluna];
@@ -90,6 +102,75 @@ applyFilters(rows, isWallets, skipColumn){
     }
     return true;
   });
+},
+
+// Overlays da célula que cada filtro geral procura — mesmos nomes que
+// snapshot_builder.py escreve em cells[].ov e que a legenda mostra:
+// 'div'/'div_strong' são o badge "Rent" (respeitam os 2 campos de limiar da
+// toolbar) e 'pauta' é o badge fúcsia "Pauta" [2026-09-24, pedido do usuário].
+OVERLAYS_FILTRO_GERAL: {
+  divergencia: ['div', 'div_strong'],
+  pauta: ['pauta'],
+},
+
+// Rótulo de cada filtro geral no chip da toolbar (ordem de exibição).
+ROTULOS_FILTRO_GERAL: {
+  divergencia: 'Todos com Divergência de Rentabilidade',
+  pauta: 'Todos Pauta',
+},
+
+/* Contexto:
+   Diz se a linha tem algum dos `overlays` procurados em QUALQUER dia da
+   janela — é o que diferencia os filtros gerais dos filtros de cabeçalho,
+   que olham um dia só [2026-09-24, pedido do usuário: "Capturar todos no
+   range de datas"]. Usada por linhaPassaNosFiltrosGerais(). Serve igual pra
+   carteira e pra agrupamento (os dois têm `cells` com `ov`). Retorna bool.
+
+   Pseudocódigo:
+     1. Percorre as células da linha (a janela inteira, em ordem).
+     2. Basta uma célula com um dos overlays procurados pra devolver true. */
+linhaTemOverlayNaJanela(r, overlays){
+  return (r.cells || []).some(c=> (c.ov || []).some(o=> overlays.includes(o)));
+},
+
+/* Contexto:
+   Aplica os filtros gerais da toolbar (state.filtrosGerais) a 1 linha —
+   chamada por applyFilters() antes dos filtros de coluna. Retorna bool
+   (true = a linha continua na grade).
+
+   Os dois filtros SOMAM quando marcados juntos: a linha passa se tiver
+   divergência OU pauta em qualquer dia da janela [2026-09-24, pedido do
+   usuário: "posso selecionar esses dois filtros juntos"]. União, não
+   interseção — marcar os dois é montar a lista de trabalho do dia (tudo que
+   pede atenção), não isolar o punhado que tem os dois alertas juntos.
+
+   Pseudocódigo:
+     1. Nenhum filtro geral marcado -> passa (comportamento de sempre).
+     2. Marcado(s) -> passa se casar com PELO MENOS UM deles. */
+linhaPassaNosFiltrosGerais(r){
+  const marcados = Object.keys(ControleCargas.state.filtrosGerais)
+    .filter(chave=> ControleCargas.state.filtrosGerais[chave]);
+  if(!marcados.length) return true;
+  return marcados.some(chave=>
+    ControleCargas.linhaTemOverlayNaJanela(r, ControleCargas.OVERLAYS_FILTRO_GERAL[chave]));
+},
+
+/* Contexto:
+   Liga/desliga 1 filtro geral (clique no chip da toolbar) e redesenha a
+   grade. Chamada pelos handlers ligados em buildFilters(). Não retorna nada.
+
+   Pseudocódigo:
+     1. Inverte o estado do filtro pedido.
+     2. Descongela a ordem (a lista mudou de tamanho; manter a ordem
+        congelada mostraria linhas que o filtro acabou de tirar).
+     3. Sincroniza os chips e reconstrói a matriz da aba visível. */
+alternarFiltroGeral(chave){
+  ControleCargas.state.filtrosGerais[chave] = !ControleCargas.state.filtrosGerais[chave];
+  ControleCargas.state.frozen = null;
+  const badge = document.getElementById('freeze-badge');
+  if(badge) badge.style.display = 'none';
+  ControleCargas.refreshFilterUI();
+  ControleCargas.buildMatrix();
 },
 
 /* Contexto:
@@ -259,6 +340,15 @@ buildFilters(){
   if(!companies.length){
     html += '<span class="chip-dica">as empresas aparecem aqui depois do primeiro ↻ Atualizar</span>';
   }
+
+  // [2026-09-24, pedido do usuário] Filtros GERAIS — não são por empresa nem
+  // por dia: varrem a janela inteira (ver linhaPassaNosFiltrosGerais).
+  html += '<span class="filtro-geral-sep" title="Filtros que olham a janela inteira, não uma data só">Gerais:</span>';
+  Object.keys(ControleCargas.ROTULOS_FILTRO_GERAL).forEach(chave=>{
+    const ligado = ControleCargas.state.filtrosGerais[chave] ? ' on' : '';
+    html += `<span class="chip chip-geral${ligado}" data-geral="${chave}" title="Mostra as linhas com esse alerta em QUALQUER dia do range (${ControleCargas.SNAPSHOT.meta.window[0]} a ${ControleCargas.SNAPSHOT.meta.referenceDate}). Marcando os dois, a grade mostra quem tem um OU o outro.">${ControleCargas.esc(ControleCargas.ROTULOS_FILTRO_GERAL[chave])}</span>`;
+  });
+
   el.innerHTML = html;
 
   el.querySelectorAll('.chip[data-company]').forEach(chip=>{
@@ -267,6 +357,9 @@ buildFilters(){
       ControleCargas.state.frozen = null;
       ControleCargas.refreshFilterUI(); ControleCargas.buildMatrix();
     });
+  });
+  el.querySelectorAll('.chip[data-geral]').forEach(chip=>{
+    chip.addEventListener('click', ()=> ControleCargas.alternarFiltroGeral(chip.dataset.geral));
   });
 },
 
@@ -278,10 +371,15 @@ buildFilters(){
 
    Pseudocódigo:
      1. Para cada chip de empresa, liga "on" só no que corresponde ao filtro
-        corrente. */
+        corrente.
+     2. Para cada chip de filtro geral, liga "on" conforme state.filtrosGerais
+        [2026-09-24]. */
 refreshFilterUI(){
   document.querySelectorAll('.chip[data-company]').forEach(chip=>{
     chip.classList.toggle('on', (chip.dataset.company||null) === ControleCargas.state.company);
+  });
+  document.querySelectorAll('.chip[data-geral]').forEach(chip=>{
+    chip.classList.toggle('on', !!ControleCargas.state.filtrosGerais[chip.dataset.geral]);
   });
 },
 
