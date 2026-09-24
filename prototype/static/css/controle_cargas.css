@@ -9,6 +9,7 @@
   --border:#dadedb;
   --accent:#3d5c4e;
   --accent-ink:#eef4f0;
+  --accent-wash:rgba(61,92,78,.22);
   --focus:#6b7280;
 
   --state-p-bg:#dcfce7;   --state-p-fg:#15803d;
@@ -77,6 +78,7 @@
      "Comprada"; texto branco (4.8:1). */
   --overlay-pauta:#c026d3;
   --overlay-pauta-ink:#ffffff;
+  --overlay-pauta-wash:rgba(192,38,211,.22);
 
   /* [NOVO 2026-08-13, pedido do usuário: "se a carteira da lista for
      comprada por alguma carteira da lista... um contorno nele e na
@@ -89,7 +91,7 @@
      das que a compram). Cor escolhida por inspeção (Tailwind violet-600 /
      violet-400), NÃO passou pelo validate_palette.py da skill dataviz como
      os outros pares acima — revisitar se o time achar baixo contraste. */
-  --overlay-pauta:#c026d3; --overlay-pauta-ink:#ffffff; --overlay-comprada:#7c3aed;        /* violet-600 */
+  --overlay-pauta:#c026d3; --overlay-pauta-ink:#ffffff; --overlay-pauta-wash:rgba(192,38,211,.22); --overlay-comprada:#7c3aed;        /* violet-600 */
   --overlay-comprada-ink:#ffffff;
   --overlay-comprada-wash:rgba(124,58,237,.14);
 
@@ -100,7 +102,7 @@
   :root{
     --surface:#14171b; --surface-raised:#1b1f24; --surface-sunk:#0f1215;
     --ink:#e7e9e4; --ink-muted:#a1a89d; --ink-faint:#6b7268; --border:#2c322d;
-    --accent:#7fae95; --accent-ink:#0f1a14; --focus:#9ca3af;
+    --accent:#7fae95; --accent-ink:#0f1a14; --accent-wash:rgba(127,174,149,.32); --focus:#9ca3af;
     --state-p-bg:#0f2e1c;   --state-p-fg:#5fd894;
     /* rodada 7: fundo = só estágio também no dark — Unp âmbar-oliva escuro,
        Pro verde-petróleo. Validado com validate_palette.py (surface #14171b):
@@ -122,13 +124,13 @@
        17.8 (deutan) / normal 24.5; texto no badge 9.8:1 (leve) e 5.8:1
        (elevado). */
     --overlay-div:#facc15; --overlay-div-strong:#f87171; --overlay-div-ink:#451a03; --overlay-div-strong-ink:#450a0a; --overlay-seq:#f87171; --overlay-issue:#94a3b8;
-    --overlay-pauta:#e879f9; --overlay-pauta-ink:#3b0764; --overlay-comprada:#a78bfa; --overlay-comprada-ink:#2e1065; --overlay-comprada-wash:rgba(167,139,250,.16);
+    --overlay-pauta:#e879f9; --overlay-pauta-ink:#3b0764; --overlay-pauta-wash:rgba(232,121,249,.28); --overlay-comprada:#a78bfa; --overlay-comprada-ink:#2e1065; --overlay-comprada-wash:rgba(167,139,250,.16);
   }
 }
 :root[data-theme="dark"]{
   --surface:#14171b; --surface-raised:#1b1f24; --surface-sunk:#0f1215;
   --ink:#e7e9e4; --ink-muted:#a1a89d; --ink-faint:#6b7268; --border:#2c322d;
-  --accent:#7fae95; --accent-ink:#0f1a14; --focus:#9ca3af;
+  --accent:#7fae95; --accent-ink:#0f1a14; --accent-wash:rgba(127,174,149,.32); --focus:#9ca3af;
   --state-p-bg:#0f2e1c;   --state-p-fg:#5fd894;
   /* rodada 7: espelho exato do bloco @media dark acima — manter em sincronia. */
   --state-unp-bg:#6b4f0d;  --state-unp-fg:#fbd77e;
@@ -141,12 +143,12 @@
   --tier-att-bg:#3a2a06;  --tier-att-fg:#f0b642;
   /* rodada 6: espelho exato do bloco @media dark acima — manter em sincronia. */
   --overlay-div:#facc15; --overlay-div-strong:#f87171; --overlay-div-ink:#451a03; --overlay-div-strong-ink:#450a0a; --overlay-seq:#f87171; --overlay-issue:#94a3b8;
-  --overlay-pauta:#e879f9; --overlay-pauta-ink:#3b0764; --overlay-comprada:#a78bfa; --overlay-comprada-ink:#2e1065; --overlay-comprada-wash:rgba(167,139,250,.16);
+  --overlay-pauta:#e879f9; --overlay-pauta-ink:#3b0764; --overlay-pauta-wash:rgba(232,121,249,.28); --overlay-comprada:#a78bfa; --overlay-comprada-ink:#2e1065; --overlay-comprada-wash:rgba(167,139,250,.16);
 }
 :root[data-theme="light"]{
   --surface:#f6f7f5; --surface-raised:#ffffff; --surface-sunk:#eef0ec;
   --ink:#1c211d; --ink-muted:#5b635a; --ink-faint:#8a9187; --border:#dadedb;
-  --accent:#3d5c4e; --accent-ink:#eef4f0; --focus:#6b7280;
+  --accent:#3d5c4e; --accent-ink:#eef4f0; --accent-wash:rgba(61,92,78,.22); --focus:#6b7280;
   --state-p-bg:#dcfce7;   --state-p-fg:#15803d;
   /* rodada 7: espelho exato do :root claro acima — manter em sincronia. */
   --state-unp-bg:#fde68a;  --state-unp-fg:#78350f;
@@ -159,7 +161,7 @@
   --tier-att-bg:#fef3c7;  --tier-att-fg:#92400e;
   /* rodada 6: espelho exato do :root claro acima — manter em sincronia. */
   --overlay-div:#eab308; --overlay-div-strong:#dc2626; --overlay-div-ink:#451a03; --overlay-div-strong-ink:#ffffff; --overlay-seq:#991b1b; --overlay-issue:#475569;
-  --overlay-pauta:#c026d3; --overlay-pauta-ink:#ffffff; --overlay-comprada:#7c3aed; --overlay-comprada-ink:#ffffff; --overlay-comprada-wash:rgba(124,58,237,.14);
+  --overlay-pauta:#c026d3; --overlay-pauta-ink:#ffffff; --overlay-pauta-wash:rgba(192,38,211,.22); --overlay-comprada:#7c3aed; --overlay-comprada-ink:#ffffff; --overlay-comprada-wash:rgba(124,58,237,.14);
 }
 
 *{box-sizing:border-box;}
@@ -199,8 +201,18 @@ body{
   color:var(--ink-muted); background:var(--surface-sunk); font-weight:550; cursor:pointer;
   user-select:none;
 }
-.chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);}
+/* [2026-09-24, relato do usuário: "não consigo identificar quando estão
+   selecionados"] O ligado dependia SÓ de trocar fundo/letra — some num
+   relance, e some de vez pra quem não distingue bem as cores. Agora o estado
+   é redundante em 3 canais: marca (✓/☑, via ::before), peso da fonte e anel
+   em volta. */
+.chip.on{
+  background:var(--accent);color:var(--accent-ink);border-color:var(--accent);
+  font-weight:750;box-shadow:0 0 0 3px var(--accent-wash);
+}
+.chip[data-company].on::before{content:'✓ ';}
 .chip:hover{filter:brightness(0.97);}
+.chip:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
 
 .selectbox, .searchbox{
   font-size:12.5px; padding:6px 10px; border-radius:8px; border:1px solid var(--border);
@@ -754,17 +766,30 @@ td.col-cust, th.hdr-cust{
 .chip-dica{font-size:11px;color:var(--ink-faint);align-self:center;}
 
 /* Filtros GERAIS da toolbar (varrem a janela inteira, não uma data) —
-   [2026-09-24, pedido do usuário]. Canal visual próprio (contorno fúcsia,
-   a mesma cor do badge Pauta) pra não se confundir com os chips de empresa,
-   que ficam na mesma faixa e usam o verde do --accent quando ligados. */
-.filtro-geral-sep{
-  font-size:11px;color:var(--ink-faint);align-self:center;margin-left:10px;
-  text-transform:uppercase;letter-spacing:.04em;font-weight:700;
+   [2026-09-24, pedido do usuário]. Ficam num GRUPO próprio, com moldura e
+   rótulo, e vêm ANTES dos chips de empresa: com 20 empresas na faixa, eles
+   se perdiam no meio da lista [REVISADO no mesmo dia, relato do usuário:
+   "não achei que as seleções do filtro ficaram boas... melhore a cor de
+   seleção e layout"]. */
+.filtros-grupo{
+  display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:5px 10px 5px 8px;border:1px solid var(--border);border-radius:12px;
+  background:var(--surface-raised);
 }
-.chip-geral{border-color:var(--overlay-pauta);color:var(--overlay-pauta);}
+.filtros-grupo-rotulo{
+  font-size:10px;color:var(--ink-faint);text-transform:uppercase;
+  letter-spacing:.06em;font-weight:800;
+}
+/* Separador entre o grupo e os chips de empresa — barra fina, não texto. */
+.filtros-divisor{width:1px;align-self:stretch;min-height:22px;background:var(--border);margin:0 2px;}
+
+/* Toggle geral: DESLIGADO é neutro como qualquer chip (o ligado é que tem
+   que saltar); a caixinha ☐/☑ diz o estado antes mesmo da cor. */
+.chip-geral::before{content:'☐ ';font-size:13px;line-height:1;}
+.chip-geral.on::before{content:'☑ ';}
 .chip-geral.on{
   background:var(--overlay-pauta);color:var(--overlay-pauta-ink);
-  border-color:var(--overlay-pauta);
+  border-color:var(--overlay-pauta);box-shadow:0 0 0 3px var(--overlay-pauta-wash);
 }
 
 /* Rodapé de diagnóstico (diagnostico.js) — sempre visível [2026-09-22,

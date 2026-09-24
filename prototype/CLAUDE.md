@@ -1385,6 +1385,28 @@ Complementa a divisão de código da seção 4 — juntas atacam a causa dos con
     até 6 itens por carteira — é o que "trazer os alertas do range" significa.
     Se ficar verboso na prática, o passo seguinte seria agrupar por tipo
     ("Atraso forte: 27/07, 28/07, …") em vez de listar por dia.
+  - **[REVISADO no mesmo dia, relato do usuário: "não achei que as seleções do
+    filtro ficaram boas, não consigo identificar quando estão selecionados,
+    melhore a cor de seleção e layout"]** A 1ª versão errou em duas coisas.
+    (a) **Estado só por cor**: ligado era "fundo fúcsia", desligado era "letra
+    e contorno fúcsia" — a diferença some num relance e some de vez pra quem
+    não distingue bem as cores. Agora o estado é redundante em 3 canais:
+    caixinha **☐/☑** (`::before`, então `refreshFilterUI()` só troca a classe),
+    **peso da fonte** (750) e **anel** em volta (`box-shadow` com os tokens
+    novos `--overlay-pauta-wash`/`--accent-wash`, definidos nos 4 blocos de
+    tema); o DESLIGADO virou neutro como qualquer chip, pra o ligado ser o
+    único colorido. Os chips de empresa ganharam o mesmo tratamento, com **✓**
+    no selecionado. Todos os chips ganharam `role="button"` + `aria-pressed` +
+    `tabindex` (o estado também passou a existir pra leitor de tela) e
+    `:focus-visible`. (b) **Layout**: os 2 gerais ficavam DEPOIS de até 20
+    chips de empresa, quebrando pra 2ª linha e sumindo. Agora abrem a faixa,
+    num grupo com moldura e rótulo "ALERTAS NA JANELA", separado das empresas
+    por uma barra fina (`.filtros-grupo`/`.filtros-divisor`).
+    **Verificado** (Playwright, 10 verificações, tema claro E escuro): grupo é
+    o 1º filho de `#filters`; divisor presente; `::before` "☐ " no desligado e
+    "☑ " no ligado; `aria-pressed` acompanhando; ligado com anel e
+    `font-weight:750`; chip de empresa com "✓ "; no escuro o ligado continua
+    preenchido e com anel; zero erro de JS.
 
 ---
 

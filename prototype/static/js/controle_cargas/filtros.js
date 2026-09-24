@@ -321,7 +321,10 @@ getGroupingBlocks(){
    mesmo dia.
 
    Pseudocódigo:
-     1. Monta o HTML dos chips de empresa (a partir de meta.companies).
+     1. Monta o grupo "Alertas na janela" (os 2 filtros gerais) e, depois do
+        divisor, os chips de empresa (a partir de meta.companies) — os gerais
+        vêm primeiro pra não se perderem quando há 20 empresas na faixa
+        [2026-09-24].
      2. Snapshot ainda sem empresa nenhuma -> acrescenta uma dica explicando
         que os chips aparecem depois do 1º Atualizar [2026-09-22, relato do
         usuário: "não aparece mais a company para selecionar"]. Desde que a
@@ -333,21 +336,27 @@ getGroupingBlocks(){
 buildFilters(){
   const el = document.getElementById('filters');
   const companies = ControleCargas.SNAPSHOT.meta.companies;
-  let html = `<span class="chip ${ControleCargas.state.company===null?'on':''}" data-company="">Todas as empresas</span>`;
+
+  // [2026-09-24, pedido do usuário] Filtros GERAIS — não são por empresa nem
+  // por dia: varrem a janela inteira (ver linhaPassaNosFiltrosGerais). Vêm
+  // PRIMEIRO, num grupo com moldura: com 20 empresas na faixa, eles sumiam no
+  // meio da lista [REVISADO no mesmo dia: "melhore a cor de seleção e layout"].
+  const janela = `${ControleCargas.SNAPSHOT.meta.window[0]} a ${ControleCargas.SNAPSHOT.meta.referenceDate}`;
+  let html = '<span class="filtros-grupo"><span class="filtros-grupo-rotulo" title="Filtros que olham a janela inteira, não uma data só">Alertas na janela</span>';
+  Object.keys(ControleCargas.ROTULOS_FILTRO_GERAL).forEach(chave=>{
+    const ligado = ControleCargas.state.filtrosGerais[chave];
+    html += `<span class="chip chip-geral${ligado?' on':''}" data-geral="${chave}" role="button" aria-pressed="${ligado}" tabindex="0" title="Mostra as linhas com esse alerta em QUALQUER dia do range (${janela}). Marcando os dois, a grade mostra quem tem um OU o outro.">${ControleCargas.esc(ControleCargas.ROTULOS_FILTRO_GERAL[chave])}</span>`;
+  });
+  html += '</span><span class="filtros-divisor"></span>';
+
+  const empresaLigada = (valor)=> ControleCargas.state.company === valor;
+  html += `<span class="chip ${empresaLigada(null)?'on':''}" data-company="" role="button" aria-pressed="${empresaLigada(null)}" tabindex="0">Todas as empresas</span>`;
   companies.forEach(c=>{
-    html += `<span class="chip ${ControleCargas.state.company===c?'on':''}" data-company="${ControleCargas.escAttr(c)}">${ControleCargas.esc(c)}</span>`;
+    html += `<span class="chip ${empresaLigada(c)?'on':''}" data-company="${ControleCargas.escAttr(c)}" role="button" aria-pressed="${empresaLigada(c)}" tabindex="0">${ControleCargas.esc(c)}</span>`;
   });
   if(!companies.length){
     html += '<span class="chip-dica">as empresas aparecem aqui depois do primeiro ↻ Atualizar</span>';
   }
-
-  // [2026-09-24, pedido do usuário] Filtros GERAIS — não são por empresa nem
-  // por dia: varrem a janela inteira (ver linhaPassaNosFiltrosGerais).
-  html += '<span class="filtro-geral-sep" title="Filtros que olham a janela inteira, não uma data só">Gerais:</span>';
-  Object.keys(ControleCargas.ROTULOS_FILTRO_GERAL).forEach(chave=>{
-    const ligado = ControleCargas.state.filtrosGerais[chave] ? ' on' : '';
-    html += `<span class="chip chip-geral${ligado}" data-geral="${chave}" title="Mostra as linhas com esse alerta em QUALQUER dia do range (${ControleCargas.SNAPSHOT.meta.window[0]} a ${ControleCargas.SNAPSHOT.meta.referenceDate}). Marcando os dois, a grade mostra quem tem um OU o outro.">${ControleCargas.esc(ControleCargas.ROTULOS_FILTRO_GERAL[chave])}</span>`;
-  });
 
   el.innerHTML = html;
 
@@ -373,13 +382,19 @@ buildFilters(){
      1. Para cada chip de empresa, liga "on" só no que corresponde ao filtro
         corrente.
      2. Para cada chip de filtro geral, liga "on" conforme state.filtrosGerais
-        [2026-09-24]. */
+        [2026-09-24].
+     3. Mantém o aria-pressed de cada chip em dia com a classe — é o que um
+        leitor de tela anuncia, e o que sobra quando a cor não basta. */
 refreshFilterUI(){
   document.querySelectorAll('.chip[data-company]').forEach(chip=>{
-    chip.classList.toggle('on', (chip.dataset.company||null) === ControleCargas.state.company);
+    const ligado = (chip.dataset.company||null) === ControleCargas.state.company;
+    chip.classList.toggle('on', ligado);
+    chip.setAttribute('aria-pressed', ligado);
   });
   document.querySelectorAll('.chip[data-geral]').forEach(chip=>{
-    chip.classList.toggle('on', !!ControleCargas.state.filtrosGerais[chip.dataset.geral]);
+    const ligado = !!ControleCargas.state.filtrosGerais[chip.dataset.geral];
+    chip.classList.toggle('on', ligado);
+    chip.setAttribute('aria-pressed', ligado);
   });
 },
 
