@@ -60,6 +60,10 @@ e o CLAUDE.md atualizado). O que ESTE arquivo faz:
      static/js/controle_cargas/diagnostico.js) — antes disso a mesma
      informação só existia na 1ª linha do log de boot, num arquivo que
      ninguém abre.
+  4d) [2026-09-25, pedido do usuário: "o formato do excel não é XLSX"]
+     `POST /api/exportar-excel` — recebe da tela a matriz já filtrada/ordenada
+     e devolve um .xlsx DE VERDADE (openpyxl, mesma lib do relatório do CLI).
+     O gerador antigo vivia no navegador e produzia SpreadsheetML 2003 (.xls).
   5) `GET /api/janela-padrao` — [2026-07-23] devolve De/Até default (D-1 do
      hoje REAL do servidor + 5du antes) sem tocar o Mongo; usada pra sugerir
      os campos de data no 1º acesso sem depender da meta.referenceDate
@@ -118,11 +122,12 @@ import uuid
 import datetime as dt
 from pathlib import Path
 
-from flask import Flask, jsonify, request, send_from_directory, session
+from flask import Flask, jsonify, request, send_file, send_from_directory, session
 
 from beehus_api import BeehusAPIError, BeehusAuthError, bind_session_id, clear_token, set_token, token_status, verify_token
 from build_snapshot import montar_snapshot, escrever_snapshot_json
 import db
+from excel_matriz_xlsx import montar_workbook_matriz
 import progresso_atualizacao
 from pages.controle_demandas import bp as controle_demandas_bp
 from pages.anomalias import bp as anomalias_bp
@@ -1295,6 +1300,37 @@ def diagnostico_dados():
             "templateCarteiras": _descrever_arquivo_compartilhado(DATA_DIR / "TemplateCarteiras.xlsx"),
         },
     })
+
+
+@app.route("/api/exportar-excel", methods=["POST"])
+def exportar_excel():
+    """Contexto:
+    Devolve como .xlsx (Open XML) a matriz que está NA TELA — botão
+    "⬇ Baixar Excel" [2026-09-25, pedido do usuário: "o formato do excel não é
+    XLSX, pode corrigir e validar?"]. Até aqui o arquivo era montado no
+    próprio navegador em SpreadsheetML 2003 (XML com extensão .xls): o Excel
+    abria reclamando que o conteúdo não batia com a extensão, e quem lê xlsx
+    de verdade (pandas, Google Sheets) recusava.
+
+    Rota fina (CLAUDE.md §4): quem formata é excel_matriz_xlsx.py; quem decide
+    o CONTEÚDO (filtros, ordem, anotações ainda não salvas) continua sendo a
+    tela, que manda tudo pronto no corpo — o servidor não conhece o estado do
+    grid de cada navegador.
+
+    Pseudocódigo:
+      1. Lê o JSON; sem `janela` não há o que montar -> 400.
+      2. Monta o workbook em memória (montar_workbook_matriz).
+      3. Devolve como download, com o mimetype de xlsx e um nome com a data.
+    """
+    payload = request.get_json(force=True, silent=True) or {}
+    if not payload.get("janela"):
+        return jsonify({"error": "payload sem 'janela' — nada a exportar"}), 400
+
+    buffer = montar_workbook_matriz(payload)
+    nome = f"ControleCargas_relatorio_{_today_str()}.xlsx"
+    return send_file(
+        buffer, as_attachment=True, download_name=nome,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 
 @app.route("/api/empresas", methods=["GET"])

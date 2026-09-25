@@ -190,7 +190,8 @@ sortArrayBy(rows, mode){
 /* Contexto:
    Linhas prontas para desenhar na matriz: aplica os filtros e, se houver
    ordem congelada (state.frozen), respeita-a; senão ordena pelo critério
-   corrente. Chamada por buildMatrix() (aba Carteiras) e por buildExcelXml().
+   corrente. Chamada por buildMatrix() (aba Carteiras) e por
+   montarPayloadExcel() (exportar.js).
    Retorna a lista final (filtrada + ordenada).
 
    Pseudocódigo:

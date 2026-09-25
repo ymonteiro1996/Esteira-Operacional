@@ -1669,6 +1669,50 @@ Complementa a divisão de código da seção 4 — juntas atacam a causa dos con
     de Pauta e ausente nas demais. **Lição pro próximo gerador de arquivo:
     validar abrindo no programa de destino, não por substring.**
 
+- **[2026-09-25, pedido do usuário: "o formato do excel não é XLSX, pode
+  corrigir e validar?" + "quero na extensão mais nova e padrão"] O "⬇ BAIXAR
+  EXCEL" PASSOU A GERAR .XLSX DE VERDADE (Open XML), no servidor.** O gerador
+  vivia no navegador e produzia SpreadsheetML 2003 — XML com extensão `.xls`,
+  escolha de julho pra não depender de servidor nem de CDN. O Excel abre, mas
+  avisa que o conteúdo não bate com a extensão, e quem lê xlsx de verdade
+  (pandas, Google Sheets, visualizador de e-mail) recusa.
+  - **Módulo novo `excel_matriz_xlsx.py`** (openpyxl — a MESMA lib que
+    `excel_report.py` já usava, então zero dependência nova, CLAUDE.md §13) +
+    rota fina `POST /api/exportar-excel` (app.py).
+  - **Quem decide o conteúdo continua sendo a TELA**: `montarPayloadExcel()`
+    (exportar.js) manda as linhas já filtradas e ordenadas como estão no grid,
+    com as anotações (inclusive as ainda NÃO salvas), os alertas dia a dia e o
+    comentário vigente de cada dia. O servidor não conhece filtro, ordem nem
+    `PENDING_ANNOTATIONS` — mandar só ids quebraria o "o que você vê é o que
+    você baixa". O módulo novo só formata (cor, contorno, congelamento,
+    autofiltro); ele nem sabe o que é "pauta", recebe um booleano por célula.
+  - **Uma fonte de cor a menos**: a paleta agora vem só de
+    `excel_report._PREENCHIMENTO_XLSX`. Os dicts gêmeos `XML_BG`/`XML_FG` do
+    JS (que um comentário mantinha "em sincronia" com o Python) saíram junto
+    com `buildEstilosExcel`/`buildAbaMatrizExcel`/`buildWorkbookXml`/
+    `buildExcelXml`. `xmlEsc()`/`ssCell()` FICARAM: a aba "Carteiras Não
+    Cadastradas" ainda exporta em SpreadsheetML e os reaproveita.
+  - **Ainda em .xls**: o export da aba "Carteiras Não Cadastradas". Converter
+    é o mesmo desenho (payload + openpyxl), só não foi pedido.
+  - **Verificado** (Playwright clicando no botão de verdade, contra servidor
+    ISOLADO na 5052, 24 verificações): o arquivo baixado começa com `PK` e é
+    um pacote OOXML (`[Content_Types].xml` + `xl/workbook.xml`) — não mais XML
+    de texto; abre no openpyxl E no Excel via COM; aba "Matriz"; acentos e `&`
+    preservados (`ACME & Cia <Ltda>`); fundo por estágio (`FDE68A` no Unp,
+    `8AE6D2` no Pub); contorno `thick` `C026D3` SÓ na célula de Pauta
+    (confirmado também pelo COM: cor 13838016 em BGR); identidade tingida pelo
+    comentário vigente; colunas de auditoria com o range e o conteúdo dia a
+    dia; congelamento em E3 e autofiltro. **Volume**: 1000 carteiras × 7 dias
+    = payload de 1,25 MB, 2,1s do clique ao arquivo pronto, .xlsx de 80 KB (o
+    .xls antigo era vários MB de XML).
+  - **Pegadinha durante a implementação, registrada porque custou uma rodada**:
+    ao recortar os blocos antigos do exportar.js por marcadores de texto, um
+    `});` no meio de `new Blob([xml], {type:'...'});` virou o fim do recorte e
+    deixou meia função órfã no fim do arquivo — o JS parava de carregar
+    inteiro ("Unexpected token '}'") e o botão simplesmente não fazia nada.
+    Recorte por marcador de texto em JS precisa de âncora que não apareça
+    dentro de literais.
+
 ---
 
 ## Checklist rápido (antes de considerar uma tarefa pronta)
