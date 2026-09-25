@@ -1644,6 +1644,31 @@ Complementa a divisão de código da seção 4 — juntas atacam a causa dos con
     ~5 minutos de API; os pesos vieram dos timings já registrados no log do
     servidor, e a 1ª execução real é que vai popular o histórico.
 
+- **[2026-09-25, relato do usuário: "ao baixar excel, está vindo corrompido"]
+  O EXCEL EXPORTADO NÃO ABRIA — regressão do contorno das células Pauta
+  (24/09).** `BORDA_PAUTA_XML` emitia os 4 `<Border>` SOLTOS dentro do
+  `<Style>`; no SpreadsheetML eles têm que vir dentro de um `<Borders>`. O
+  Excel não ignora o trecho inválido: recusa o **arquivo inteiro** ("formato
+  inválido"), então a planilha parava de abrir — não era o contorno que se
+  perdia. Corrigido o invólucro e, de passagem, a ordem dos filhos de
+  `<Style>` (Alignment, Borders, Font, Interior — a documentada; a anterior
+  era Interior/Font/Alignment, que o Excel tolerava).
+  - **Guarda nova contra a mesma classe de erro**: a célula agora escolhe o
+    estilo por `XML_BG[estado] ? estado : 'notcov'`. Um estado sem cor
+    declarada (snapshot antigo aberto na tela, estado novo criado no backend
+    antes de ganhar cor no exportador) apontava pra um `ss:StyleID` inexistente
+    — e isso também derruba o arquivo inteiro, não só a célula.
+  - **Por que o teste de 24/09 não pegou**: ele conferia SUBSTRINGS no XML
+    (`ss:Weight="3"` presente, `st_wu_pauta` usado 2x). Presença não é
+    validade. Agora o teste gera o .xls pela própria tela e **abre no Excel
+    via COM** — e, de quebra, abre também uma cópia SEM o `<Borders>` pra
+    provar que é esse o motivo: a boa abre (aba "Matriz", cabeçalho e acentos
+    corretos), a sem invólucro devolve "O método Open da classe Workbooks
+    falhou". Confirmado também, lendo as células pelo COM, que o contorno
+    fúcsia (LineStyle contínuo, Weight xlThick, cor #C026D3) está nas células
+    de Pauta e ausente nas demais. **Lição pro próximo gerador de arquivo:
+    validar abrindo no programa de destino, não por substring.**
+
 ---
 
 ## Checklist rápido (antes de considerar uma tarefa pronta)

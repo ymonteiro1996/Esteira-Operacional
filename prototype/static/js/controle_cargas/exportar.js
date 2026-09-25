@@ -77,9 +77,14 @@ XML_FG_COMENTARIO: { red:'#B91C1C', yellow:'#92400E', green:'#15803D' },
 // diferente"]. Fúcsia #C026D3 = o mesmo --overlay-pauta da tela (modo claro),
 // Weight 3 = a linha mais grossa do SpreadsheetML, pra saltar no meio de uma
 // grade cheia de fundos pastel.
-BORDA_PAUTA_XML: ['Left','Top','Right','Bottom']
+// O <Borders> em volta NÃO é enfeite: [CORRIGIDO 2026-09-25, relato do
+// usuário "ao baixar excel, está vindo corrompido"] a 1ª versão emitia os 4
+// <Border> soltos dentro do <Style>, e o Excel recusa o arquivo INTEIRO
+// ("formato inválido") quando o XML foge do schema do SpreadsheetML — não
+// era só o contorno que se perdia, era a planilha que não abria.
+BORDA_PAUTA_XML: '<Borders>' + ['Left','Top','Right','Bottom']
   .map(lado=> `<Border ss:Position="${lado}" ss:LineStyle="Continuous" ss:Weight="3" ss:Color="#C026D3"/>`)
-  .join(''),
+  .join('') + '</Borders>',
 
 /* Contexto:
    Monta o bloco <Styles> do XML SpreadsheetML: 1 estilo por estado da
@@ -105,14 +110,18 @@ BORDA_PAUTA_XML: ['Left','Top','Right','Bottom']
 buildEstilosExcel(){
   let styles = `<Style ss:ID="hdr"><Font ss:Bold="1"/><Interior ss:Color="#EEF0EC" ss:Pattern="Solid"/></Style>`;
   Object.keys(ControleCargas.XML_BG).forEach(k=>{
-    const pintura = `<Interior ss:Color="${ControleCargas.XML_BG[k]}" ss:Pattern="Solid"/><Font ss:Color="${ControleCargas.XML_FG[k]}" ss:Bold="1"/><Alignment ss:Horizontal="Center"/>`;
-    styles += `<Style ss:ID="st_${k}">${pintura}</Style>`;
+    // Ordem dos filhos de <Style> conforme o schema do SpreadsheetML
+    // (Alignment, Borders, Font, Interior) — o Excel tolera outra ordem, mas
+    // não custa nada seguir a documentada [2026-09-25].
+    const alinhamento = '<Alignment ss:Horizontal="Center"/>';
+    const fonteEFundo = `<Font ss:Color="${ControleCargas.XML_FG[k]}" ss:Bold="1"/><Interior ss:Color="${ControleCargas.XML_BG[k]}" ss:Pattern="Solid"/>`;
+    styles += `<Style ss:ID="st_${k}">${alinhamento}${fonteEFundo}</Style>`;
     // [2026-09-24, pedido do usuário: "Celulas Pauta da matriz do Excel devem
     // ter um contorno diferente"] Mesma pintura de estágio + contorno fúcsia
     // grosso — o fundo continua dizendo o ESTÁGIO (Unp/Pro/Pub), o contorno
     // diz "é a pauta do dia", que é como a tela já separa os dois canais
     // (fundo = estágio, badge = alerta).
-    styles += `<Style ss:ID="st_${k}_pauta">${pintura}${ControleCargas.BORDA_PAUTA_XML}</Style>`;
+    styles += `<Style ss:ID="st_${k}_pauta">${alinhamento}${ControleCargas.BORDA_PAUTA_XML}${fonteEFundo}</Style>`;
   });
   Object.keys(ControleCargas.XML_BG_COMENTARIO).forEach(sev=>{
     styles += `<Style ss:ID="cmt_${sev}"><Interior ss:Color="${ControleCargas.XML_BG_COMENTARIO[sev]}" ss:Pattern="Solid"/><Font ss:Color="${ControleCargas.XML_FG_COMENTARIO[sev]}"/></Style>`;
@@ -215,12 +224,18 @@ buildAbaMatrizExcel(window_, walletRows){
     matrixRows += ControleCargas.ssCell(r.loadModel) + ControleCargas.ssCell(r.monthly?'Mensal':'Diário') + ControleCargas.ssCell(ControleCargas.montarDefasagemExcel(r));
     window_.forEach(d=>{
       const c = cmap[d];
-      const key = c ? c.s : 'notcov';
-      const letter = ControleCargas.STATES[key] ? ControleCargas.STATES[key].letter : '—';
+      const estado = c ? c.s : 'notcov';
+      const letter = ControleCargas.STATES[estado] ? ControleCargas.STATES[estado].letter : '—';
+      // [2026-09-25] Estado sem cor declarada (snapshot antigo em tela, estado
+      // novo criado no backend antes de ganhar cor aqui) apontaria pra um
+      // ss:StyleID que não existe no bloco <Styles> — e o Excel recusa o
+      // ARQUIVO INTEIRO por causa disso, não só a célula. Cai pra 'notcov',
+      // que sempre existe.
+      const chaveEstilo = ControleCargas.XML_BG[estado] ? estado : 'notcov';
       // [2026-09-24, pedido do usuário] Célula com badge Pauta usa a variante
       // de estilo com contorno fúcsia (buildEstilosExcel).
       const ehPauta = !!(c && (c.ov||[]).includes('pauta'));
-      matrixRows += ControleCargas.ssCell(letter, {style:'st_'+key+(ehPauta?'_pauta':'')});
+      matrixRows += ControleCargas.ssCell(letter, {style:'st_'+chaveEstilo+(ehPauta?'_pauta':'')});
     });
 
     const ttDoDia = (d)=> ((cmap[d] || {}).tt) || {};
