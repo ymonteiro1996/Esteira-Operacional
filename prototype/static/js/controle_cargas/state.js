@@ -33,17 +33,12 @@ STATES: {
   miss:  {cls:'s-r1', letter:'∅', name:'Sem Unprocessed — prazo vencido, agir'},
   wait:  {cls:'s-g1', letter:'Agd', name:'Aguardando — no prazo, normal'},
   notcov:{cls:'s-g2', letter:'—',   name:'Não cobrado neste dia'},
-  // [NOVO 2026-09-03, pedido do usuário: "tratar data inicial para não
-  // aparecer vazio, deixar a matriz em branco (sem nada) e na cor verde se
-  // a carteira não iniciou ou se já encerrou"] célula SEM LETRA de propósito
-  // (letter:'' — "sem nada" mesmo, diferente de notcov que mostra "—").
-  fp:    {cls:'s-fp', letter:'',    name:'Fora do período — carteira ainda não iniciou ou já saiu do agrupamento vinculado'},
 },
 
 // Ordem de prioridade (pior → melhor) usada tanto pro rank de ordenação
 // (compute_sort_key, snapshot_builder.py) quanto pra exibir a legenda
 // nessa mesma ordem [2026-07-24, pedido do usuário].
-PRIORITY_ORDER: ['miss', 'wait', 'notcov', 'wu', 'wc', 'cD', 'p', 'fp'],
+PRIORITY_ORDER: ['miss', 'wait', 'notcov', 'wu', 'wc', 'cD', 'p'],
 
 // atraso/atraso_strong NÃO viram classe na célula: o badge "Atraso" é um
 // <span> real (ControleCargas.atrasoBadgeHtml) porque ::before/::after já estão ocupados

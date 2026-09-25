@@ -902,9 +902,36 @@ Complementa a divisão de código da seção 4 — juntas atacam a causa dos con
     precisa ir para `main`) — commitar aqui e trazer/aplicar o mesmo diff em
     `main` (merge, cherry-pick, ou PR de `development` — a critério do time).
 
-- **[2026-09-03, pedido do usuário: "tratar data inicial para não aparecer
+- **[REMOVIDA POR COMPLETO em 2026-09-25 — pedido do usuário: "vamos tirar a
+  regra e legenda" (citando a linha da legenda do `fp`). O texto abaixo fica
+  como histórico do que existiu entre 03/09 e 25/09.]** Saíram: o gate
+  `wallet_fora_do_periodo()`, o mockkey `fp` nos 3 mapas de
+  `snapshot_builder.py`, a chamada dele em `compute_wallet_row()`, o `"fp"`
+  nos 6 checks de pendência (snapshot_builder/build_snapshot/paineis.js), a
+  cor no Excel (`excel_report.py` e `exportar.js`), `STATES.fp`/
+  `PRIORITY_ORDER` (state.js), a linha da legenda (matriz.js), os tokens
+  `--state-fp-*`/`.s-fp` (CSS, 4 blocos de tema) e — porque só serviam ao
+  gate — os campos `initialDateOnGrouping`/`finalDateOnGrouping` da CARTEIRA
+  e o helper `_membro_no_1o_agrupamento()` (registry.py). **Os pares
+  `initialDateOnGrouping`/`finalDateOnGrouping` do MEMBRO de agrupamento
+  continuam intactos** — são de 24/08 e seguem sendo a base de
+  `_membro_ativo_em()`/`_membro_intersecta_janela()` no roll-up de
+  Agrupamentos. **Consequência de negócio:** carteira que ainda não iniciou
+  (ou que já saiu do agrupamento) volta a ser calculada como qualquer outra —
+  ou seja, volta a aparecer ∅/Agd (vermelho/âmbar) nesses dias em vez de
+  célula em branco, exatamente como era antes de 03/09. **Verificado**
+  (10 checagens em Python + 7 na tela): o gate não existe mais, nenhum dos 3
+  mapas tem `fp`, `compute_wallet_row()` de uma carteira com
+  `startDateConsolidation` no futuro devolve `miss` em todos os dias da
+  janela (nenhum `fp`), carteira publicada continua `p`, o front não tem
+  `STATES.fp`/`PRIORITY_ORDER`/`XML_BG`/`.s-fp`, a legenda perdeu a linha e
+  manteve os outros 7 estados, zero erro de JS.
+
+  <details><summary>Histórico: como a regra funcionava (03/09 a 25/09)</summary>
+
+  **[2026-09-03, pedido do usuário: "tratar data inicial para não aparecer
   vazio, deixar a matriz em branco (sem nada) e na cor verde se a carteira
-  não iniciou ou se já encerrou"] REINTRODUZ (de forma mais estreita) o gate
+  não iniciou ou se já encerrou"] REINTRODUZIA (de forma mais estreita) o gate
   de onboarding que tinha saído de compute_cell() em 2026-07-25.** Daquela
   vez a decisão foi confiar 100% no processo operacional ("só cadastraremos
   no Template quando realmente iniciar"), mas na prática isso nem sempre se
@@ -974,6 +1001,8 @@ Complementa a divisão de código da seção 4 — juntas atacam a causa dos con
     controle_cargas/exportar.js` (`XML_BG`/`XML_FG`). Filtro "Status (Data
     Referência)"/legenda/chip de prioridade não precisaram de código novo —
     são 100% data-driven a partir de `STATES`/`PRIORITY_ORDER`.
+
+  </details>
 
 - **[2026-09-11, relato do usuário: "estou com problemas ao selecionar data e
   atualizar, às vezes fica em data antiga ou no dia 03/08"] MATRIZ PRESA NUMA

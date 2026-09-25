@@ -757,10 +757,7 @@ buildGroupingPanel(groupingId, focusDate){
   // membros rastreados (registry ∩ janela) — base para ofensoras/mini-matriz
   const trackedIds = (g.members||[]).filter(m=>m.tracked).map(m=>m.walletId);
   const memberRows = trackedIds.map(wid=> ControleCargas.SNAPSHOT.wallets.find(w=>w.walletId===wid)).filter(Boolean);
-  // [AMPLIADO 2026-09-03, pedido do usuário] 'fp' (carteira fora do próprio
-  // período) entra junto com 'p'/'cD' — não é uma ofensora, é uma carteira
-  // sem obrigação nesse dia.
-  const semPendencia = w=> ['p','cD','fp'].includes(ControleCargas.mockkeyReferencia(w));
+  const semPendencia = w=> ['p','cD'].includes(ControleCargas.mockkeyReferencia(w));
   const offenders = memberRows.filter(w=> !semPendencia(w))
     .sort((a,b)=>{ const ka=a.sortKey, kb=b.sortKey; for(let i=0;i<ka.length;i++){ if(ka[i]<kb[i]) return -1; if(ka[i]>kb[i]) return 1; } return 0; });
   const healthyMembers = memberRows.filter(semPendencia);

@@ -331,14 +331,10 @@ def _montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=Fals
     linhas_carteiras.sort(key=lambda r: r["sortKey"])
     linhas_carteiras_por_id = {r["walletId"]: r for r in linhas_carteiras}
 
-    # [AMPLIADO 2026-09-03, pedido do usuário] "fp" (carteira fora do próprio
-    # período — ainda não iniciou / já saiu do agrupamento vinculado) some
-    # do check de pendência junto com "p"/"cD" — não há issuesDetail a
-    # buscar pra ela, é economia de chamada além de correção de semântica.
-    ids_com_pendencia = [r["walletId"] for r in linhas_carteiras if r["cells"][-1]["s"] not in ("p", "cD", "fp")]
+    ids_com_pendencia = [r["walletId"] for r in linhas_carteiras if r["cells"][-1]["s"] not in ("p", "cD")]
     issues_detail_por_carteira = db.buscar_issues_detail(ids_com_pendencia, janela[0], janela[-1], timings)
     for r in linhas_carteiras:
-        if r["cells"][-1]["s"] not in ("p", "cD", "fp"):
+        if r["cells"][-1]["s"] not in ("p", "cD"):
             r["issuesDetail"] = issues_detail_por_carteira.get(r["walletId"], [])
 
     linhas_agrupamentos = compute_groupings_rows(

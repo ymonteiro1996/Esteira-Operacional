@@ -23,13 +23,11 @@ Object.assign(ControleCargas, {
 XML_BG: {
   p:'#8AE6D2', cD:'#8AE6D2', wu:'#FDE68A', wc:'#DCFCE7',
   miss:'#FEE2E2', wait:'#F3F4F6', notcov:'#F9FAFB',
-  fp:'#ECFDF5',  // [NOVO 2026-09-03] mesmo tom de excel_report.py/_PREENCHIMENTO_XLSX
 },
 
 XML_FG: {
   p:'#134E4A', cD:'#134E4A', wu:'#78350F', wc:'#15803D',
   miss:'#B91C1C', wait:'#9CA3AF', notcov:'#D1D5DB',
-  fp:'#6EE7B7',
 },
 
 /* Contexto:
