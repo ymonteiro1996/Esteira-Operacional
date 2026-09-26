@@ -8,6 +8,16 @@
    este modal ABRE AUTOMATICAMENTE sempre que o token está ausente/expirado/
    rejeitado. Parte do objeto único ControleCargas (ver state.js) — pasta
    static/js/controle_cargas/, 1 arquivo por funcionalidade (CLAUDE.md §4).
+
+   [2026-09-25, pedido do usuário: "quando estourar o token, já mostrar o pop
+   up de colar o token" — TRV-01/CC-06] (1) O modal abre também NA HORA em que
+   uma ação bate no token vencido: o servidor marca a resposta com
+   `X-Beehus-Token: expired` e o static/js/utils/beehus_token_guard.js chama
+   abrirModalTokenBeehus('expirado'). (2) O token ganhou um modal PRÓPRIO
+   (#modal-token-beehus, criado por JS — index.html/index_template.html
+   intocados): antes ele usava o modal genérico (paineis.js), então abrir o
+   token SUBSTITUÍA o painel de detalhe aberto. (3) Pela D12 do escopo, este
+   modal não fecha com clique no fundo — só pelo "Fechar" ou Esc.
 */
 Object.assign(ControleCargas, {
 /* Contexto:
@@ -68,12 +78,14 @@ atualizarBotaoTokenBeehus(){
    e sem retorno nenhum, não dava pra distinguir "não colou" de "colou
    errado". O aviso sobre `Bearer `/aspas é o par visível da limpeza que o
    backend faz (beehus_api/client.py::normalizar_token_colado). */
-abrirModalTokenBeehus(){
+abrirModalTokenBeehus(motivo){
+  const aviso = (motivo === 'expirado')
+    ? '<p class="modal-status-msg err">Seu token expirou, cole um novo.</p>' : '';
   const html = `
-    <h2>Token da API Beehus</h2>
+    <h2>Token da API Beehus</h2>${aviso}
     <p>Cole o token de hoje (válido por 1 dia — a Beehus renova todo dia). Ele fica
-    só na memória deste servidor (nunca sincroniza no OneDrive) e é perdido a cada
-    restart — é preciso colar de novo quando isso acontecer ou quando expirar.</p>
+    salvo neste computador, por navegador (arquivo local, nunca sincroniza no OneDrive),
+    e sobrevive a um restart do servidor até expirar — aí é preciso colar de novo.</p>
     <div style="display:flex;gap:6px;align-items:stretch;">
       <input type="password" id="input-beehus-token" style="flex:1;min-width:0;box-sizing:border-box;padding:8px;font-family:monospace;font-size:12.5px;"
         placeholder="eyJ...">
@@ -83,10 +95,14 @@ abrirModalTokenBeehus(){
     <p class="psub">Pode colar com o prefixo <code>Bearer</code> ou entre aspas, e mesmo
     quebrado em várias linhas — o app limpa antes de usar.</p>
     <p class="modal-status-msg" id="beehus-token-msg"></p>
-    <div style="margin-top:8px;">
+    <div style="margin-top:8px;display:flex;gap:8px;">
       <button class="btn" id="btn-salvar-beehus-token">Validar e salvar</button>
+      <button class="btn secondary" type="button" id="btn-fechar-beehus-token">Fechar</button>
     </div>`;
-  ControleCargas.openModal(html);
+  const fundo = ControleCargas.garantirModalTokenBeehus();
+  document.getElementById('modal-token-beehus-corpo').innerHTML = html;
+  fundo.classList.add('show');
+  document.getElementById('btn-fechar-beehus-token').addEventListener('click', ControleCargas.fecharModalTokenBeehus);
   const input = document.getElementById('input-beehus-token');
   document.getElementById('btn-salvar-beehus-token').addEventListener('click', ControleCargas.salvarTokenBeehus);
   document.getElementById('btn-ver-beehus-token').addEventListener('click', ()=>{
@@ -173,11 +189,64 @@ salvarTokenBeehus(){
       }
       msg.textContent = 'Token válido — salvo com sucesso.';
       msg.classList.add('ok');
-      ControleCargas.closeModal();
+      ControleCargas.fecharModalTokenBeehus();
+      // [TRV-01/D11] avisa "Token salvo. Repita a ação." — nada é repetido sozinho.
+      if(window.BeehusTokenGuard) BeehusTokenGuard.notificarTokenSalvo();
       ControleCargas.preencherSelectEmpresas();
       ControleCargas.convidarParaAtualizar();
     })
     .catch(()=>{ msg.textContent = 'Falha de rede ao salvar o token.'; msg.classList.add('err'); });
+},
+
+/* Contexto:
+   Cria 1x (e devolve) o modal PRÓPRIO do token, #modal-token-beehus — mesmo
+   visual do modal genérico (.modal-backdrop/.modal), por cima dele (z-index
+   maior) e sem fechar com clique no fundo (D12). Chamada por
+   abrirModalTokenBeehus(). Retorna o elemento de fundo.
+
+   Pseudocódigo:
+     1. Já existe -> devolve.
+     2. Senão cria fundo + caixa + corpo, anexa ao <body> e liga o Esc (só
+        fecha o token, não o painel de baixo). */
+garantirModalTokenBeehus(){
+  let fundo = document.getElementById('modal-token-beehus');
+  if(fundo) return fundo;
+  fundo = document.createElement('div');
+  fundo.className = 'modal-backdrop';
+  fundo.id = 'modal-token-beehus';
+  fundo.style.zIndex = '110';
+  fundo.innerHTML = '<div class="modal" style="max-width:560px"><div id="modal-token-beehus-corpo"></div></div>';
+  document.body.appendChild(fundo);
+  // Esc em fase de CAPTURA e parando ali: sem isso o Esc do modal genérico (paineis.js)
+  // fecharia junto o painel de detalhe que estiver aberto por baixo do token.
+  document.addEventListener('keydown', (e)=>{
+    if(e.key !== 'Escape' || !ControleCargas.modalTokenBeehusAberto()) return;
+    e.stopImmediatePropagation();
+    ControleCargas.fecharModalTokenBeehus();
+  }, true);
+  return fundo;
+},
+
+/* Contexto: fecha o modal de token (botão Fechar, Esc, sucesso ao salvar) e
+   liga a espera de 20 s do guard antes de reabrir sozinho. Não retorna nada.
+
+   Pseudocódigo:
+     1. Tira a classe .show do fundo.
+     2. Avisa o guard (anti-loop). */
+fecharModalTokenBeehus(){
+  const fundo = document.getElementById('modal-token-beehus');
+  if(fundo) fundo.classList.remove('show');
+  if(window.BeehusTokenGuard) BeehusTokenGuard.marcarFechado();
+},
+
+/* Contexto: o modal de token está aberto? Usado pelo guard (não reabrir) e
+   pelo Esc. Retorna boolean.
+
+   Pseudocódigo:
+     1. Existe e tem .show. */
+modalTokenBeehusAberto(){
+  const fundo = document.getElementById('modal-token-beehus');
+  return !!(fundo && fundo.classList.contains('show'));
 },
 
 /* Contexto: liga o clique do botão "🔑 Beehus API" da masthead ao modal —
@@ -186,7 +255,7 @@ salvarTokenBeehus(){
    Pseudocódigo:
      1. Clique no botão -> abrirModalTokenBeehus(). */
 wireTokenBeehus(){
-  document.getElementById('btn-beehus-token').addEventListener('click', ControleCargas.abrirModalTokenBeehus);
+  document.getElementById('btn-beehus-token').addEventListener('click', ()=> ControleCargas.abrirModalTokenBeehus());
 },
 });
 
@@ -196,3 +265,10 @@ wireTokenBeehus(){
 // ─────────────────────────────────────────────────────────────────────────
 ControleCargas.wireTokenBeehus();
 ControleCargas.verificarTokenBeehus();
+// [TRV-01] Resposta com X-Beehus-Token: expired (qualquer fetch) abre ESTE modal na hora.
+if(window.BeehusTokenGuard){
+  BeehusTokenGuard.registrarModal({
+    abrir: ()=> ControleCargas.abrirModalTokenBeehus('expirado'),
+    estaAberto: ()=> ControleCargas.modalTokenBeehusAberto(),
+  });
+}

@@ -1662,9 +1662,28 @@ idênticos) roda em fase de captura e cancela só esse clique: começou em `inpu
 do mousedown. Vale para todos os modais do app sem mexer em cada um — `#modal-backdrop` da grade e os
 overlays próprios de Demandas/Anomalias. Clique simples no fundo e Esc continuam fechando. Mesmo
 arquivo do conciliacao e do beehus-swat. Testado com Playwright num servidor isolado (5150, DATA_DIR no
-scratchpad): com a guarda desligada o modal da grade volta a fechar no arrasto. **Pendente (D12, junto
-do TRV-01):** o token usa hoje este mesmo modal genérico; ele vai ganhar um modal próprio que não
-fecha com clique no fundo.
+scratchpad): com a guarda desligada o modal da grade volta a fechar no arrasto. **D12 (feito junto
+do TRV-01, abaixo):** o token ganhou modal próprio que não fecha com clique no fundo.
+
+**[2026-09-25, pedido do usuário: "quando estourar o token, já mostrar o pop up de colar o token" —
+TRV-01/CC-06]** Antes o modal de token só abria sozinho no carregamento da página; um token que
+vencia no meio do uso virava só "Erro ao atualizar".
+- **Servidor** — `utils/token_expirado.py` (instalado no `app.py`): as rotas que consultam a API
+  Beehus (`/api/atualizar`, `/api/carteiras-nao-cadastradas`, `/api/empresas` — lista
+  `ROTAS_QUE_USAM_BEEHUS`; **rota nova que use a API entra ali**) saem com
+  `X-Beehus-Token: expired` enquanto o token DA SESSÃO estiver ausente/vencido/rejeitado. As rotas
+  locais (Demandas, Anomalias, comentários, anotações, progresso, configs) nunca são marcadas — senão
+  quem só usa o Kanban sem token veria o pop-up a cada ação. Os 401 amigáveis ganharam
+  `error_code: "BEEHUS_TOKEN_EXPIRED"`; há `errorhandler(BeehusAuthError)` de reserva. O cliente deixou
+  de tratar 403 como token rejeitado (medido: token inválido/ausente = 401).
+- **Tela** — `static/js/utils/beehus_token_guard.js` (mesmo arquivo do conciliacao/swat, 1 `<script>`
+  novo nos dois HTMLs, idênticos) lê o cabeçalho em qualquer fetch e chama
+  `abrirModalTokenBeehus('expirado')`. O token tem **modal próprio** (`#modal-token-beehus`, criado por
+  JS em `beehus_token.js`, z-index acima do genérico): não substitui mais o painel de detalhe aberto,
+  não fecha com clique no fundo (D12), Esc fecha só ele. Abre com o campo vazio e "Seu token expirou,
+  cole um novo."; não reabre nos 20 s depois de fechado; salvar mostra "Token salvo. Repita a ação."
+  sem repetir nada (D11). Texto corrigido: o token fica salvo por navegador e sobrevive a restart.
+- Verificado com Playwright em servidor isolado (15 checks, só leitura no Beehus).
 
 ---
 

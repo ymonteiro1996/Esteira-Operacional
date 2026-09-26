@@ -231,7 +231,8 @@ def listar_carteiras_nao_cadastradas():
         return jsonify(montar_resposta_carteiras_nao_cadastradas(dt.date.today().isoformat()))
     except BeehusAuthError:
         return jsonify({"error": "Token da API Beehus ausente ou expirado — cole um token novo no "
-                                 "botão \"🔑 Beehus API\" e clique em Atualizar lista."}), 401
+                                 "botão \"🔑 Beehus API\" e clique em Atualizar lista.",
+                        "error_code": "BEEHUS_TOKEN_EXPIRED"}), 401
     except PermissionError:
         return jsonify({"error": "Não consegui ler o TemplateCarteiras.xlsx — feche o arquivo no Excel "
                                  "(ou espere o OneDrive terminar de sincronizar) e tente de novo."}), 409

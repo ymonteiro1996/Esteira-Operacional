@@ -502,6 +502,11 @@ app.register_blueprint(anomalias_bp)
 # [2026-09-24] Aba "Carteiras Não Cadastradas" (pages/carteiras_nao_cadastradas.py)
 # — mesmo mecanismo aditivo: só expõe GET /api/carteiras-nao-cadastradas.
 app.register_blueprint(carteiras_nao_cadastradas_bp)
+# [2026-09-25, pedido do usuário: "quando estourar o token, já mostrar o pop up de colar o token"]
+# TRV-01: as rotas que usam a API Beehus avisam (cabeçalho X-Beehus-Token) quando o token desta
+# sessão venceu — o front (beehus_token_guard.js) abre o modal de token na hora.
+from utils import token_expirado  # noqa: E402
+token_expirado.instalar(app)
 
 
 def _carregar_ou_criar_secret_key():
@@ -833,7 +838,7 @@ def beehus_token_set():
     Pseudocódigo:
       1. Lê `token` do body JSON; vazio -> 400.
       2. set_token() (guarda em memória + persiste em ~/.swat/beehus.token).
-      3. verify_token() — 401/403 -> 401 com mensagem clara; qualquer outro
+      3. verify_token() — 401 -> 401 com mensagem clara; qualquer outro
          erro de rede/API -> aviso "soft" (o token pode estar certo, a API
          só não respondeu agora) em vez de bloquear o salvamento.
     """
@@ -846,7 +851,7 @@ def beehus_token_set():
         verify_token()
     except BeehusAuthError as exc:
         return jsonify({
-            "error": "Token rejeitado pela API (401/403). Confira se copiou o token de hoje por completo.",
+            "error": "Token rejeitado pela API (401). Confira se copiou o token de hoje por completo.",
             "upstream_status": exc.status,
         }), 401
     except BeehusAPIError as exc:
@@ -1353,7 +1358,8 @@ def listar_empresas():
     try:
         return jsonify({"empresas": db.listar_empresas()})
     except BeehusAuthError as exc:
-        return jsonify({"error": _mensagem_amigavel_erro_atualizacao(exc)}), 401
+        # [TRV-01] error_code estável p/ o front reconhecer token vencido sem depender do texto.
+        return jsonify({"error": _mensagem_amigavel_erro_atualizacao(exc), "error_code": "BEEHUS_TOKEN_EXPIRED"}), 401
     except Exception as exc:  # pragma: no cover - defensivo, nunca 500 cru pro front
         return jsonify({"error": _mensagem_amigavel_erro_atualizacao(exc)}), 500
 
@@ -1437,7 +1443,8 @@ def atualizar_snapshot():
                                     limiar_divergencia_pct=limiar_pct, limiar_divergencia_reais=limiar_reais,
                                     company_id=company_id or None)
     except BeehusAuthError as exc:
-        return jsonify({"error": _mensagem_amigavel_erro_atualizacao(exc)}), 401
+        # [TRV-01] error_code estável p/ o front reconhecer token vencido sem depender do texto.
+        return jsonify({"error": _mensagem_amigavel_erro_atualizacao(exc), "error_code": "BEEHUS_TOKEN_EXPIRED"}), 401
     except Exception as exc:  # pragma: no cover - defensivo, nunca 500 cru pro front
         return jsonify({"error": _mensagem_amigavel_erro_atualizacao(exc)}), 500
 

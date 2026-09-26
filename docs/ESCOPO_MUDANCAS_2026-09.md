@@ -53,7 +53,7 @@ A ordem prioriza o que pode gerar **dado errado no Beehus**. Depois vêm o token
 | 1 | TRV-02 | todos | Modal fecha ao arrastar a seleção de texto (transação, token e outros) | P | — | feito no CC (guarda nos 2 HTMLs idênticos; Playwright em servidor isolado, com e sem a guarda). D12 do token fica p/ o TRV-01 (modal próprio) |
 | 1 | CC-04 | ControleCargas | Instituição "XP" aparece como "P" na matriz | P | — | feito — causa confirmada no DOM (Company 60px < 96px fixo); `left` da Carteira agora medido. Playwright: só Blue3 mostra "XP"; todas as empresas rolando, nada se cobre; Agrupamentos idem |
 | 1 | SWAT-04 | swat | Groupings não aparecem | P–M | reprodução do usuário | pendente |
-| 2 | TRV-01 | todos | Token expirado abre o pop-up de colar token na hora | M | PREP | pendente |
+| 2 | TRV-01 | todos | Token expirado abre o pop-up de colar token na hora | M | PREP | feito no CC (= CC-06; branch `onda-2/escopo-2026-09`; modal próprio do token + D12; só as 3 rotas do Beehus marcam; 15 checks Playwright) |
 | 2 | TRV-03 | swat, conciliacao | Campo token começa vazio | P | TRV-02 | pendente |
 | 3 | SWAT-07 | swat | Lote do Identificar Transações: 500 → 250 | P | — | pendente |
 | 3 | SWAT-08 | swat | Faixa de datas vem preenchida (D-7 a D-1) nos 5 executores | P | — | pendente |
