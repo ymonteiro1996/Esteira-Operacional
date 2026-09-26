@@ -1239,6 +1239,18 @@ Critério de pronto de cada fase: página funcional com dados de produção, sem
 
 ## Simbologia da Matriz de Status
 
+> **[2026-09-25, pedido do usuário: "células de Pauta com contorno azul; se não houver posição
+> processada no dia anterior, manter o anel vermelho" — CC-05]** A célula com badge **Pauta** ganhou
+> **anel azul** (`.ov-pauta`, token `--overlay-pauta-ring` — sky-600 `#0284c7` no claro, sky-400
+> `#38bdf8` no escuro; diferente do azul de seleção, que é `outline`). **Vermelho na Pauta** (overlay
+> `seq`) quando o dia útil anterior não tem posição processada — MESMO que o dia da Pauta ainda não
+> esteja processado (`pauta_com_d1_sem_processada`, snapshot_builder.py; decisão do usuário, muda a
+> regra para células de Pauta). Nas demais células o `seq` segue igual (processada sem D-1). A
+> `.ov-pauta` é declarada antes da `.ov-seq`: com as duas classes, o vermelho vence. O badge fúcsia
+> continua (D9). No Excel o contorno da Pauta passou de fúcsia a **azul `0284C7`**, e **vermelho
+> `991B1B`** com o D-1 sem processada (`pautaSemD1` no payload de exportar.js). Verificado: regra no
+> `compute_wallet_row` (4 casos) e na tela/Excel via Playwright, nos 2 temas.
+
 > Estudo feito em 2026-07-17 seguindo a metodologia da skill `dataviz` (paleta de status reservada + regra "cor nunca sozinha") e inspecionando os grids maduros já existentes (`Relatorios/db.py::cell_cls` e `Controle de cargas/pages/controlpanel.py::_cell_cls/_extra_cell` + tooltip flutuante `#reg-tooltip` do `controlpanel.html`). Nada de lógica foi copiado — só as convenções visuais que a equipe já lê sem treinamento (pastel-100 de fundo + texto -700, badges de contagem, tooltip escuro flutuante).
 
 ### Princípio central: fundo = estágio, badges = alertas **[REVISADO na rodada 7, 2026-07-18]**

@@ -575,6 +575,26 @@ def wallet_sequencia_quebrada(wallet, data, doc_pro, calendario, datas_processad
     return onboarded_anterior and data_anterior not in datas_processadas
 
 
+def pauta_com_d1_sem_processada(wallet, data, calendario, datas_processadas):
+    """Contexto:
+    [2026-09-25, pedido do usuário: células de Pauta com contorno azul; "se não houver posição
+    processada no dia anterior, manter o anel vermelho" — CC-05] Numa célula de PAUTA, o anel
+    vermelho vale sempre que o dia útil anterior (D-1) não tem posição processada — MESMO que o
+    próprio dia da Pauta ainda não esteja processado (diferente do gate de sequência comum,
+    `wallet_sequencia_quebrada`, que só olha dias que JÁ têm processada). Chamada por
+    compute_wallet_row() só quando a célula leva o badge 'pauta'. Retorna bool.
+
+    Pseudocódigo:
+      1. Acha o dia útil anterior.
+      2. Carteira já onboarded nele (ou sem data de onboarding) e ele NÃO está entre as datas
+         processadas -> True.
+    """
+    data_anterior = calendario.deslocar(data, -1)
+    onboarded_anterior = (not wallet["startDateConsolidation"]) or \
+        (data_anterior >= wallet["startDateConsolidation"])
+    return onboarded_anterior and data_anterior not in datas_processadas
+
+
 def montar_horarios_celula(doc_unp, doc_pro, doc_nav):
     """Contexto:
     Formata os horários BRT (Unprocessed/Processada/reprocesso/Publicada) de
@@ -805,6 +825,12 @@ def compute_wallet_row(wallet, janela, calendario, data_hoje, unp_map, pro_map, 
         tipos_de_issue = issues_map.get((wallet_id, data))
         overlays, info_divergencia, texto_issues = compute_overlays(
             doc_nav, tipos_de_issue, sequencia_quebrada, estado, atraso_du)
+        # [2026-09-25, CC-05] Pauta com D-1 sem processada leva o anel vermelho ('seq'), mesmo
+        # sem processada no próprio dia; sem isso a Pauta fica só com o anel azul (front).
+        if "pauta" in overlays and "seq" not in overlays and \
+                pauta_com_d1_sem_processada(wallet, data, calendario, datas_processadas):
+            overlays.append("seq")
+            sequencia_quebrada = True
 
         mockkey = STATE_TO_MOCKKEY.get((estado, sigla)) or STATE_TO_MOCKKEY.get((estado, None))
 

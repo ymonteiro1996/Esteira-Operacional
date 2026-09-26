@@ -187,7 +187,9 @@ montarPayloadExcel(){
         const estado = c ? c.s : 'notcov';
         const st = ControleCargas.STATES[estado];
         return { letra: st ? st.letter : '—', estado,
-                 pauta: !!(c && (c.ov||[]).includes('pauta')) };
+                 pauta: !!(c && (c.ov||[]).includes('pauta')),
+                 // [CC-05] Pauta com D-1 sem processada -> contorno vermelho no Excel.
+                 pautaSemD1: !!(c && (c.ov||[]).includes('pauta') && (c.ov||[]).includes('seq')) };
       }),
       responsavel: anotacao.responsavel,
       comentarioAtuacao: anotacao.comentarioAtuacao,

@@ -44,7 +44,9 @@ PRIORITY_ORDER: ['miss', 'wait', 'notcov', 'wu', 'wc', 'cD', 'p'],
 // <span> real (ControleCargas.atrasoBadgeHtml) porque ::before/::after já estão ocupados
 // (triângulo de issues / badge Rent) e os badges precisam coexistir.
 OV_CLASS: {div:'ov-dot', div_strong:'ov-div_strong', seq:'ov-seq', issue:'ov-issue',
-                  atraso:'', atraso_strong:'', pauta:''},
+                  // [2026-09-25, CC-05] Pauta ganha anel azul (.ov-pauta); o vermelho do 'seq'
+                  // (D-1 sem processada) vence por vir depois no CSS.
+                  atraso:'', atraso_strong:'', pauta:'ov-pauta'},
 
 /* Contexto:
    Escapa texto para inserção segura em HTML (evita XSS/quebra de marcação

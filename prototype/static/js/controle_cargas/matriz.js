@@ -692,7 +692,9 @@ buildLegend(){
   overlayGroup += `<div class="legend-item"><span class="legend-swatch s-g1" style="position:relative;"><span class="atraso-badge pauta">Pauta</span></span><span>Badge <b>Pauta</b> fúcsia (inf. esq.) — hoje é o dia da Defasagem: carteira na esteira do dia, ainda não publicada (filtro "Pauta do dia" no ▾ das datas)</span></div>`;
   overlayGroup += `<div class="legend-item"><span class="legend-swatch s-g1 ov-dot" style="color:transparent">•</span><span>Badge <b>Rent</b> amarelo (sup. dir.) — divergência Rent Contribuição × Rent NAV leve, &gt;2bp (0,02%) <b>e</b> impacto ≥ R$800</span></div>`;
   overlayGroup += `<div class="legend-item"><span class="legend-swatch s-g1 ov-div_strong" style="color:transparent">•</span><span>Badge <b>Rent</b> vermelho — divergência elevada, &gt;5bp (idem, impacto ≥ R$800)</span></div>`;
-  overlayGroup += `<div class="legend-item"><span class="legend-swatch s-g1 ov-seq" style="color:transparent">•</span><span>Anel vermelho (borda) — fora de sequência: processada sem D-1 processada</span></div>`;
+  // [2026-09-25, CC-05] anel azul da Pauta + vermelho também na Pauta com D-1 sem processada.
+  overlayGroup += `<div class="legend-item"><span class="legend-swatch s-g1 ov-pauta" style="color:transparent">•</span><span>Anel azul (borda) — célula de <b>Pauta</b> com o D-1 processado</span></div>`;
+  overlayGroup += `<div class="legend-item"><span class="legend-swatch s-g1 ov-seq" style="color:transparent">•</span><span>Anel vermelho (borda) — fora de sequência: processada sem D-1 processada; na <b>Pauta</b>, D-1 sem processada (mesmo com o dia ainda não processado)</span></div>`;
   overlayGroup += `<div class="legend-item"><span class="legend-swatch s-g1 ov-issue" style="color:transparent">•</span><span>Triângulo (sup. esq.) — issues pendentes na carteira-dia</span></div>`;
   // balão — comentário humano vigente; NUNCA substitui a cor calculada
   // (PLANNING §Sistema de Comentários — "Aparência na célula").

@@ -35,9 +35,11 @@ from openpyxl.utils import get_column_letter
 
 from excel_report import _PREENCHIMENTO_XLSX
 
-# Contorno das células com badge "Pauta do dia" — mesmo fúcsia do badge na
-# tela (--overlay-pauta) [2026-09-24, pedido do usuário].
-COR_CONTORNO_PAUTA = "C026D3"
+# Contorno das células com badge "Pauta do dia" [2026-09-24, pedido do usuário] — [REVISADO
+# 2026-09-25, CC-05] azul, o mesmo anel da tela (--overlay-pauta-ring); vermelho (--overlay-seq)
+# quando o D-1 da Pauta não tem posição processada.
+COR_CONTORNO_PAUTA = "0284C7"
+COR_CONTORNO_PAUTA_SEM_D1 = "991B1B"
 
 # Colunas de identidade, na ordem em que aparecem (as 4 primeiras ficam
 # congeladas com o cabeçalho).
@@ -58,17 +60,17 @@ _LARGURA_DIA = 7
 _LARGURA_AUDITORIA = 42
 
 
-def _borda_pauta():
+def _borda_pauta(cor=COR_CONTORNO_PAUTA):
     """Contexto:
-    Borda fúcsia grossa dos 4 lados, usada nas células com badge Pauta.
-    Chamada 1x por escrita (o objeto é reaproveitado em todas as células).
-    Retorna um `Border` do openpyxl.
+    Borda grossa dos 4 lados das células com badge Pauta — azul, ou vermelha quando o D-1 não
+    tem processada (CC-05). Chamada 2x por escrita (uma por cor; o objeto é reaproveitado em todas
+    as células). Retorna um `Border` do openpyxl.
 
     Pseudocódigo:
-      1. Monta um lado "grosso" na cor da pauta.
+      1. Monta um lado "grosso" na cor pedida.
       2. Aplica o mesmo lado nas 4 direções.
     """
-    lado = Side(style="thick", color=COR_CONTORNO_PAUTA)
+    lado = Side(style="thick", color=cor)
     return Border(left=lado, right=lado, top=lado, bottom=lado)
 
 
@@ -79,7 +81,7 @@ def _escrever_cabecalho(aba, payload):
     a lista de títulos escritos (quem chama usa pra largura/autofiltro).
 
     Pseudocódigo:
-      1. Linha 1: quando foi gerado + o que significa o contorno fúcsia.
+      1. Linha 1: quando foi gerado + o que significam os contornos azul/vermelho.
       2. Linha 2: identidade + 1 coluna por dia da janela + as colunas de
          auditoria, que cobrem a janela inteira (rótulo com o range).
       3. Negrito e fundo cinza no cabeçalho.
@@ -89,7 +91,8 @@ def _escrever_cabecalho(aba, payload):
     referencia = payload.get("referenceDate") or ""
 
     aba.append([f"Relatório gerado em: {payload.get('geradoEm', '')} — células com contorno "
-                f"fúcsia = Pauta do dia (dia exato da Defasagem); as colunas de alerta cobrem "
+                f"azul = Pauta do dia (dia exato da Defasagem), vermelho = Pauta com o D-1 sem "
+                f"posição processada; as colunas de alerta cobrem "
                 f"toda a janela, dia a dia"])
 
     titulos = (COLUNAS_IDENTIDADE + list(janela) + [
@@ -119,7 +122,7 @@ def _escrever_linha(aba, numero_linha, linha, janela, borda_pauta):
       1. Identidade; nas 4 primeiras colunas, aplica a cor do comentário
          vigente quando a tela mandou uma severidade.
       2. 1 célula por dia: sigla no centro, fundo/letra do estágio e, quando
-         o dia é pauta, o contorno fúcsia.
+         o dia é pauta, o contorno azul (vermelho se o D-1 não tem processada).
       3. As 7 colunas de auditoria, como texto.
     """
     valores_identidade = [linha.get(c, "") for c in
@@ -146,7 +149,7 @@ def _escrever_linha(aba, numero_linha, linha, janela, borda_pauta):
         celula.fill = PatternFill("solid", fgColor=fundo)
         celula.font = Font(color=letra, bold=True)
         if dia.get("pauta"):
-            celula.border = borda_pauta
+            celula.border = borda_pauta[1] if dia.get("pautaSemD1") else borda_pauta[0]
 
     primeira_coluna_auditoria = primeira_coluna_dia + len(janela)
     for indice, chave in enumerate(("responsavel", "comentarioAtuacao", "divergencia",
@@ -199,7 +202,7 @@ def montar_workbook_matriz(payload):
     aba.title = "Matriz"
 
     titulos = _escrever_cabecalho(aba, payload)
-    borda_pauta = _borda_pauta()
+    borda_pauta = (_borda_pauta(COR_CONTORNO_PAUTA), _borda_pauta(COR_CONTORNO_PAUTA_SEM_D1))
     for numero, linha in enumerate(payload.get("linhas") or [], start=3):
         _escrever_linha(aba, numero, linha, payload["janela"], borda_pauta)
 
