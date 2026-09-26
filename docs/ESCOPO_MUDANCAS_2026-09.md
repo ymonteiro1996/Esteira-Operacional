@@ -47,10 +47,10 @@ A ordem prioriza o que pode gerar **dado errado no Beehus**. Depois vêm o token
 
 | Onda | ID | Projeto | Item | Esforço | Depende de | Status |
 |---|---|---|---|---|---|---|
-| 0 | PREP | todos | Preparação: branch, commit do que está pendente, conferir host da API | P | — | pendente |
+| 0 | PREP | todos | Preparação: branch, commit do que está pendente, conferir host da API | P | — | feito (CC: branch `onda-1/escopo-2026-09`; só CRLF pendente) |
 | 1 | SWAT-05 | swat | Publicação publica acima da divergência: checar por data e por carteira no servidor | M | — | pendente |
 | 1 | CONC-01 | conciliacao | Colar valor na transação perde o decimal (manda valor errado ao Beehus) | M | — | pendente |
-| 1 | TRV-02 | todos | Modal fecha ao arrastar a seleção de texto (transação, token e outros) | P | — | pendente |
+| 1 | TRV-02 | todos | Modal fecha ao arrastar a seleção de texto (transação, token e outros) | P | — | feito no CC (guarda nos 2 HTMLs idênticos; Playwright em servidor isolado, com e sem a guarda). D12 do token fica p/ o TRV-01 (modal próprio) |
 | 1 | CC-04 | ControleCargas | Instituição "XP" aparece como "P" na matriz | P | — | pendente |
 | 1 | SWAT-04 | swat | Groupings não aparecem | P–M | reprodução do usuário | pendente |
 | 2 | TRV-01 | todos | Token expirado abre o pop-up de colar token na hora | M | PREP | pendente |

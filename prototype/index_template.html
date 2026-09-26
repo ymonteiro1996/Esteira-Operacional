@@ -33,6 +33,8 @@
      desenhado — script bloqueante de propósito (sem defer/async), pra não
      haver 1 frame de flash com o tema errado. Ver static/js/utils/tema.js. -->
 <script src="/static/js/utils/tema.js"></script>
+<!-- [2026-09-25, pedido do usuário: modal fecha ao arrastar a seleção de texto] TRV-02: arrastar de um campo até o fundo não fecha nenhum modal (grade, Demandas, Anomalias...). -->
+<script src="/static/js/utils/guarda_arrasto.js"></script>
 <!-- [2026-09-21] Helper de data do relógio local (aaaa-mm-dd), usado pela
      vigência dos comentários (comentarios.js). No <head> junto do tema por
      ser genérico e sem dependência de DOM, garantindo que já exista quando

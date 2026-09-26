@@ -1641,6 +1641,19 @@ O balão **some da matriz** — a célula volta ao estado puro. Um marcador venc
 
 Acessibilidade e consistência: painel fechável por Esc / clique fora (padrão do modal atual); todo dado dinâmico entra no DOM via `textContent` (nunca `innerHTML`) — mesma regra do tooltip; células da mini-timeline/mini-matriz são focáveis por teclado como no grid principal.
 
+**[2026-09-25, pedido do usuário: modal fecha ao arrastar a seleção de texto — TRV-02]** "Clique fora"
+tinha um efeito colateral: o mouse que DESCE num campo (comentário, busca, token) e SOBE no fundo
+gera um `click` no fundo (ancestral comum) e o modal fechava no meio da seleção. A guarda
+`static/js/utils/guarda_arrasto.js` (carregada no `<head>` de `index.html` e `index_template.html`,
+idênticos) roda em fase de captura e cancela só esse clique: começou em `input/textarea/select/
+[contenteditable]` ou selecionou texto durante o arrasto, alvo diferente, e o alvo do click contém o
+do mousedown. Vale para todos os modais do app sem mexer em cada um — `#modal-backdrop` da grade e os
+overlays próprios de Demandas/Anomalias. Clique simples no fundo e Esc continuam fechando. Mesmo
+arquivo do conciliacao e do beehus-swat. Testado com Playwright num servidor isolado (5150, DATA_DIR no
+scratchpad): com a guarda desligada o modal da grade volta a fechar no arrasto. **Pendente (D12, junto
+do TRV-01):** o token usa hoje este mesmo modal genérico; ele vai ganhar um modal próprio que não
+fecha com clique no fundo.
+
 ---
 
 ## Aba Controle de Cargas (Custodiantes)
