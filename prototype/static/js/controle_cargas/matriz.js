@@ -330,7 +330,8 @@ buildCorpoMatrizAgrupamentos(window_){
    Pseudocódigo:
      1. Fecha qualquer popover de filtro de cabeçalho aberto — o <th> que o
         ancora está prestes a ser destruído [2026-07-29].
-     2. Substitui o innerHTML da tabela por thead+tbody.
+     2. Substitui o innerHTML da tabela por thead+tbody e reposiciona a
+        coluna Carteira sticky pela largura real da Company (CC-04).
      3. Atualiza o contador "Mostrando X de Y" e a nota do grid (texto
         diferente por aba).
      4. Reindexa window._ROWS_BY_ID (usado pelo tooltip/painel) com TODAS as
@@ -340,6 +341,8 @@ buildCorpoMatrizAgrupamentos(window_){
 atualizarDomEEstadoMatriz(table, thead, body, data, isWallets, shownCount, window_, refDate){
   ControleCargas.fecharFiltroCabecalho();
   table.innerHTML = thead + '<tbody>' + body + '</tbody>';
+  // [2026-09-25, CC-04] Carteira gruda logo depois da Company de verdade (colunas_sticky.js).
+  ControleCargas.ajustarColunaStickyNome(table);
 
   document.getElementById('resultcount').textContent =
     `Mostrando ${shownCount} de ${data.length} ${isWallets?'carteiras':'agrupamentos'}`;

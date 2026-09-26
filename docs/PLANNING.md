@@ -697,6 +697,18 @@ Exemplo com dois extremos reais: carteira com `miss_very_late` na janela, atraso
 **Instituição/Company como colunas fixas (não mais cabeçalho de grupo):**
 
 - Revisão (17/07): a Company ganhou **coluna própria, fixa, a primeira da tabela** (à esquerda de "Carteira") — não é mais um chip condicional. Ordem final das colunas fixas (sticky, `left` empilhado): **Company → Carteira → Instituição** → depois as colunas de data.
+- **[2026-09-25, pedido do usuário: "no caso da XP, apareceu só o P" — CC-04]** Na prática só
+  Company e Carteira são sticky (a Instituição virou `col-summary` em 29/07), e a Carteira grudava
+  num `left:96px` FIXO. Com Company mais estreita que 96px (ex.: só Blue3, 624 carteiras 100% XP)
+  a Carteira era empurrada até 96px mesmo sem rolar e cobria o começo do chip de Instituição —
+  medido no DOM: Company 60px, Carteira terminando em 330 e o chip "XP" começando em 307. Com nomes
+  longos o inverso: rolar para o lado fazia a Carteira cobrir a Company. Agora
+  `static/js/controle_cargas/colunas_sticky.js::ajustarColunaStickyNome()` mede a Company a cada
+  redesenho (chamada em `atualizarDomEEstadoMatriz`, vale para Carteiras e Agrupamentos, e de novo
+  quando as fontes terminam de carregar) e grava `--sticky-left-nome` (= largura da Company +
+  `border-spacing`) na tabela; o CSS usa `left:var(--sticky-left-nome, 96px)`. Verificado com
+  Playwright (servidor isolado, snapshot sintético): só Blue3 → "XP" inteiro e a Carteira logo depois
+  da Company; todas as empresas rolando para o lado → nenhuma coluna cobre a outra; Agrupamentos idem.
 - **Company**: texto simples (nome curto, ex. `Oikos WM`, `Blue3`), `text-[12px] text-gray-600 font-medium`, sticky à esquerda de tudo. Sempre visível — mesmo com `CompanySelector` filtrado numa única company (nesse caso a coluna existe mas fica visualmente "achatada": todas as linhas com o mesmo valor, o que é aceitável e evita reflow ao trocar o filtro).
 - **Carteira**: nome completo (regra da casa: `"007CVG - 005285190"`).
 - **Instituição**: chip pequeno à direita do nome da carteira: `text-[10px] px-1.5 py-px rounded bg-gray-100 text-gray-500` (ex.: `XP`, `BTG`). Cinza neutro de propósito — **cor é reservada para status**; o chip é metadado, não semáforo.
