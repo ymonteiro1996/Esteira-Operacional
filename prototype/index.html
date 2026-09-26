@@ -92,7 +92,10 @@
     <button class="tab active" id="tab-wallets">Carteiras</button>
     <button class="tab" id="tab-groupings">Agrupamentos</button>
     <button class="tab" id="tab-company">Company</button>
-    <button class="tab" id="tab-custodian">Controle de Cargas</button>
+    <!-- [2026-09-25, pedido do usuário: "Nomear o Controle de Cargas atual como Checklist Manual Cargas"]
+         CC-02: só o rótulo mudou; id/view seguem "custodian". "Controle de Cargas" continua sendo o
+         nome do app (<title>/<h1>) e será o nome da aba nova do CC-03. -->
+    <button class="tab" id="tab-custodian">Checklist Manual Cargas</button>
     <!-- [2026-08-21] Aba nova, adição pura de marcação — o clique é ligado
          por static/js/controle_demandas/index.js (aditivo, ver comentário
          lá); switchTab()/wireAbas() de controle_cargas/index.js não foram
@@ -117,7 +120,7 @@
        mais dentro dela) pra ser compartilhada por Carteiras/Agrupamentos/
        Company — as 3 abas leem o MESMO ControleCargas.SNAPSHOT.meta.window,
        então usam os mesmos campos De/Até em vez de 3 cópias. Escondida só na
-       aba Controle de Cargas (custodiantes), que tem navegação própria
+       aba Checklist Manual Cargas (custodiantes), que tem navegação própria
        (◀/▶/mais recente) sobre uma fonte de dado totalmente diferente
        (ControleUpload.xlsx) — ver switchTab() em index.js. -->
   <div class="toolbar3" id="toolbar3">
@@ -202,7 +205,7 @@
     <p class="note" id="grid-note"></p>
   </div>
 
-  <!-- ── Aba "Controle de Cargas" (custodiantes) — ControleUpload.xlsx ──
+  <!-- ── Aba "Checklist Manual Cargas" (custodiantes) — ControleUpload.xlsx ──
        Painel próprio (escondido por padrão): a fonte de dado é outra (Excel
        manual da operação, não o Mongo), então filtros/ordenação/export das
        outras abas não se aplicam — aqui é só janela deslizante + grid. -->

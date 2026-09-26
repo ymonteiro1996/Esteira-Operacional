@@ -54,7 +54,7 @@ from utils.datas import CalendarioDiasUteis, calcular_janela_grid, GRID_REFERENC
 from utils.caminhos import diagnosticar_data_dir, resolver_data_dir
 from excel_report import write_excel_report
 
-# Ingestão do ControleUpload.xlsx (aba "Controle de Cargas" — custodiantes).
+# Ingestão do ControleUpload.xlsx (aba "Checklist Manual Cargas" — custodiantes).
 # Módulo separado de propósito: fonte de dado TOTALMENTE diferente do resto
 # (Excel manual de OUTRA pessoa, fora do projeto, somente leitura — nunca
 # escrever nele; ver docstring de custodian_upload.py).
@@ -349,7 +349,7 @@ def _montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=Fals
         contagem_blocos[r["bloco"]] += 1
 
     progresso_atualizacao.iniciar_etapa(5, "lendo ControleUpload.xlsx")
-    print("[5/6] Lendo ControleUpload.xlsx (aba Controle de Cargas — custodiantes)...")
+    print("[5/6] Lendo ControleUpload.xlsx (aba Checklist Manual Cargas — custodiantes)...")
     t0 = time.monotonic()
     custodian_upload = _ler_controle_upload_custodiantes()
     timings["controle_upload_xlsx"] = time.monotonic() - t0

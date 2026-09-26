@@ -25,9 +25,9 @@ startWithSnapshot(data){
 // Ordenação / abas / busca
 // ─────────────────────────────────────────────────────────────────────────
 /* Contexto:
-   Troca de aba (Carteiras / Agrupamentos / Company / Controle de Cargas) —
+   Troca de aba (Carteiras / Agrupamentos / Company / Checklist Manual Cargas) —
    mesmo padrão de sempre (classe .active no botão). As abas "Company" e
-   "Controle de Cargas" têm painel PRÓPRIO (#panel-company/#panel-custodian):
+   "Checklist Manual Cargas" têm painel PRÓPRIO (#panel-company/#panel-custodian):
    fonte/formato de dado diferentes da grade principal, então o painel
    principal + a legenda das outras abas somem e o painel da aba assume — e
    vice-versa ao voltar. Chamada pelos handlers de clique nas abas (wire())
@@ -35,18 +35,18 @@ startWithSnapshot(data){
 
    Pseudocódigo:
      1. Grava a view corrente no estado e resolve se é aba de painel próprio
-        (Company / Controle de Cargas).
+        (Company / Checklist Manual Cargas).
      2. Liga/desliga a classe "active" das 4 abas e alterna a visibilidade
         dos painéis (principal+legenda vs. Company vs. custodiante).
      3. Alterna a visibilidade do #toolbar3 (campos De/Até + Atualizar) —
         pedido do usuário 2026-07-23: Carteiras/Agrupamentos/Company
         compartilham o MESMO SNAPSHOT.meta.window, então compartilham os
-        mesmos campos; só Controle de Cargas (fonte de dado à parte, com
+        mesmos campos; só Checklist Manual Cargas (fonte de dado à parte, com
         navegação própria) esconde.
      4. Recalcula a visibilidade dos painéis "Carteiras Publicadas" (só
         aparece na aba Carteiras) e "Agrupamentos Publicados" (só aparece na
         aba Agrupamentos) — feito aqui, incondicional, pra cobrir também as
-        abas de painel próprio (Company/Controle de Cargas), que retornam
+        abas de painel próprio (Company/Checklist Manual Cargas), que retornam
         cedo e nunca chegam ao buildMatrix() que normalmente recalcula os
         dois.
      5. Aba Company: só (re)desenha essa matriz e sai (ela já recalcula os
@@ -90,7 +90,7 @@ switchTab(view){
 // a organização mudou (CLAUDE.md §3).
 
 /* Contexto: liga o clique das 4 abas (Carteiras/Agrupamentos/Company/
-   Controle de Cargas) — cada uma dispara switchTab(). Chamada por wire().
+   Checklist Manual Cargas) — cada uma dispara switchTab(). Chamada por wire().
    Não retorna nada.
 
    Pseudocódigo:
@@ -105,7 +105,7 @@ wireAbas(){
   document.getElementById('tab-custodian').addEventListener('click', ()=> ControleCargas.switchTab('custodian'));
 },
 
-/* Contexto: liga a navegação da janela deslizante da aba Controle de Cargas
+/* Contexto: liga a navegação da janela deslizante da aba Checklist Manual Cargas
    (25 colunas) — ◀/▶ pulam uma janela inteira; "mais recente" volta à âncora
    default (última data com dado). Chamada por wire(). Não retorna nada.
 

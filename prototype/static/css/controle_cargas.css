@@ -691,7 +691,7 @@ tr.linha-comprada-pendente > td{box-shadow:inset 0 0 0 2px var(--overlay-comprad
    (PLANNING §Simbologia: "permite subir para font-size 13px sem alargar") */
 .cell .emptyset{font-size:13px;}
 
-/* ── Aba "Controle de Cargas" (custodiantes) — ControleUpload.xlsx ──────
+/* ── Aba "Checklist Manual Cargas" (custodiantes) — ControleUpload.xlsx ──────
    Grid deliberadamente mais simples que Carteiras/Agrupamentos: só 3 cores
    (verde OK / amarelo alerta / cinza neutro), sem sigla central, sem badges
    — o texto bruto original vive no tooltip. Cores reaproveitam as CSS vars

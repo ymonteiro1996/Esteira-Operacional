@@ -1,11 +1,11 @@
-/* ControleCargas.matriz_custodiantes — aba "Controle de Cargas" (custodiantes) — ControleUpload.xlsx, janela deslizante.
+/* ControleCargas.matriz_custodiantes — aba "Checklist Manual Cargas" (custodiantes) — ControleUpload.xlsx, janela deslizante.
    Parte do objeto único ControleCargas (ver state.js). Gerado a partir da
    refatoração de index_template.html (CLAUDE.md §4, "Divisão clara das
    páginas" — pasta static/js/controle_cargas/, 1 arquivo por funcionalidade).
 */
 Object.assign(ControleCargas, {
 // ─────────────────────────────────────────────────────────────────────────
-// Aba "Controle de Cargas" (custodiantes) — ControleUpload.xlsx
+// Aba "Checklist Manual Cargas" (custodiantes) — ControleUpload.xlsx
 // Fonte: ControleCargas.SNAPSHOT.custodianUpload (gerado por custodian_upload.py, chamado
 // pelo build_snapshot.py — Excel manual da operação, SOMENTE LEITURA).
 // Grid simples: linhas = custodiantes, colunas = datas (janela deslizante de
@@ -46,7 +46,7 @@ cuDefaultEnd(cu){
 },
 
 /* Contexto:
-   (Re)desenha a aba "Controle de Cargas" (custodiantes) — grid de janela
+   (Re)desenha a aba "Checklist Manual Cargas" (custodiantes) — grid de janela
    deslizante de CU_WINDOW colunas de data. Chamada ao trocar para essa aba
    e pelos botões ◀/▶/"mais recente". Não retorna nada.
 

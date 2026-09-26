@@ -1,11 +1,11 @@
 """
-custodian_upload.py — ingestão do ControleUpload.xlsx (aba "Controle de Cargas")
+custodian_upload.py — ingestão do ControleUpload.xlsx (aba "Checklist Manual Cargas")
 ================================================================================
 
 Lê o Excel MANTIDO MANUALMENTE por uma pessoa da operação com o status diário
 de upload por custodiante ("Gestor + Custodia") e devolve o bloco
 `custodianUpload` pronto para entrar no snapshot.json (ver PLANNING.md,
-seção "Aba Controle de Cargas (Custodiantes)").
+seção "Aba Checklist Manual Cargas (Custodiantes)").
 
 REGRAS INEGOCIÁVEIS deste módulo:
 - O arquivo é EXTERNO ao projeto (vive em "Cliente Beehus\\ControleUpload.xlsx")

@@ -1687,7 +1687,11 @@ vencia no meio do uso virava só "Erro ao atualizar".
 
 ---
 
-## Aba Controle de Cargas (Custodiantes)
+## Aba Checklist Manual Cargas (Custodiantes)
+
+**[2026-09-25, pedido do usuário: "Nomear o Controle de Cargas atual como Checklist Manual Cargas" — CC-02]** Era a aba
+"Controle de Cargas"; só o rótulo mudou (id `tab-custodian`, view `'custodian'` e dados intocados). O nome
+"Controle de Cargas" segue sendo o do app e vai para a aba nova do CC-03.
 
 **[NOVO 2026-07-18]** Terceira aba do protótipo, ao lado de Carteiras e Agrupamentos — mesma barra de tabs, mas com **fonte de dado totalmente diferente**: não vem do Mongo, vem de um **Excel mantido manualmente por uma pessoa da operação**.
 

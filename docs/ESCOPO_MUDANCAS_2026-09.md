@@ -59,7 +59,7 @@ A ordem prioriza o que pode gerar **dado errado no Beehus**. Depois vêm o token
 | 3 | SWAT-08 | swat | Faixa de datas vem preenchida (D-7 a D-1) nos 5 executores | P | — | pendente |
 | 3 | SWAT-09 | swat | Transações: um scroll só | P | — | pendente |
 | 3 | CONC-03 | conciliacao | Botão de copiar o valor do GAP | P–M | CONC-01 | pendente |
-| 3 | CC-02 | ControleCargas | Renomear a aba atual para "Checklist Manual Cargas" | P | — | pendente |
+| 3 | CC-02 | ControleCargas | Renomear a aba atual para "Checklist Manual Cargas" | P | — | feito (branch `onda-3/escopo-2026-09`; rótulo + comentários/docstrings/log; ids, <title>, <h1> e nome do app intocados; Playwright: aba, painel e ◀/▶) |
 | 3 | CC-05 | ControleCargas | Pauta com contorno azul; vermelho se o D-1 não foi processado | P | — | pendente |
 | 4 | SWAT-01 | swat | Log temporário na tela e limpeza ao trocar de Company | M | SWAT-08 | pendente |
 | 4 | SWAT-06 | swat | Várias empresas ou "Todas" nos 5 executores | M (Transações: G) | SWAT-05, SWAT-01 | pendente |
