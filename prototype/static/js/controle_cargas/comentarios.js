@@ -273,7 +273,8 @@ commentsSectionHtml(targetType, targetId, cellDate){
   const relevantExp = expirados.filter(c=> c.cellDate===cellDate || c.cellDate===null);
 
   const renderList = (list, expired)=> list.map(c=>{
-    const scopeLabel = c.cellDate ? `dia ${c.cellDate}` : (targetType==='wallet'?'carteira toda':'agrupamento todo');
+    const scopeLabel = c.cellDate ? `dia ${c.cellDate}`
+      : ({wallet:'carteira toda', grouping:'agrupamento todo', carga:'carga toda'}[targetType] || 'linha toda');   // [CC-03]
     // [2026-09-24, pedido do usuário: "ver o comentário, criar, editar"]
     // Qualquer pessoa edita (decisão dele), com rastro: o autor original
     // continua aparecendo e o "editado por" entra ao lado quando houver.

@@ -426,6 +426,7 @@ def _montar_snapshot_vazio():
         "wallets": [],
         "groupings": [],
         "custodianUpload": None,
+        "cargas": {"linhas": [], "parametros": {}},   # [2026-09-27, CC-03]
     }
 
 def _snapshot_json_esta_desatualizado():
@@ -466,7 +467,8 @@ def _snapshot_json_esta_desatualizado():
 
 
 VALID_SEVERITIES = ("green", "yellow", "red")
-VALID_TARGET_TYPES = ("wallet", "grouping")
+# [2026-09-27, CC-03] "carga" = linha da aba Controle de Cargas (targetId = companyId|Instituição|Modelo|D/M).
+VALID_TARGET_TYPES = ("wallet", "grouping", "carga")
 
 # static_folder="static": Flask passa a servir /static/css/... e
 # /static/js/... nativamente (CLAUDE.md §4 — CSS/JS quebrados em arquivos
@@ -929,7 +931,7 @@ def post_comments():
 
     errors = []
     if target_type not in VALID_TARGET_TYPES:
-        errors.append("targetType deve ser 'wallet' ou 'grouping'")
+        errors.append("targetType deve ser 'wallet', 'grouping' ou 'carga'")
     if not target_id:
         errors.append("targetId é obrigatório")
     if severity not in VALID_SEVERITIES:
@@ -1082,7 +1084,7 @@ def post_annotations():
     errors = []
     for i, item in enumerate(itens):
         if item.get("targetType") not in VALID_TARGET_TYPES:
-            errors.append(f"item {i}: targetType deve ser 'wallet' ou 'grouping'")
+            errors.append(f"item {i}: targetType deve ser 'wallet', 'grouping' ou 'carga'")
         if not item.get("targetId"):
             errors.append(f"item {i}: targetId é obrigatório")
         if not item.get("referenceDate"):

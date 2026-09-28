@@ -32,6 +32,19 @@ openModal(html){
      1. Esconde o backdrop do modal. */
 closeModal(){ document.getElementById('modal-backdrop').classList.remove('show'); },
 
+/* Contexto:
+   Reabre o painel de detalhe do alvo focado num dia — usado ao refocar pela mini-linha do tempo e
+   depois de salvar/editar comentário. [2026-09-27, CC-03] Antes era um "carteira senão agrupamento"
+   repetido em 3 lugares; com o painel da aba Controle de Cargas ('carga') virou um mapa só. Não
+   retorna nada.
+
+   Pseudocódigo: 1. wallet -> buildWalletPanel; carga -> buildCargaPanel; senão buildGroupingPanel. */
+reabrirPainel(targetType, targetId, data){
+  if(targetType==='wallet') ControleCargas.buildWalletPanel(targetId, data);
+  else if(targetType==='carga') ControleCargas.buildCargaPanel(targetId, data);
+  else ControleCargas.buildGroupingPanel(targetId, data);
+},
+
 /* Contexto: monta o chip visual do STATUS (mockkey na data focada) — usado
    no cabeçalho dos dois painéis de detalhe. Substitui o antigo chip de tier
    (Crítica/Atenção/Observação/OK, aposentado 2026-07-24) — usa a MESMA
@@ -162,7 +175,7 @@ wireFocoDataPainel(body, targetType, targetId){
   body.querySelectorAll('[data-panel-date]').forEach(el=>{
     el.addEventListener('click', ()=>{
       const d = el.dataset.panelDate;
-      if(targetType==='wallet') ControleCargas.buildWalletPanel(targetId, d); else ControleCargas.buildGroupingPanel(targetId, d);
+      ControleCargas.reabrirPainel(targetType, targetId, d);
     });
   });
 },
@@ -231,8 +244,8 @@ wireFormularioComentarioPainel(body, targetType, targetId, focusDate){
     }).then(()=> ControleCargas.loadComments()).then(()=>{
       msgEl.classList.add('ok'); msgEl.textContent = 'Comentário salvo.';
       // re-renderiza o painel (mostra o comentário novo) + a matriz (balão)
-      if(targetType==='wallet') ControleCargas.buildWalletPanel(targetId, focusDate); else ControleCargas.buildGroupingPanel(targetId, focusDate);
-      ControleCargas.buildMatrix();
+      ControleCargas.reabrirPainel(targetType, targetId, focusDate);
+      ControleCargas.redesenharVisaoAtual();
     }).catch(err=>{
       msgEl.classList.add('err');
       msgEl.textContent = 'Erro ao salvar: ' + err.message + ' (servidor Flask/app.py rodando?)';
@@ -282,9 +295,8 @@ wireEdicaoComentarioPainel(body, targetType, targetId, focusDate){
         validFrom: form.querySelector('.ce-from').value,
         validTo: form.querySelector('.ce-to').value,
       }).then(()=> ControleCargas.loadComments()).then(()=>{
-        if(targetType==='wallet') ControleCargas.buildWalletPanel(targetId, focusDate);
-        else ControleCargas.buildGroupingPanel(targetId, focusDate);
-        ControleCargas.buildMatrix();
+        ControleCargas.reabrirPainel(targetType, targetId, focusDate);
+        ControleCargas.redesenharVisaoAtual();
       }).catch(err=>{
         msgEl.classList.add('err');
         msgEl.textContent = 'Erro ao salvar a edição: ' + err.message;
@@ -793,6 +805,9 @@ wireRowClicks(){
   document.querySelectorAll('.cell').forEach(cell=>{
     cell.addEventListener('click', ()=>{
       const rid = cell.dataset.rid, date = cell.dataset.date, view = cell.dataset.view;
+      // [2026-09-27, CC-03] só as células da grade principal; a aba Controle de Cargas liga as dela
+      // (wireCliquesCargas) e a Company não tem clique de célula.
+      if(view!=='wallets' && view!=='groupings') return;
       if(!ControleCargas.celulaEstaSelecionada(view, rid, date)){
         ControleCargas.selecionarCelula(view, rid, date);
         return;

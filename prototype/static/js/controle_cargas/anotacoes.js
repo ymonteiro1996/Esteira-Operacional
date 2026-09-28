@@ -105,17 +105,20 @@ registrarEdicaoAnotacao(targetType, targetId, campo, valor, data){
    registrarEdicaoAnotacao() e depois de salvarAnotacoes()/loadAnnotations().
    Não retorna nada.
 
+   [2026-09-27, CC-03] São 2 botões com o MESMO lote: o da grade principal e o da aba Controle de
+   Cargas (#btn-salvar-anotacoes-cargas — a toolbar da grade fica escondida lá).
+
    Pseudocódigo:
-     1. Sem o botão no DOM (HTML antigo em cache), sai sem erro.
+     1. Sem nenhum botão no DOM (HTML antigo em cache), não faz nada.
      2. Conta quantas chaves há em PENDING_ANNOTATIONS.
-     3. Sem pendência -> botão desabilitado, texto padrão.
-     4. Com pendência -> botão habilitado, texto com a contagem. */
+     3. Sem pendência -> botões desabilitados, texto padrão.
+     4. Com pendência -> botões habilitados, texto com a contagem. */
 atualizarBotaoSalvarAnotacoes(){
-  const btn = document.getElementById('btn-salvar-anotacoes');
-  if(!btn) return;
   const n = Object.keys(ControleCargas.PENDING_ANNOTATIONS).length;
-  btn.disabled = n===0;
-  btn.textContent = n>0 ? `💾 Salvar (${n})` : '💾 Salvar';
+  document.querySelectorAll('#btn-salvar-anotacoes, #btn-salvar-anotacoes-cargas').forEach(btn=>{
+    btn.disabled = n===0;
+    btn.textContent = n>0 ? `💾 Salvar (${n})` : '💾 Salvar';
+  });
 },
 
 /* Contexto:
@@ -135,11 +138,11 @@ atualizarBotaoSalvarAnotacoes(){
         mensagem no "grid-note". */
 salvarAnotacoes(){
   const itens = Object.values(ControleCargas.PENDING_ANNOTATIONS);
-  const msgEl = document.getElementById('grid-note');
+  // [2026-09-27, CC-03] na aba Controle de Cargas o #grid-note está escondido — o erro vai pra nota dela.
+  const msgEl = document.getElementById(ControleCargas.state.view==='cargas' ? 'cargas-note' : 'grid-note');
   if(!itens.length) return Promise.resolve();
 
-  const btn = document.getElementById('btn-salvar-anotacoes');
-  if(btn) btn.disabled = true;
+  document.querySelectorAll('#btn-salvar-anotacoes, #btn-salvar-anotacoes-cargas').forEach(btn=> btn.disabled = true);
 
   return fetch('/api/annotations', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({annotations: itens})})
     .then(async r=>{
@@ -148,7 +151,7 @@ salvarAnotacoes(){
       ControleCargas.ANNOTATIONS = data.annotations || ControleCargas.ANNOTATIONS;
       ControleCargas.PENDING_ANNOTATIONS = {};
       ControleCargas.atualizarBotaoSalvarAnotacoes();
-      ControleCargas.buildMatrix();
+      ControleCargas.redesenharVisaoAtual();   // [2026-09-27, CC-03] a aba Controle de Cargas também anota
     })
     .catch(err=>{
       if(msgEl) msgEl.textContent = 'Erro ao salvar anotações: ' + err.message;

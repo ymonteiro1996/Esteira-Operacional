@@ -1,0 +1,13 @@
+{
+  "diasAtividadeDu": 5,
+  "diasCarteiraNovaDu": 5,
+  "limiteExcluidasPct": 50,
+  "coberturaParcialPct": 95,
+  "faltantesParcialMax": 1,
+  "disparo": {
+    "maxDiasUteisFaixa": 10,
+    "defasagemPorInstituicao": {
+      "XP": 3
+    }
+  }
+}

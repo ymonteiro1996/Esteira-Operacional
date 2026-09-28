@@ -24,8 +24,21 @@
    selecionou nada continua editando a data de referência, como sempre.
 
    Parte do objeto único ControleCargas (ver state.js) — 1 arquivo por
-   funcionalidade (CLAUDE.md §4). */
+   funcionalidade (CLAUDE.md §4).
+
+   [2026-09-27, CC-03] Vale também na aba Controle de Cargas: a tabela e o targetType saem da visão
+   em tela (tabelaEAlvoDaSelecao), em vez de fixos em #matrix e wallet/grouping. */
 Object.assign(ControleCargas, {
+
+/* Contexto: tabela e targetType da visão em tela, para a seleção achar a célula e a linha certas.
+   Retorna {tabela: seletor CSS, targetType}.
+
+   Pseudocódigo: 1. cargas -> #cargas-matrix/'carga'; wallets -> #matrix/'wallet'; senão grouping. */
+tabelaEAlvoDaSelecao(){
+  const view = ControleCargas.state.view;
+  if(view === 'cargas') return {tabela: '#cargas-matrix', targetType: 'carga'};
+  return {tabela: '#matrix', targetType: view === 'wallets' ? 'wallet' : 'grouping'};
+},
 
 /* Contexto:
    Diz se (view, rid, date) é a célula selecionada agora — usada pelo clique
@@ -131,8 +144,9 @@ pintarSelecaoCelula(){
     .forEach(c=> c.classList.remove('celula-selecionada'));
   const sel = ControleCargas.state.celulaSelecionada;
   if(!sel) return;
+  const {tabela} = ControleCargas.tabelaEAlvoDaSelecao();
   const alvo = document.querySelector(
-    `#matrix .cell[data-rid="${CSS.escape(sel.rid)}"][data-date="${CSS.escape(sel.date)}"]`);
+    `${tabela} .cell[data-rid="${CSS.escape(sel.rid)}"][data-date="${CSS.escape(sel.date)}"]`);
   if(alvo) alvo.classList.add('celula-selecionada');
 },
 
@@ -152,12 +166,12 @@ pintarSelecaoCelula(){
         via dataAnotacaoDaLinha).
      3. Substitui as 2 células e liga os inputs novos. */
 redesenharColunasAnotacao(rid){
-  const linha = document.querySelector(`#matrix tr[data-rid="${CSS.escape(rid)}"]`);
+  const {tabela, targetType} = ControleCargas.tabelaEAlvoDaSelecao();
+  const linha = document.querySelector(`${tabela} tr[data-rid="${CSS.escape(rid)}"]`);
   if(!linha) return;
   const antigas = linha.querySelectorAll('td.col-anotacao');
   if(antigas.length !== 2) return;
 
-  const targetType = ControleCargas.state.view === 'wallets' ? 'wallet' : 'grouping';
   const molde = document.createElement('tbody');
   molde.innerHTML = `<tr>${ControleCargas.colunasAnotacaoHtml(targetType, rid)}</tr>`;
   const novas = Array.from(molde.querySelector('tr').children);

@@ -1720,6 +1720,56 @@ campo **D0** (`#data-d0`, 1º campo da `#toolbar3`, nos dois HTMLs idênticos;
   resposta se o D0 mudou nesse meio tempo.
 - Verificado: 8 checks no servidor (`app.test_client()`, DATA_DIR isolado) + 9 na tela (Playwright,
   servidor isolado 5150, `/api/atualizar` interceptado — nada consultado no Beehus).
+---
+
+## Aba Controle de Cargas (CC-03, fase 3A)
+
+**[2026-09-27, pedido do usuário: "Controlar as cargas por Company – Instituição – Modelo de Carga –
+Mensal/Diário ... uma métrica que diga se a carga foi efetivada ... mostrar primeiro os problemas com
+mais carteiras afetadas"]** Aba nova, só leitura, entre "Checklist Manual Cargas" e "Controle de
+Demandas". Arquitetura aprovada pelo usuário (confirmação 2 do escopo).
+
+- **Linha** = `companyId | Instituição | Modelo de Carga | D/M` (do TemplateCarteiras); **célula** =
+  cobertura de carga do dia (% e "−N faltantes"). Ordem: mais carteiras faltando na referência (falha
+  prolongada conta todas as esperadas), depois dias seguidos com problema.
+- **Cálculo no servidor**, `matriz_cargas.py` (funções puras), chamado por `_montar_snapshot()` →
+  `snapshot["cargas"] = {linhas, parametros}`. Usa as linhas de carteira já prontas (mockkey do dia:
+  wu/wc/cD/p = tem carga; wait = no prazo; miss = vencida) e o calendário ANBIMA. **Nenhuma chamada
+  nova à API.** Medido num snapshot real de 1032 carteiras: 53 linhas, 1,5 s, 116 KB a mais no JSON.
+- **Métrica (proposta D3, "a confirmar")**, parâmetros em `data/controle_cargas_config.json`:
+  efetivada (0 faltantes) · parcial (1 faltante ou cobertura ≥ 95%) · não efetivada · **falha
+  prolongada** (nenhuma ativa ou > 50% das esperadas inativas — um feed parado não vira 0/0 = OK) ·
+  aguardando (ninguém vencido, alguém no prazo). Inativa = sem carga nos 5 du ANTES do dia (quando a
+  janela não cobre os 5 du, vale "sem carga na janela inteira"); carteira nova (< 5 du) nunca é inativa
+  e aparece como **onboarding** até a 1ª carga; carteira que ainda não começou não é esperada.
+- **Mensais**: avaliadas só no último dia útil do mês (e até o D0), prazo = fim do mês + du Recebimento
+  PDF + du Upload Beehus; nos outros dias "—". A regra de inativa **não** vale para elas (achado rodando
+  sobre o snapshot real: carteira mensal só tem carga no fechamento, e todas as mensais caíam em falha
+  prolongada). Linha mensal com contorno tracejado; chips Todas / Diárias / Mensais.
+- **Clique em 2 tempos** (igual a Carteiras): o 1º seleciona a célula e Responsável / Comentário sobre
+  atuação da linha passam a editar aquele dia (`targetType: 'carga'`, `targetId` = a chave; botão
+  "💾 Salvar" próprio da aba, mesmo lote de pendências); o 2º abre o painel com as carteiras faltantes
+  (clique abre o painel da carteira), aguardando/onboarding/inativas recolhidas e os comentários
+  temporários com vigência. `app.py::VALID_TARGET_TYPES` ganhou `"carga"`.
+- **Código compartilhado que mudou**: `switchTab()` conhece a view `'cargas'`;
+  `redesenharVisaoAtual()` (index.js) substituiu o "Company senão grade" em atualizar.js,
+  sincronizacao.js, anotacoes.js e paineis.js; `reabrirPainel()` (paineis.js) substituiu o
+  "carteira senão agrupamento" repetido 3x; `selecao_celula.js` acha tabela e targetType pela view
+  (`tabelaEAlvoDaSelecao`); `wireRowClicks()` ignora células que não são da grade principal. As abas
+  Demandas/Anomalias/Não Cadastradas não foram tocadas — `wireAbaCargas()` registra os listeners que
+  faltam nelas.
+- **Limites**: a API devolve o estado ATUAL (sem histórico); com filtro de empresa no Atualizar, só a
+  empresa escolhida aparece. Snapshot gravado antes desta aba mostra o convite para Atualizar.
+- **Fases seguintes**: 3B (ler `GET /beehus/jobs/logger`) depende de um exemplo de resposta capturado
+  pelo usuário no DevTools; 3C ("Rodar carga", escrita aprovada com confirmação; D1 = até 10 du em
+  sequência; D2 = só a XP manda data + 3 du) depende da 3B.
+- **Verificado**: 22 checks das regras com carteiras sintéticas (`matriz_cargas`); 32 na tela
+  (Playwright, servidor isolado 5150, DATA_DIR no scratchpad, snapshot sintético gerado pelo módulo
+  real): ordem, níveis e cores, contorno das mensais, chips, 1º/2º clique, anotação e comentário
+  gravados como 'carga' e de volta depois de recarregar, drill-through, troca com as 7 outras abas,
+  Carteiras sem regressão, snapshot antigo, tema escuro, zero erro de JS. Regressão: CC-01, CC-05 e
+  TRV-02 passam (o teste do TRV-02 precisou fechar o modal de token, que desde o TRV-01 abre sozinho);
+  o TRV-01 não roda sem um token válido (o do dia 26/09 venceu).
 
 ---
 

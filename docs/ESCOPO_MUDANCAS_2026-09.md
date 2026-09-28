@@ -64,7 +64,7 @@ A ordem prioriza o que pode gerar **dado errado no Beehus**. Depois vêm o token
 | 4 | SWAT-01 | swat | Log temporário na tela e limpeza ao trocar de Company | M | SWAT-08 | pendente |
 | 4 | SWAT-06 | swat | Várias empresas ou "Todas" nos 5 executores | M (Transações: G) | SWAT-05, SWAT-01 | pendente |
 | 4 | CC-01 | ControleCargas | Campo "Data D0" que muda todo o D0 da ferramenta | M | — | feito (branch `onda-4/escopo-2026-09`; `data_hoje` no snapshot + `d0` nas 4 rotas; D10: abre em hoje, faixa "D0 simulado", não roda Atualizar sozinho; 8 checks servidor + 9 tela) |
-| 5 | CC-03 | ControleCargas | Novo "Controle de Cargas" (3A leitura · 3B API de jobs · 3C disparo) | G | CC-02, CC-01 | pendente |
+| 5 | CC-03 | ControleCargas | Novo "Controle de Cargas" (3A leitura · 3B API de jobs · 3C disparo) | G | CC-02, CC-01 | 3A feita (branch `onda-5/escopo-2026-09`, só local; métrica D3 "a confirmar"; 22 checks de regra + 32 na tela); 3B aguarda a captura do `jobs/logger` pelo usuário; 3C bloqueada pela 3B |
 
 Aliases (o mesmo trabalho aparece em mais de um lugar do pedido original):
 - `CONC-02` (transação fecha ao selecionar) = **TRV-02**
@@ -93,8 +93,8 @@ A sessão pode seguir com o **padrão proposto** e marcar o item como "a confirm
 
 | # | Tema | Padrão proposto |
 |---|---|---|
-| D1 🔴 | **CC-03**: a frase "podendo inserir um range de datas com intervalo de …" ficou cortada. Intervalo de quê? Tamanho máximo da faixa, passo entre execuções ou espera entre disparos? | Faixa De/Até de no máximo **10 dias úteis**, uma chamada por data, em sequência. |
-| D2 🔴 | **CC-03**: a regra "D+3" vale **só para XP**, ou para todo mundo via coluna **Defasagem** do Template? No Template, D-3 também aparece em Goldman Sachs (21), BTG Pactual US (19), JP Morgan NY (17), Avenue (11) etc.; D-2 em Morgan Stanley NY (130); D-1 em BTG, Itaú etc. | Usar a Defasagem do Template (XP = D-3 → D+3). Se for só XP, deixar a lista de instituições em `data/controle_cargas_config.json`. |
+| D1 🔴 | **CC-03**: a frase "podendo inserir um range de datas com intervalo de …" ficou cortada. Intervalo de quê? Tamanho máximo da faixa, passo entre execuções ou espera entre disparos? | Faixa De/Até de no máximo **10 dias úteis**, uma chamada por data, em sequência. **Respondido 27/09: é isso** (`disparo.maxDiasUteisFaixa` = 10). |
+| D2 🔴 | **CC-03**: a regra "D+3" vale **só para XP**, ou para todo mundo via coluna **Defasagem** do Template? No Template, D-3 também aparece em Goldman Sachs (21), BTG Pactual US (19), JP Morgan NY (17), Avenue (11) etc.; D-2 em Morgan Stanley NY (130); D-1 em BTG, Itaú etc. | Usar a Defasagem do Template (XP = D-3 → D+3). Se for só XP, deixar a lista de instituições em `data/controle_cargas_config.json`. **Respondido 27/09: só XP** (`disparo.defasagemPorInstituicao` = `{"XP": 3}`). |
 | D3 | **CC-03**: a métrica de "carga efetivada" | Ver a proposta refinada no CC-03 (três níveis, dias úteis, trava contra falha prolongada). |
 | D4 | **SWAT-08**: D-7 e D-1 em **dias úteis ANBIMA** ou dias corridos? | Dias úteis ANBIMA (o projeto já tem `bizdays` e `wallet_scope.deslocar_du`). |
 | D5 | **SWAT-01**: ao trocar de Company, as datas ficam **em branco** ou **voltam ao padrão** D-7/D-1? O log é por ferramenta ou um só para o painel? | Voltar ao padrão D-7/D-1 e limpar o log. Um log por ferramenta, logo abaixo do botão Executar. |
@@ -108,8 +108,8 @@ A sessão pode seguir com o **padrão proposto** e marcar o item como "a confirm
 
 **Confirmações de arquitetura** (os CLAUDE.md do conciliacao e do ControleCargas, §7, exigem aval antes):
 1. TRV-01 intercepta o `fetch` globalmente nos três projetos.
-2. CC-03 cria uma aba nova, um blueprint novo e uma chamada nova à API de jobs.
-3. CC-03, fase 3C: o ControleCargas passaria a fazer chamadas de **escrita** (disparo de job), contrariando a regra atual de "app somente leitura" (§8).
+2. CC-03 cria uma aba nova, um blueprint novo e uma chamada nova à API de jobs. **Aprovado 27/09.** Na 3A não precisou de blueprint nem de chamada nova: a matriz sai do snapshot (`matriz_cargas.py`).
+3. CC-03, fase 3C: o ControleCargas passaria a fazer chamadas de **escrita** (disparo de job), contrariando a regra atual de "app somente leitura" (§8). **Aprovado 27/09, com confirmação** (modal + registro no log, só pela rota que sair da 3B).
 
 ---
 

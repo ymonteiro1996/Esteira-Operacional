@@ -584,8 +584,7 @@ enviarAtualizacao(){
         ControleCargas.buildHeader();
         ControleCargas.buildLegend();
         ControleCargas.buildFilters();
-        if(ControleCargas.state.view==='company') ControleCargas.buildCompanyMatrix();
-        else ControleCargas.buildMatrix();
+        ControleCargas.redesenharVisaoAtual();   // [2026-09-27, CC-03] inclui a aba Controle de Cargas
         if(msgEl){
           const cacheInfo = data.meta && data.meta.cacheInfo;
           const empresaFiltro = data.meta && data.meta.companyFiltro;

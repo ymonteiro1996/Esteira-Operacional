@@ -53,6 +53,7 @@ from snapshot_builder import (
 from utils.datas import CalendarioDiasUteis, calcular_janela_grid, GRID_REFERENCE_LAG_DU, mapear_distancia_dias_uteis_hoje
 from utils.caminhos import diagnosticar_data_dir, resolver_data_dir
 from excel_report import write_excel_report
+from matriz_cargas import carregar_config_cargas, montar_matriz_cargas   # [2026-09-27, CC-03]
 
 # Ingestão do ControleUpload.xlsx (aba "Checklist Manual Cargas" — custodiantes).
 # Módulo separado de propósito: fonte de dado TOTALMENTE diferente do resto
@@ -358,6 +359,10 @@ def _montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=Fals
 
     progresso_atualizacao.iniciar_etapa(6, "montando snapshot final")
     print("[6/6] Montando snapshot final...")
+    # [2026-09-27, pedido do usuário — CC-03] aba "Controle de Cargas": cobertura de carga por
+    # Company | Instituição | Modelo | D/M, calculada das linhas de carteira já prontas (sem API).
+    matriz_cargas = montar_matriz_cargas(linhas_carteiras, janela, calendario, hoje,
+                                         carregar_config_cargas(DATA_DIR))
     timings["total"] = time.monotonic() - t_total0
 
     snapshot = {
@@ -401,6 +406,7 @@ def _montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=Fals
         "wallets": linhas_carteiras,
         "groupings": linhas_agrupamentos,
         "custodianUpload": custodian_upload,
+        "cargas": matriz_cargas,
     }
 
     print(f"\nConcluído em {timings['total']:.2f}s. Blocos de agrupamento: {dict(contagem_blocos)}")

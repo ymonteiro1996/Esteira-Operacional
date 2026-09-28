@@ -13,6 +13,8 @@
      via var() dos mesmos tokens .company-ok/att/crit/neutral, zero token
      novo. -->
 <link rel="stylesheet" href="/static/css/matriz_hora_company.css">
+<!-- [2026-09-27, CC-03] aba "Controle de Cargas" (só layout; cores das classes já existentes). -->
+<link rel="stylesheet" href="/static/css/matriz_cargas.css">
 <!-- [2026-08-21] CSS autocontido da aba "Controle de Demandas" — não usa
      nenhum token/classe de controle_cargas.css (visual preservado fiel à
      origem beehus-rotinas, escopado sob #panel-demandas/.kd-modal-*). -->
@@ -96,6 +98,9 @@
          CC-02: só o rótulo mudou; id/view seguem "custodian". "Controle de Cargas" continua sendo o
          nome do app (<title>/<h1>) e será o nome da aba nova do CC-03. -->
     <button class="tab" id="tab-custodian">Checklist Manual Cargas</button>
+    <!-- [2026-09-27, CC-03] Aba nova "Controle de Cargas" — view 'cargas' do switchTab(); o clique é
+         ligado por static/js/controle_cargas/matriz_cargas.js (wireAbaCargas). -->
+    <button class="tab" id="tab-cargas">Controle de Cargas</button>
     <!-- [2026-08-21] Aba nova, adição pura de marcação — o clique é ligado
          por static/js/controle_demandas/index.js (aditivo, ver comentário
          lá); switchTab()/wireAbas() de controle_cargas/index.js não foram
@@ -276,6 +281,36 @@
       <table class="matrix" id="pubhora-matrix"></table>
     </div>
     <p class="note" id="pubhora-note" style="display:none;"></p>
+  </div>
+
+  <!-- ── Aba "Controle de Cargas" (CC-03, fase 3A) ──
+       [2026-09-27, pedido do usuário: "Controlar as cargas por Company – Instituição – Modelo de
+       Carga – Mensal/Diário"] Cobertura de carga por chave × dia, calculada no servidor
+       (matriz_cargas.py → SNAPSHOT.cargas); usa o mesmo #toolbar3 (De/Até, D0, Atualizar). Desenho e
+       cliques em static/js/controle_cargas/matriz_cargas.js. -->
+  <div class="panel" id="panel-cargas" style="display:none;">
+    <div class="toolbar2">
+      <span class="resultcount" id="cargas-count"></span>
+      <button class="btn" id="btn-salvar-anotacoes-cargas" type="button" disabled title="Salva o Responsável / Comentário sobre atuação editados nesta aba (mesmo lote do Salvar da grade)">💾 Salvar</button>
+      <div class="pubhora-switch" id="cargas-periodicidade" role="group" aria-label="Periodicidade da carga">
+        <button type="button" class="pubhora-switch-btn active" data-periodicidade="todas" aria-pressed="true">Todas</button>
+        <button type="button" class="pubhora-switch-btn" data-periodicidade="D" aria-pressed="false">Diárias</button>
+        <button type="button" class="pubhora-switch-btn" data-periodicidade="M" aria-pressed="false">Mensais</button>
+      </div>
+    </div>
+    <div class="grid-scroll" id="cargas-matrix-wrap">
+      <table class="matrix" id="cargas-matrix"></table>
+    </div>
+    <div class="cu-legend" id="cargas-legend">
+      <span class="legend-item"><span class="legend-swatch company-ok">✓</span><span>Efetivada: todas as carteiras ativas com carga</span></span>
+      <span class="legend-item"><span class="legend-swatch company-att">97%</span><span>Parcial: 1 faltante, ou cobertura ≥ 95%</span></span>
+      <span class="legend-item"><span class="legend-swatch company-crit">70%</span><span>Não efetivada</span></span>
+      <span class="legend-item"><span class="legend-swatch company-crit cg-prolongada">parado</span><span>Falha prolongada: nenhuma ativa, ou mais da metade sem carga há dias</span></span>
+      <span class="legend-item"><span class="legend-swatch s-g1">⏳</span><span>Aguardando: ainda no prazo</span></span>
+      <span class="legend-item"><span class="legend-swatch company-neutral">—</span><span>Mensal fora do fechamento do mês</span></span>
+      <span class="legend-item"><span class="legend-swatch company-neutral" style="border:1.5px dashed currentColor;">M</span><span>Linha mensal (contorno tracejado)</span></span>
+    </div>
+    <p class="note" id="cargas-note"></p>
   </div>
 
   <!-- ── Aba "Controle de Demandas" — Kanban de demandas operacionais ──
@@ -676,6 +711,7 @@
      (redesenha as colunas Responsável/Comentário da linha selecionada) e
      antes de index.js, que liga wireSelecaoCelula() no bootstrap. -->
 <script src="/static/js/controle_cargas/selecao_celula.js"></script>
+<script src="/static/js/controle_cargas/matriz_cargas.js"></script>
 <script src="/static/js/controle_cargas/exportar.js"></script>
 <script src="/static/js/controle_cargas/progresso.js"></script>
 <script src="/static/js/controle_cargas/atualizar.js"></script>

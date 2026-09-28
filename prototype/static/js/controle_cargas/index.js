@@ -56,17 +56,24 @@ startWithSnapshot(data){
      6. Carteiras/Agrupamentos: descongela a ordem, ajusta a visibilidade do
         botão de ordenar-por-instituição (só faz sentido em Carteiras) e
         reconstrói a matriz principal (que já recalcula os painéis de
-        publicação). */
+        publicação).
+     [2026-09-27, CC-03] Aba "Controle de Cargas" ('cargas'): painel próprio (#panel-cargas), usa o
+     #toolbar3 (mesmo snapshot/janela) e só redesenha a própria matriz (matriz_cargas.js). */
 switchTab(view){
   ControleCargas.state.view = view;
   const isCust = view==='custodian';
   const isCompany = view==='company';
+  const isCargas = view==='cargas';
+  const tabCargas = document.getElementById('tab-cargas');
+  const panelCargas = document.getElementById('panel-cargas');
+  if(tabCargas) tabCargas.classList.toggle('active', isCargas);
+  if(panelCargas) panelCargas.style.display = isCargas ? '' : 'none';
   document.getElementById('tab-wallets').classList.toggle('active', view==='wallets');
   document.getElementById('tab-groupings').classList.toggle('active', view==='groupings');
   document.getElementById('tab-company').classList.toggle('active', isCompany);
   document.getElementById('tab-custodian').classList.toggle('active', isCust);
-  document.getElementById('panel-main').style.display = (isCust || isCompany) ? 'none' : '';
-  document.getElementById('panel-legend').style.display = (isCust || isCompany) ? 'none' : '';
+  document.getElementById('panel-main').style.display = (isCust || isCompany || isCargas) ? 'none' : '';
+  document.getElementById('panel-legend').style.display = (isCust || isCompany || isCargas) ? 'none' : '';
   document.getElementById('panel-company').style.display = isCompany ? '' : 'none';
   document.getElementById('panel-custodian').style.display = isCust ? '' : 'none';
   document.getElementById('toolbar3').style.display = isCust ? 'none' : '';
@@ -74,6 +81,7 @@ switchTab(view){
   ControleCargas.buildGroupingPublishStat();
   if(isCompany){ ControleCargas.buildCompanyMatrix(); return; }
   if(isCust){ ControleCargas.buildCustodianMatrix(); return; }
+  if(isCargas){ ControleCargas.buildCargasMatrix(); return; }
   ControleCargas.state.frozen = null;
   if(view==='wallets'){
     ControleCargas.state.filtroValoresColuna.institution = null;
@@ -82,6 +90,21 @@ switchTab(view){
     document.getElementById('sort-inst-btn').style.display='none';
   }
   ControleCargas.buildMatrix();
+},
+
+/* Contexto:
+   Redesenha a matriz da aba em tela depois que o dado mudou (Atualizar, comentário/anotação salvos,
+   novidades do sincronizador). [2026-09-27, CC-03] Antes cada chamador escolhia entre
+   buildCompanyMatrix() e buildMatrix(); com a aba Controle de Cargas eram 3 casos, e buildMatrix()
+   com ela em tela religaria os cliques da grade principal. Não retorna nada.
+
+   Pseudocódigo:
+     1. Company -> buildCompanyMatrix; Controle de Cargas -> buildCargasMatrix; senão buildMatrix. */
+redesenharVisaoAtual(){
+  const view = ControleCargas.state.view;
+  if(view==='company') ControleCargas.buildCompanyMatrix();
+  else if(view==='cargas') ControleCargas.buildCargasMatrix();
+  else ControleCargas.buildMatrix();
 },
 
 // [refatoração 2026-07-20] wire() virou uma orquestradora fina; cada grupo

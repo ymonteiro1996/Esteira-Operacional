@@ -1,0 +1,31 @@
+/* Aba "Controle de Cargas" (CC-03, fase 3A) — static/js/controle_cargas/matriz_cargas.js.
+   [2026-09-27, pedido do usuário] Só layout: as cores de nível reaproveitam as classes que já
+   existem (.company-ok/-att/-crit/-neutral e .s-g1, controle_cargas.css), então os 2 temas vêm de
+   graça. Os chips Todas/Diárias/Mensais reaproveitam .pubhora-switch (matriz_publicacao_hora.css). */
+
+/* Célula: percentual em cima, "−N faltantes" embaixo. */
+#cargas-matrix .cg-cell{flex-direction:column; gap:0; line-height:1.05; min-width:56px;}
+#cargas-matrix .cg-cell .cg-num{font-size:11.5px;}
+#cargas-matrix .cg-cell .cg-falta{font-size:9.5px; font-weight:700; opacity:.85;}
+
+/* Falha prolongada: mesmo vermelho do "não efetivada", com anel interno para não se confundir com
+   uma falha de 1 dia (inset: o outline fica livre para a seleção e o foco). */
+.cg-prolongada{box-shadow:inset 0 0 0 2px currentColor;}
+
+/* Linha mensal com contorno tracejado (pedido: "as mensais com contorno diferente"). Borda, e não
+   outline, porque o outline é o da célula selecionada/focada. */
+#cargas-matrix tr.cg-mensal .cg-cell{border:1.5px dashed currentColor;}
+#cargas-matrix tr.cg-mensal > td.col-company,
+#cargas-matrix tr.cg-mensal > td.col-name{border-left:3px dashed var(--ink-faint);}
+
+#cargas-matrix .cg-inst{font-weight:650;}
+#cargas-matrix th.col-anotacao{min-width:140px;}
+
+/* Grupos recolhíveis do painel (aguardando / onboarding / inativas). */
+.modal details.cg-grupo{margin-top:10px;}
+.modal details.cg-grupo > summary{cursor:pointer; font-size:11.5px; font-weight:700; color:var(--ink-muted);}
+.modal .pchip.company-ok, .modal .pchip.company-att, .modal .pchip.company-crit,
+.modal .pchip.company-neutral, .modal .pchip.s-g1{font-weight:700;}
+
+/* Legenda: "parado" não cabe na caixinha de largura fixa das outras legendas. */
+#cargas-legend .legend-swatch{width:auto; min-width:28px; padding:0 5px;}
