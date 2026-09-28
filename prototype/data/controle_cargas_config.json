@@ -1,4 +1,5 @@
 {
+  "_confirmacao": "D3 confirmado pelo usuário em 27/09/2026: cobertura parcial 95%, 1 faltante tolerado, inativa após 5 du sem carga, trava de falha prolongada em 50%.",
   "diasAtividadeDu": 5,
   "diasCarteiraNovaDu": 5,
   "limiteExcluidasPct": 50,

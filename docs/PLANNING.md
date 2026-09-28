@@ -1736,7 +1736,9 @@ Demandas". Arquitetura aprovada pelo usuário (confirmação 2 do escopo).
   `snapshot["cargas"] = {linhas, parametros}`. Usa as linhas de carteira já prontas (mockkey do dia:
   wu/wc/cD/p = tem carga; wait = no prazo; miss = vencida) e o calendário ANBIMA. **Nenhuma chamada
   nova à API.** Medido num snapshot real de 1032 carteiras: 53 linhas, 1,5 s, 116 KB a mais no JSON.
-- **Métrica (proposta D3, "a confirmar")**, parâmetros em `data/controle_cargas_config.json`:
+- **Métrica (D3 — confirmada pelo usuário em 27/09/2026, valores como propostos)**, parâmetros em
+  `data/controle_cargas_config.json` (o campo `_confirmacao` registra isso; o código ignora chaves com `_`
+  por não usá-las):
   efetivada (0 faltantes) · parcial (1 faltante ou cobertura ≥ 95%) · não efetivada · **falha
   prolongada** (nenhuma ativa ou > 50% das esperadas inativas — um feed parado não vira 0/0 = OK) ·
   aguardando (ninguém vencido, alguém no prazo). Inativa = sem carga nos 5 du ANTES do dia (quando a
