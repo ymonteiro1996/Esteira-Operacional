@@ -166,14 +166,18 @@ montarComentarioNaDataExcel(r, data){
         cor) e se aquele dia é Pauta (define o contorno).
      4. As 7 colunas de auditoria: Responsável/Comentário sobre atuação (da
         data de referência) + as 5 que cobrem a janela inteira, dia a dia
-        (montarColunaPorDiaExcel). */
-montarPayloadExcel(){
+        (montarColunaPorDiaExcel).
+   [2026-09-28] `linhasCarteira` opcional: sem ela, as carteiras da tela (filtros + ordem, como
+   sempre); com ela, só essas — usado pelo "⬇ Excel" das carteiras faltantes da aba Controle de
+   Cargas (painel_carga.js). */
+montarPayloadExcel(linhasCarteira){
   const meta = ControleCargas.SNAPSHOT.meta;
   const janela = meta.window;
   const refDate = meta.referenceDate;
   const rotuloJanela = `${ControleCargas.fmtDM(janela[0])}–${ControleCargas.fmtDM(janela[janela.length-1])}`;
 
-  const linhas = ControleCargas.sortedRows(ControleCargas.SNAPSHOT.wallets, true).map(r=>{
+  const origem = linhasCarteira || ControleCargas.sortedRows(ControleCargas.SNAPSHOT.wallets, true);
+  const linhas = origem.map(r=>{
     const cmap = ControleCargas.cellByDate(r);
     const ttDoDia = (d)=> ((cmap[d] || {}).tt) || {};
     const anotacao = ControleCargas.annotationAtual('wallet', r.walletId);
@@ -226,21 +230,34 @@ montarPayloadExcel(){
         Content-Disposition (ou um nome padrão).
      4. Reabilita o botão em qualquer caso. */
 exportExcel(){
-  const btn = document.getElementById('btn-export');
-  const msgEl = document.getElementById('grid-note');
-  const rotuloOriginal = '⬇ Baixar Excel';
+  return ControleCargas.baixarXlsxMatriz(ControleCargas.montarPayloadExcel(),
+    document.getElementById('btn-export'), null, document.getElementById('grid-note'));
+},
+
+/* Contexto:
+   Manda um payload de matriz pro servidor (POST /api/exportar-excel) e salva o .xlsx que volta —
+   o corpo do antigo exportExcel(), extraído [2026-09-28] para o "⬇ Excel" do painel da aba Controle
+   de Cargas reaproveitar o MESMO exportador. Retorna Promise (resolvida sempre; erro vira mensagem).
+
+   Pseudocódigo:
+     1. Desabilita o botão e mostra "Gerando Excel...".
+     2. POST; resposta não-ok vira erro com a mensagem do backend.
+     3. Salva o blob com `nomeArquivo` (se veio) ou o nome do Content-Disposition.
+     4. Erro -> mensagem em `msgEl` (ou alert); reabilita o botão em qualquer caso. */
+baixarXlsxMatriz(payload, btn, nomeArquivo, msgEl){
+  const rotuloOriginal = btn ? btn.textContent : '';
   if(btn){ btn.disabled = true; btn.textContent = 'Gerando Excel...'; }
 
   return fetch('/api/exportar-excel', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(ControleCargas.montarPayloadExcel()),
+    body: JSON.stringify(payload),
   })
     .then(async r=>{
       if(!r.ok){
         const erro = await r.json().catch(()=>({}));
         throw new Error(erro.error || ('http '+r.status));
       }
-      return { blob: await r.blob(), nome: ControleCargas.nomeArquivoDaResposta(r) };
+      return { blob: await r.blob(), nome: nomeArquivo || ControleCargas.nomeArquivoDaResposta(r) };
     })
     .then(({blob, nome})=>{
       const url = URL.createObjectURL(blob);
@@ -254,6 +271,7 @@ exportExcel(){
     })
     .catch(err=>{
       if(msgEl) msgEl.textContent = 'Erro ao gerar o Excel: ' + err.message;
+      else alert('Erro ao gerar o Excel: ' + err.message);
     })
     .finally(()=>{
       if(btn){ btn.disabled = false; btn.textContent = rotuloOriginal; }

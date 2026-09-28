@@ -5,7 +5,9 @@ Mensal/Diário ... uma métrica que diga se a carga foi efetivada ... mostrar pr
 mais carteiras afetadas" — aba nova aprovada pelo usuário (confirmação de arquitetura 2 do
 docs/ESCOPO_MUDANCAS_2026-09.md)]
 
-Uma linha por CHAVE `companyId | Instituição | Modelo de Carga | D/M`; uma célula por dia da janela do
+Uma linha por CHAVE `companyId | Instituição | Modelo de Carga | D/M | SLA` [SLA entrou na chave em
+2026-09-28, pedido do usuário: "uma coluna filtrável por SLA, sendo um novo campo de agrupamento
+seguindo Company, entidade"]; uma célula por dia da janela do
 grid com a cobertura de carga das carteiras do Template daquela chave. Tudo sai das linhas de carteira
 que o snapshot JÁ calculou (build_snapshot._montar_snapshot) — nenhuma chamada nova à API Beehus.
 
@@ -94,13 +96,33 @@ def carregar_config_cargas(data_dir):
 # 2. REGRAS DA MÉTRICA (funções puras)
 # ─────────────────────────────────────────────────────────────
 
+def rotulo_sla(linha_carteira):
+    """Contexto:
+    SLA da carteira como aparece na coluna SLA [2026-09-28]: diária = a Defasagem EFETIVA (a que gera
+    o prazo, inclusive a herdada da explosão), no formato do Template ("D-1", "D-3"); mensal = "M+n du"
+    com n = du Recebimento PDF + du Upload Beehus (o prazo do fechamento), ou "M" sem esses campos.
+    Retorna string.
+
+    Pseudocódigo: 1. Mensal -> "M+n du"/"M". 2. Diária -> "D-<defasagem efetiva>".
+    """
+    if linha_carteira.get("monthly"):
+        pdf, upload = linha_carteira.get("slaPdfReceiptDu"), linha_carteira.get("slaUploadDu")
+        if pdf is None and upload is None:
+            return "M"
+        return f"M+{(pdf or 0) + (upload or 0)} du"
+    defasagem = linha_carteira.get("lagBizDaysEfetiva", linha_carteira.get("lagBizDays"))
+    return f"D-{defasagem or 0}"
+
+
 def montar_chave_carga(linha_carteira):
     """Contexto:
     Chave da linha da matriz — também é o targetId de comentários e anotações ('carga').
-    Retorna string "companyId|Instituição|Modelo|D" (ou "|M").
+    Retorna string "companyId|Instituição|Modelo|D|SLA" (ou "|M|SLA").
+    [2026-09-28] O SLA virou o 5º campo: anotação/comentário gravado com a chave antiga (4 campos,
+    entre 27 e 28/09) deixa de aparecer na linha.
 
     Pseudocódigo:
-      1. Junta companyId, instituição, modelo de carga e D/M com "|".
+      1. Junta companyId, instituição, modelo de carga, D/M e o rótulo do SLA com "|".
     """
     periodicidade = "M" if linha_carteira.get("monthly") else "D"
     return "|".join([
@@ -108,6 +130,7 @@ def montar_chave_carga(linha_carteira):
         (linha_carteira.get("institution") or "").strip() or "—",
         (linha_carteira.get("loadModel") or "").strip() or "—",
         periodicidade,
+        rotulo_sla(linha_carteira),
     ])
 
 
@@ -189,6 +212,11 @@ def situacao_carteira_mensal(linha_carteira, data, calendario, data_hoje):
     return "aguardando" if calendario.dias_uteis_entre(prazo, data_hoje) < 0 else "faltante"
 
 
+def celula_da_carteira(linha_carteira, data):
+    """Contexto: a célula (dict do snapshot) da carteira no dia, ou {}. Retorna dict."""
+    return next((c for c in linha_carteira.get("cells") or [] if c.get("d") == data), {})
+
+
 def situacao_carteira_diaria(linha_carteira, data):
     """Contexto: situação de uma carteira DIÁRIA no dia `data`, lida do mockkey que o snapshot já
     calculou (o prazo com Defasagem já está nele). Retorna "carga" | "aguardando" | "faltante".
@@ -196,8 +224,7 @@ def situacao_carteira_diaria(linha_carteira, data):
     Pseudocódigo:
       1. Mockkey de carga -> "carga"; "wait" -> "aguardando"; resto -> "faltante".
     """
-    celula = next((c for c in linha_carteira.get("cells") or [] if c.get("d") == data), None)
-    mockkey = celula.get("s") if celula else None
+    mockkey = celula_da_carteira(linha_carteira, data).get("s")
     if mockkey in MOCKKEYS_COM_CARGA:
         return "carga"
     return "aguardando" if mockkey == "wait" else "faltante"
@@ -251,11 +278,20 @@ def montar_celula_carga(carteiras, data, janela, calendario, data_hoje, config, 
 
     listas = {"faltantes": [], "aguardando": [], "onboarding": [], "inativas": []}
     esperadas = com_carga = 0
+    # [2026-09-28, pedido do usuário: "Sinalização de Pauta dia igual Carteira"] Pauta = o dia da
+    # Defasagem é hoje (D0) para a carteira — o mesmo overlay 'pauta' que a aba Carteiras mostra;
+    # 'seq' junto = D-1 sem processada (anel vermelho, CC-05). Conta entre as esperadas.
+    em_pauta = pauta_sem_d1 = 0
     for carteira in carteiras:
         inicio = _data_inicio(carteira)
         if inicio and inicio > data:
             continue   # ainda não começou: não é esperada neste dia
         esperadas += 1
+        overlays = celula_da_carteira(carteira, data).get("ov") or []
+        if "pauta" in overlays:
+            em_pauta += 1
+            if "seq" in overlays:
+                pauta_sem_d1 += 1
         dias_com_carga = datas_com_carga(carteira)
         nova = carteira_e_nova(carteira, data, calendario, config)
         if not mensal and not nova and not carteira_ativa_na_data(dias_com_carga, data, janela, config):
@@ -281,6 +317,7 @@ def montar_celula_carga(carteiras, data, janela, calendario, data_hoje, config, 
         "esperadas": esperadas, "ativas": ativas, "comCarga": com_carga,
         "nFaltantes": len(listas["faltantes"]), "nAguardando": len(listas["aguardando"]),
         "nOnboarding": len(listas["onboarding"]), "nInativas": len(listas["inativas"]),
+        "pauta": em_pauta > 0, "nPauta": em_pauta, "pautaSemD1": pauta_sem_d1 > 0,
         **listas,
     }
 
@@ -345,6 +382,7 @@ def montar_linha_carga(chave, carteiras, janela, calendario, data_hoje, config):
         "loadModel": (primeira.get("loadModel") or "").strip() or "—",
         "isManualLoad": bool(primeira.get("isManualLoad")),
         "periodicity": "M" if mensal else "D",
+        "sla": rotulo_sla(primeira),
         "totalWallets": len(carteiras),
         "cells": celulas,
         "faltantesRef": faltantes_para_ordenar(referencia) if referencia else 0,
@@ -358,11 +396,11 @@ def ordenar_linhas_carga(linhas):
 
     Pseudocódigo:
       1. Faltantes na referência (decrescente), dias seguidos com problema (decrescente), depois
-         Company, Instituição, Modelo e D/M em ordem alfabética.
+         Company, Instituição, Modelo, D/M e SLA em ordem alfabética.
     """
     linhas.sort(key=lambda l: (-l["faltantesRef"], -l["diasSeguidosProblema"],
                                (l["company"] or "").casefold(), l["institution"].casefold(),
-                               l["loadModel"].casefold(), l["periodicity"]))
+                               l["loadModel"].casefold(), l["periodicity"], l.get("sla") or ""))
     return linhas
 
 

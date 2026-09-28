@@ -27,5 +27,21 @@
 .modal .pchip.company-ok, .modal .pchip.company-att, .modal .pchip.company-crit,
 .modal .pchip.company-neutral, .modal .pchip.s-g1{font-weight:700;}
 
+/* [2026-09-28] Painel da carga: matriz de processamento das carteiras de cada grupo (painel_carga.js). */
+.modal .cg-proc-wrap{overflow-x:auto; margin:6px 0 4px;}
+.modal table.cg-proc{border-collapse:collapse; font-size:11px;}
+.modal table.cg-proc th{font-weight:600; color:var(--ink-faint); text-align:left; padding:2px 6px; white-space:nowrap;}
+.modal table.cg-proc th .dline{display:block; font-size:9px;}
+.modal table.cg-proc th.cg-proc-foco{color:var(--ink);}
+.modal table.cg-proc td{padding:2px 4px; white-space:nowrap; border-bottom:1px solid var(--border);}
+.modal table.cg-proc td .cell{min-width:34px; height:22px; font-size:10px;}
+.modal table.cg-proc td .cell.focused{outline:2px solid var(--ink); outline-offset:1px;}
+.modal table.cg-proc td .cell .atraso-badge{font-size:7px;}
+.modal .cg-proc-nome{cursor:pointer; font-weight:600; text-decoration:underline dotted;}
+.modal details.cg-grupo > summary .cg-btn-excel{margin-left:8px; padding:1px 8px; font-size:10.5px;}
+.modal .pchip.cg-chip-pauta{background:var(--overlay-pauta); color:var(--overlay-pauta-ink);}
+#cargas-matrix td.cg-sla{font-variant-numeric:tabular-nums; white-space:nowrap;}
+#panel-cargas #cargas-limpar-filtros{margin-left:6px;}
+
 /* Legenda: "parado" não cabe na caixinha de largura fixa das outras legendas. */
 #cargas-legend .legend-swatch{width:auto; min-width:28px; padding:0 5px;}

@@ -56,6 +56,14 @@ conteudoCelulaCarga(c){
   return `<span class="cg-num">${pct}</span><span class="cg-falta">−${c.nFaltantes}</span>`;
 },
 
+/* Contexto: classes do anel de Pauta de 1 célula de carga — as mesmas da aba Carteiras: azul
+   (.ov-pauta) quando alguma carteira da linha está no dia da Defasagem, vermelho (.ov-seq por cima)
+   quando alguma delas está com o D-1 sem processada (CC-05) [2026-09-28]. Retorna string. */
+classesPautaCarga(c){
+  if(!c.pauta) return '';
+  return 'ov-pauta' + (c.pautaSemD1 ? ' ov-seq' : '');
+},
+
 /* Contexto: title (hover) de 1 célula, com as contagens que a métrica usou. Retorna string.
 
    Pseudocódigo: 1. Nome do nível + dia; 2. contagens (com carga, faltantes, aguardando,
@@ -67,6 +75,7 @@ tituloCelulaCarga(linha, c){
     texto += `\nCom carga: ${c.comCarga} · Faltantes: ${c.nFaltantes} · Aguardando: ${c.nAguardando}`
       + ` · Onboarding: ${c.nOnboarding} · Inativas (fora do cálculo): ${c.nInativas}`;
   }
+  if(c.pauta) texto += `\nPauta: ${c.nPauta} carteira(s) no dia da Defasagem${c.pautaSemD1 ? ' — alguma com o D-1 sem processada' : ''}`;
   return texto + '\n1º clique seleciona o dia · 2º clique abre as carteiras';
 },
 
@@ -74,8 +83,9 @@ tituloCelulaCarga(linha, c){
    (os mesmos de Carteiras). Retorna string HTML.
 
    Pseudocódigo:
-     1. Classe de cor do nível + seleção.
-     2. Balão do comentário vigente no dia (cmt-dot) e ponto azul de anotação (atuacao-dot).
+     1. Classe de cor do nível + anel de Pauta + seleção.
+     2. Badge "Pauta" (igual à aba Carteiras), balão do comentário vigente no dia (cmt-dot) e ponto
+        azul de anotação (atuacao-dot).
      3. data-view="cargas" + data-rid/data-date: é por eles que a seleção acha a célula. */
 celulaCargaHtml(linha, c){
   const nivel = ControleCargas.NIVEIS_CARGA[c.nivel] || ControleCargas.NIVEIS_CARGA.nao_avaliada;
@@ -83,16 +93,18 @@ celulaCargaHtml(linha, c){
   const marcadores = (sev ? `<span class="cmt-dot ${sev}"></span>` : '')
     + (ControleCargas.anotacaoExisteNaData('carga', linha.key, c.d) ? '<span class="atuacao-dot"></span>' : '');
   const selecionada = ControleCargas.celulaEstaSelecionada('cargas', linha.key, c.d) ? ' celula-selecionada' : '';
-  return `<td><div class="cell cg-cell ${nivel.cls}${selecionada}" tabindex="0" data-view="cargas"`
+  const badgePauta = c.pauta ? ControleCargas.atrasoBadgeHtml(['pauta']) : '';
+  return `<td><div class="cell cg-cell ${nivel.cls} ${ControleCargas.classesPautaCarga(c)}${selecionada}" tabindex="0" data-view="cargas"`
     + ` data-rid="${ControleCargas.escAttr(linha.key)}" data-date="${c.d}"`
     + ` title="${ControleCargas.escAttr(ControleCargas.tituloCelulaCarga(linha, c))}">`
-    + `${ControleCargas.conteudoCelulaCarga(c)}${marcadores}</div></td>`;
+    + `${ControleCargas.conteudoCelulaCarga(c)}${badgePauta}${marcadores}</div></td>`;
 },
 
 /* Contexto: <tr> de 1 chave. Retorna string HTML.
 
    Pseudocódigo:
-     1. Colunas fixas: Company, Instituição, Modelo (com "manual" quando é o caso), D/M, Carteiras.
+     1. Colunas fixas: Company, Instituição, Modelo (com "manual" quando é o caso), D/M, SLA,
+        Carteiras.
      2. Uma célula por dia; 3. Responsável / Comentário sobre atuação (anotacoes.js, 'carga'). */
 linhaCargaHtml(linha, window_){
   const porData = Object.fromEntries(linha.cells.map(c=> [c.d, c]));
@@ -104,6 +116,7 @@ linhaCargaHtml(linha, window_){
     + (sevLinha ? `<span class="row-comment-badge ${sevLinha}" title="${ControleCargas.escAttr(ControleCargas.rowCommentTexts('carga', linha.key))}"></span>` : '')
     + `</td><td class="col-summary">${ControleCargas.esc(linha.loadModel)}${linha.isManualLoad ? ' <span class="went">manual</span>' : ''}</td>`
     + `<td class="col-summary" title="${linha.periodicity === 'M' ? 'Mensal' : 'Diária'}">${linha.periodicity}</td>`
+    + `<td class="col-summary cg-sla">${ControleCargas.esc(linha.sla || '—')}</td>`
     + `<td class="col-summary">${linha.totalWallets}</td>`;
   window_.forEach(d=>{
     const c = porData[d];
@@ -118,18 +131,27 @@ linhaCargaHtml(linha, window_){
    mesmo rótulo "D-n" da aba Carteiras — reaproveita rotuloDistanciaHojeHtml (matriz.js), que lê
    meta.diasUteisAteHoje (calendário ANBIMA, relativo ao Data D0) — em vez de recalcular aqui.
 
-   Pseudocódigo: 1. 5 colunas fixas; 2. um <th> por dia (rótulo D-n + data; ref marcada); 3. as 2 de
-   anotação. */
+   [2026-09-28, pedido do usuário: "Cabeçalhos filtráveis" + coluna SLA] Todo cabeçalho ganha o ▾
+   (filtros_cargas.js); a coluna SLA entra depois de D/M.
+
+   Pseudocódigo: 1. 6 colunas fixas com ▾; 2. um <th> por dia (rótulo D-n + data; ref marcada) com ▾;
+   3. as 2 de anotação com ▾. */
 cabecalhoCargasHtml(window_, refDate){
-  let html = '<thead><tr><th class="hdr-companyname">Company</th><th>Instituição</th><th>Modelo</th>'
-    + '<th title="D = diária · M = mensal">D/M</th><th class="hdr-summary">Carteiras</th>';
+  const f = (chave, rotulo)=> ControleCargas.botaoFiltroCargasHtml(chave, rotulo);
+  let html = `<thead><tr><th class="hdr-companyname">Company ${f('company', 'Company')}</th>`
+    + `<th>Instituição ${f('institution', 'Instituição')}</th><th>Modelo ${f('loadModel', 'Modelo')}</th>`
+    + `<th title="D = diária · M = mensal">D/M ${f('periodicity', 'D/M')}</th>`
+    + `<th title="Diária: Defasagem efetiva do Template (D-n). Mensal: fim do mês + du Recebimento PDF + du Upload.">SLA ${f('sla', 'SLA')}</th>`
+    + `<th class="hdr-summary">Carteiras ${f('totalWallets', 'Carteiras')}</th>`;
   window_.forEach(d=>{
     const isRef = d === refDate;
+    const botao = f(ControleCargas.PREFIXO_FILTRO_DIA_CARGA + d, ControleCargas.fmtDM(d));
     html += `<th class="${isRef ? 'ref' : ''}">${ControleCargas.rotuloDistanciaHojeHtml(d)}${ControleCargas.fmtDM(d)}`
-      + (isRef ? '<span class="refline">▾ ref</span>' : `<br><span style="font-weight:400">${ControleCargas.weekdayAbbrev(d)}</span>`)
+      + (isRef ? `<span class="refline">▾ ref ${botao}</span>` : `<br><span style="font-weight:400">${ControleCargas.weekdayAbbrev(d)}</span>${botao}`)
       + '</th>';
   });
-  return html + '<th class="col-anotacao">Responsável</th><th class="col-anotacao">Comentário sobre atuação</th></tr></thead>';
+  return html + `<th class="col-anotacao">Responsável ${f('responsavel', 'Responsável')}</th>`
+    + `<th class="col-anotacao">Comentário sobre atuação ${f('comentarioAtuacao', 'Comentário sobre atuação')}</th></tr></thead>`;
 },
 
 /* Contexto: (re)desenha a aba. Chamada por switchTab('cargas'), pelo Atualizar e pelo salvar de
@@ -137,7 +159,8 @@ cabecalhoCargasHtml(window_, refDate){
 
    Pseudocódigo:
      1. Snapshot sem SNAPSHOT.cargas (arquivo antigo) -> convite para clicar em Atualizar.
-     2. Aplica o chip D/M, monta cabeçalho + corpo.
+     2. Aplica o chip D/M e os filtros de coluna / Status na Pauta (filtros_cargas.js), monta
+        cabeçalho + corpo.
      3. Contagem, chips, religa cliques e inputs de anotação. */
 buildCargasMatrix(){
   const tabela = document.getElementById('cargas-matrix');
@@ -151,13 +174,16 @@ buildCargasMatrix(){
     document.getElementById('cargas-note').textContent = 'Este snapshot é de antes do Controle de Cargas — clique em ↻ Atualizar para montar a matriz.';
     return;
   }
-  const visiveis = ControleCargas.filtrarLinhasCargas(linhas);
+  ControleCargas.podarFiltrosDiaCargas(meta.window);
+  ControleCargas.atualizarBotaoPautaCargas();
+  const visiveis = ControleCargas.aplicarFiltrosColunaCargas(ControleCargas.filtrarLinhasCargas(linhas));
   tabela.innerHTML = ControleCargas.cabecalhoCargasHtml(meta.window, meta.referenceDate)
     + '<tbody>' + visiveis.map(l=> ControleCargas.linhaCargaHtml(l, meta.window)).join('') + '</tbody>';
 
   const comProblema = visiveis.filter(l=> l.faltantesRef > 0).length;
+  const filtrando = visiveis.length !== linhas.length;
   document.getElementById('cargas-count').textContent =
-    `${visiveis.length} carga${visiveis.length === 1 ? '' : 's'} · ${comProblema} com carteira faltando na referência`;
+    `${visiveis.length}${filtrando ? ' de ' + linhas.length : ''} carga${visiveis.length === 1 ? '' : 's'} · ${comProblema} com carteira faltando na referência`;
   const p = (ControleCargas.SNAPSHOT.cargas.parametros) || {};
   document.getElementById('cargas-note').textContent =
     `Cobertura = carteiras com carga ÷ (com carga + faltantes vencidas). Inativa (fora do cálculo) = sem carga nos ${p.diasAtividadeDu} du antes do dia; `
@@ -208,95 +234,7 @@ wireFiltroPeriodicidadeCargas(){
   });
 },
 
-// ═══ Painel da carga (2º clique na célula) ═══
-
-/* Contexto: lista de carteiras de 1 grupo do painel (faltantes, aguardando...), com a célula da
-   carteira no dia e clique que abre o painel da carteira. Retorna string HTML.
-
-   Pseudocódigo:
-     1. Resolve cada walletId na linha de carteira do snapshot (as que não achar são puladas).
-     2. Monta 1 .offender por carteira (mesmo visual da lista de ofensoras dos agrupamentos). */
-listaCarteirasCargaHtml(ids, data){
-  const porId = window._WALLETS_BY_ID || Object.fromEntries(ControleCargas.SNAPSHOT.wallets.map(w=> [w.walletId, w]));
-  const itens = (ids || []).map(id=> porId[id]).filter(Boolean);
-  if(!itens.length) return '<p class="empty-note">Nenhuma.</p>';
-  return itens.map(w=>{
-    const entrada = ControleCargas.cellByDate(w)[data];
-    const st = entrada ? ControleCargas.STATES[entrada.s] : null;
-    return `<div class="offender" data-drill-wallet="${ControleCargas.escAttr(w.walletId)}">`
-      + `<div class="cell ${st ? st.cls : 's-g2'}" style="min-width:34px;height:22px;font-size:10px;">${st ? st.letter : '—'}</div>`
-      + `<div class="oname">${ControleCargas.esc(w.name)}${ControleCargas.acoesIdentificadorHtml(w.name)} <code style="font-size:10px;color:var(--ink-faint);user-select:all;">${ControleCargas.esc(w.walletId)}</code>${ControleCargas.acoesIdentificadorHtml(w.walletId)}</div>`
-      + `<div class="ometa">${st ? ControleCargas.esc(st.name) : '—'}${entrada && entrada.tt && entrada.tt.sla ? ' · ' + ControleCargas.esc(entrada.tt.sla) : ''}</div></div>`;
-  }).join('');
-},
-
-/* Contexto: cabeçalho do painel da carga (chave, dia, nível e, na carga manual, quem aciona).
-   Retorna string HTML.
-
-   Pseudocódigo: 1. Título com Instituição · Modelo; 2. chips; 3. resumo da anotação do dia. */
-secaoCabecalhoCarga(linha, c){
-  const nivel = ControleCargas.NIVEIS_CARGA[c.nivel] || {nome:c.nivel, cls:''};
-  let html = `<h3>${ControleCargas.esc(linha.institution)} · ${ControleCargas.esc(linha.loadModel)}</h3>`
-    + `<div class="modal-sub">Carga ${linha.periodicity === 'M' ? 'mensal' : 'diária'} · ${ControleCargas.esc(linha.company)} · ${ControleCargas.weekdayAbbrev(c.d)} ${c.d}</div>`
-    + `<div class="chiprow"><span class="pchip ${nivel.cls}">${ControleCargas.esc(nivel.nome)}</span>`
-    + `<span class="pchip">${linha.totalWallets} carteira${linha.totalWallets === 1 ? '' : 's'} no Template</span>`
-    + (linha.isManualLoad ? `<span class="pchip">Carga manual — acionar: ${ControleCargas.esc(linha.loadModel)}</span>` : '')
-    + '</div>';
-  return html + ControleCargas.resumoAtuacaoHtml('carga', linha.key, c.d);
-},
-
-/* Contexto: mini-linha do tempo da chave no painel — clicar num dia refoca o painel nele
-   (data-panel-date, ligado por wireFocoDataPainel). Retorna string HTML.
-
-   Pseudocódigo: 1. Uma mini-célula por dia, com a cor do nível e o dia focado marcado. */
-secaoJanelaCarga(linha, dataFocada){
-  let html = `<div class="psec"><h4>Janela (${linha.cells.length} du)</h4><div class="mini-row">`;
-  linha.cells.forEach(c=>{
-    const nivel = ControleCargas.NIVEIS_CARGA[c.nivel] || ControleCargas.NIVEIS_CARGA.nao_avaliada;
-    html += `<div class="cell ${nivel.cls}${c.d === dataFocada ? ' focused' : ''}" data-panel-date="${c.d}"`
-      + ` title="${ControleCargas.escAttr(c.d + ' — ' + nivel.nome)}">${ControleCargas.conteudoCelulaCarga(c)}</div>`;
-  });
-  return html + '</div></div>';
-},
-
-/* Contexto: as 4 listas do dia (faltantes abertas; aguardando/onboarding/inativas recolhidas).
-   Retorna string HTML.
-
-   Pseudocódigo:
-     1. Dia não avaliado -> nota explicando.
-     2. Faltantes em destaque; as outras 3 dentro de <details> com a contagem no título. */
-secaoCarteirasCarga(c){
-  if(c.nivel === 'nao_avaliada'){
-    return '<div class="psec"><h4>Carteiras</h4><p class="empty-note">Carga mensal: só o último dia útil do mês é avaliado.</p></div>';
-  }
-  const grupo = (titulo, ids, aberto)=> `<details class="cg-grupo"${aberto ? ' open' : ''}><summary>${titulo} (${(ids || []).length})</summary>`
-    + ControleCargas.listaCarteirasCargaHtml(ids, c.d) + '</details>';
-  return `<div class="psec"><h4>Carteiras faltantes (${c.nFaltantes})</h4>${ControleCargas.listaCarteirasCargaHtml(c.faltantes, c.d)}`
-    + grupo('Aguardando (no prazo)', c.aguardando, false)
-    + grupo('Onboarding (nova, sem a 1ª carga)', c.onboarding, false)
-    + grupo('Inativas (sem carga há dias — fora do cálculo)', c.inativas, c.nivel === 'falha_prolongada')
-    + '</div>';
-},
-
-/* Contexto: abre o painel da carga focado num dia. Chamada pelo 2º clique na célula e ao refocar
-   pela mini-linha do tempo ou depois de salvar comentário (reabrirPainel, paineis.js). Não retorna
-   nada.
-
-   Pseudocódigo:
-     1. Acha a linha e a célula do dia (sem elas, não abre).
-     2. Cabeçalho + janela + carteiras + comentários ('carga').
-     3. openModal + wirePanelInteractions (foco, drill-through para a carteira, comentários). */
-buildCargaPanel(chave, data){
-  const linha = (ControleCargas.linhasCargas() || []).find(l=> l.key === chave);
-  if(!linha) return;
-  const c = linha.cells.find(x=> x.d === data) || linha.cells[linha.cells.length - 1];
-  const html = ControleCargas.secaoCabecalhoCarga(linha, c)
-    + ControleCargas.secaoJanelaCarga(linha, c.d)
-    + ControleCargas.secaoCarteirasCarga(c)
-    + ControleCargas.commentsSectionHtml('carga', linha.key, c.d);
-  ControleCargas.openModal(html);
-  ControleCargas.wirePanelInteractions('carga', linha.key, c.d);
-},
+// Painel da carga (2º clique na célula): static/js/controle_cargas/painel_carga.js [2026-09-28].
 
 // ═══ Troca de aba ═══
 

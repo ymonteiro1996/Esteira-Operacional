@@ -1761,6 +1761,28 @@ Demandas". Arquitetura aprovada pelo usuário (confirmação 2 do escopo).
   Demandas/Anomalias/Não Cadastradas não foram tocadas — `wireAbaCargas()` registra os listeners que
   faltam nelas.
 - **Rótulo D-n no cabeçalho** [2026-09-28, pedido do usuário: "replicar a lógica de D-1, D-2 da Carteiras" — "aplicar na aba Controle de Cargas"]: cada data mostra o mesmo "D-n" da aba Carteiras (`rotuloDistanciaHojeHtml`, de `meta.diasUteisAteHoje` — calendário ANBIMA, relativo ao Data D0).
+- **[2026-09-28, pedido do usuário — 4 itens]**
+  - **SLA na chave**: a linha passou a ser `companyId | Instituição | Modelo | D/M | SLA` (coluna própria
+    depois de D/M). Diária = Defasagem EFETIVA do Template (`D-1`, `D-3`…, inclusive a herdada da
+    explosão); mensal = `M+n du` (du Recebimento PDF + du Upload), ou `M`. `matriz_cargas.rotulo_sla`.
+    Anotação/comentário gravado com a chave de 4 campos (27–28/09) deixa de aparecer na linha.
+  - **Pauta igual à Carteiras**: a célula recebe o badge "Pauta" + anel azul quando alguma carteira da
+    linha está no dia da Defasagem (overlay `pauta` das células de carteira), e o anel vermelho quando
+    alguma está com o D-1 sem processada (`seq`, CC-05) — `pauta`/`nPauta`/`pautaSemD1` na célula.
+    Botão **"Status na Pauta ▾"** (coluna virtual, como na Carteiras): o nível da célula em pauta, ou
+    "Sem pauta na janela".
+  - **Cabeçalhos filtráveis**: ▾ em Company, Instituição, Modelo, D/M, SLA, Carteiras, cada dia (nível,
+    com "· Pauta"), Responsável e Comentário sobre atuação (da data de referência; "(vazio)"). Estilo
+    Excel, em cascata, via `utils/filtro_popover.js`; E entre colunas, OU dentro. "Limpar filtros" zera
+    tudo (inclusive o chip D/M). `static/js/controle_cargas/filtros_cargas.js`.
+  - **Painel do 2º clique**: cada grupo do dia (faltantes aberta; aguardando/onboarding/inativas
+    recolhidas) virou uma **matriz de processamento** carteira × dia (Carteira, WalletID, Company,
+    Instituição + a simbologia da aba Carteiras, com D-n) e um **"⬇ Excel (N)"** que baixa essas
+    carteiras pelo mesmo exportador .xlsx da Carteiras (`montarPayloadExcel(linhas)` +
+    `baixarXlsxMatriz`, exportar.js), com o nome `ControleCargas_<inst>_<modelo>_<dia>_<grupo>.xlsx`.
+    O painel saiu para `static/js/controle_cargas/painel_carga.js`.
+  - Verificado: 26 checks das regras + 22 novos na tela (Playwright, servidor isolado, snapshot
+    sintético; o .xlsx baixado aberto com openpyxl) + os testes de CC-01/CC-03/CC-05/TRV-02 sem regressão.
 - **Limites**: a API devolve o estado ATUAL (sem histórico); com filtro de empresa no Atualizar, só a
   empresa escolhida aparece. Snapshot gravado antes desta aba mostra o convite para Atualizar.
 - **Fases seguintes**: 3B (ler `GET /beehus/jobs/logger`) depende de um exemplo de resposta capturado

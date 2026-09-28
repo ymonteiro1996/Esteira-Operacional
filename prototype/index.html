@@ -292,6 +292,10 @@
     <div class="toolbar2">
       <span class="resultcount" id="cargas-count"></span>
       <button class="btn" id="btn-salvar-anotacoes-cargas" type="button" disabled title="Salva o Responsável / Comentário sobre atuação editados nesta aba (mesmo lote do Salvar da grade)">💾 Salvar</button>
+      <!-- [2026-09-28] Status na Pauta (coluna virtual, como na aba Carteiras) + limpar filtros de coluna. -->
+      <button type="button" class="th-filter-btn chip-filtro" id="cargas-filtro-pauta" data-cg-coluna="statusPauta" aria-pressed="false"
+              title="Filtra pelo status da célula em Pauta (o dia da Defasagem é hoje) — ou as linhas sem pauta na janela">Status na Pauta ▾</button>
+      <button type="button" class="linklike" id="cargas-limpar-filtros" title="Tira todos os filtros da aba (cabeçalhos, Status na Pauta e Diárias/Mensais)">Limpar filtros</button>
       <div class="pubhora-switch" id="cargas-periodicidade" role="group" aria-label="Periodicidade da carga">
         <button type="button" class="pubhora-switch-btn active" data-periodicidade="todas" aria-pressed="true">Todas</button>
         <button type="button" class="pubhora-switch-btn" data-periodicidade="D" aria-pressed="false">Diárias</button>
@@ -307,6 +311,7 @@
       <span class="legend-item"><span class="legend-swatch company-crit">70%</span><span>Não efetivada</span></span>
       <span class="legend-item"><span class="legend-swatch company-crit cg-prolongada">parado</span><span>Falha prolongada: nenhuma ativa, ou mais da metade sem carga há dias</span></span>
       <span class="legend-item"><span class="legend-swatch s-g1">⏳</span><span>Aguardando: ainda no prazo</span></span>
+      <span class="legend-item"><span class="legend-swatch company-ok ov-pauta"><span class="atraso-badge pauta" aria-hidden="true">Pauta</span></span><span>Pauta: o dia da Defasagem é hoje (anel vermelho = alguma carteira com o D-1 sem processada)</span></span>
       <span class="legend-item"><span class="legend-swatch company-neutral">—</span><span>Mensal fora do fechamento do mês</span></span>
       <span class="legend-item"><span class="legend-swatch company-neutral" style="border:1.5px dashed currentColor;">M</span><span>Linha mensal (contorno tracejado)</span></span>
     </div>
@@ -712,6 +717,8 @@
      antes de index.js, que liga wireSelecaoCelula() no bootstrap. -->
 <script src="/static/js/controle_cargas/selecao_celula.js"></script>
 <script src="/static/js/controle_cargas/matriz_cargas.js"></script>
+<script src="/static/js/controle_cargas/filtros_cargas.js"></script>
+<script src="/static/js/controle_cargas/painel_carga.js"></script>
 <script src="/static/js/controle_cargas/exportar.js"></script>
 <script src="/static/js/controle_cargas/progresso.js"></script>
 <script src="/static/js/controle_cargas/atualizar.js"></script>
