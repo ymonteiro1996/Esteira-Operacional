@@ -1762,10 +1762,12 @@ Demandas". Arquitetura aprovada pelo usuário (confirmação 2 do escopo).
   faltam nelas.
 - **Rótulo D-n no cabeçalho** [2026-09-28, pedido do usuário: "replicar a lógica de D-1, D-2 da Carteiras" — "aplicar na aba Controle de Cargas"]: cada data mostra o mesmo "D-n" da aba Carteiras (`rotuloDistanciaHojeHtml`, de `meta.diasUteisAteHoje` — calendário ANBIMA, relativo ao Data D0).
 - **[2026-09-28, pedido do usuário — 4 itens]**
-  - **SLA na chave**: a linha passou a ser `companyId | Instituição | Modelo | D/M | SLA` (coluna própria
-    depois de D/M). Diária = Defasagem EFETIVA do Template (`D-1`, `D-3`…, inclusive a herdada da
-    explosão); mensal = `M+n du` (du Recebimento PDF + du Upload), ou `M`. `matriz_cargas.rotulo_sla`.
-    Anotação/comentário gravado com a chave de 4 campos (27–28/09) deixa de aparecer na linha.
+  - **SLA como coluna (não chave)** [entrou na chave e saiu no mesmo dia — pedido do usuário: "a carência não deve
+    virar chave, reverter"]: a linha continua `companyId | Instituição | Modelo | D/M`; a coluna SLA (depois de D/M)
+    mostra as carências das carteiras da linha (`slas`, ex.: "D-1, D-3"; `matriz_cargas.slas_das_carteiras`). Diária =
+    Defasagem EFETIVA do Template (inclusive a herdada da explosão); mensal = `M+n du` (du Recebimento PDF + du Upload)
+    ou `M`. O filtro ▾ do SLA lista cada carência e traz a linha que tiver ALGUMA carteira com a escolhida. Com a
+    chave de volta aos 4 campos, anotações/comentários gravados nela voltam a aparecer.
   - **Pauta igual à Carteiras**: a célula recebe o badge "Pauta" + anel azul quando alguma carteira da
     linha está no dia da Defasagem (overlay `pauta` das células de carteira), e o anel vermelho quando
     alguma está com o D-1 sem processada (`seq`, CC-05) — `pauta`/`nPauta`/`pautaSemD1` na célula.

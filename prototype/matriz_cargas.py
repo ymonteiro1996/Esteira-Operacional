@@ -5,9 +5,9 @@ Mensal/Diário ... uma métrica que diga se a carga foi efetivada ... mostrar pr
 mais carteiras afetadas" — aba nova aprovada pelo usuário (confirmação de arquitetura 2 do
 docs/ESCOPO_MUDANCAS_2026-09.md)]
 
-Uma linha por CHAVE `companyId | Instituição | Modelo de Carga | D/M | SLA` [SLA entrou na chave em
-2026-09-28, pedido do usuário: "uma coluna filtrável por SLA, sendo um novo campo de agrupamento
-seguindo Company, entidade"]; uma célula por dia da janela do
+Uma linha por CHAVE `companyId | Instituição | Modelo de Carga | D/M` [o SLA chegou a entrar na chave
+em 28/09 e saiu no mesmo dia — pedido do usuário: "a carência não deve virar chave, reverter"; ficou
+como COLUNA filtrável, com as carências das carteiras da linha]; uma célula por dia da janela do
 grid com a cobertura de carga das carteiras do Template daquela chave. Tudo sai das linhas de carteira
 que o snapshot JÁ calculou (build_snapshot._montar_snapshot) — nenhuma chamada nova à API Beehus.
 
@@ -117,12 +117,12 @@ def rotulo_sla(linha_carteira):
 def montar_chave_carga(linha_carteira):
     """Contexto:
     Chave da linha da matriz — também é o targetId de comentários e anotações ('carga').
-    Retorna string "companyId|Instituição|Modelo|D|SLA" (ou "|M|SLA").
-    [2026-09-28] O SLA virou o 5º campo: anotação/comentário gravado com a chave antiga (4 campos,
-    entre 27 e 28/09) deixa de aparecer na linha.
+    Retorna string "companyId|Instituição|Modelo|D" (ou "|M").
+    [2026-09-28] O SLA entrou e saiu da chave no mesmo dia ("a carência não deve virar chave"): a
+    chave voltou aos 4 campos, e as anotações/comentários gravados com ela voltam a aparecer.
 
     Pseudocódigo:
-      1. Junta companyId, instituição, modelo de carga, D/M e o rótulo do SLA com "|".
+      1. Junta companyId, instituição, modelo de carga e D/M com "|".
     """
     periodicidade = "M" if linha_carteira.get("monthly") else "D"
     return "|".join([
@@ -130,8 +130,20 @@ def montar_chave_carga(linha_carteira):
         (linha_carteira.get("institution") or "").strip() or "—",
         (linha_carteira.get("loadModel") or "").strip() or "—",
         periodicidade,
-        rotulo_sla(linha_carteira),
     ])
+
+
+def slas_das_carteiras(carteiras):
+    """Contexto:
+    As carências (rotulo_sla) das carteiras de uma linha, sem repetir, em ordem (D-1 antes de D-3;
+    mensais depois). É a coluna SLA e o que o filtro dela compara. Retorna [str].
+
+    Pseudocódigo: 1. Rótulo de cada carteira. 2. Distintos, ordenados pelo número de du.
+    """
+    def ordem(rotulo):
+        numero = "".join(ch for ch in rotulo if ch.isdigit())
+        return (rotulo.startswith("M"), int(numero) if numero else 0, rotulo)
+    return sorted({rotulo_sla(c) for c in carteiras}, key=ordem)
 
 
 def agrupar_carteiras_por_chave(linhas_carteiras):
@@ -382,7 +394,9 @@ def montar_linha_carga(chave, carteiras, janela, calendario, data_hoje, config):
         "loadModel": (primeira.get("loadModel") or "").strip() or "—",
         "isManualLoad": bool(primeira.get("isManualLoad")),
         "periodicity": "M" if mensal else "D",
-        "sla": rotulo_sla(primeira),
+        # [2026-09-28] carências das carteiras da linha (não é mais chave): coluna + filtro.
+        "slas": slas_das_carteiras(carteiras),
+        "sla": ", ".join(slas_das_carteiras(carteiras)),
         "totalWallets": len(carteiras),
         "cells": celulas,
         "faltantesRef": faltantes_para_ordenar(referencia) if referencia else 0,
@@ -396,11 +410,11 @@ def ordenar_linhas_carga(linhas):
 
     Pseudocódigo:
       1. Faltantes na referência (decrescente), dias seguidos com problema (decrescente), depois
-         Company, Instituição, Modelo, D/M e SLA em ordem alfabética.
+         Company, Instituição, Modelo e D/M em ordem alfabética.
     """
     linhas.sort(key=lambda l: (-l["faltantesRef"], -l["diasSeguidosProblema"],
                                (l["company"] or "").casefold(), l["institution"].casefold(),
-                               l["loadModel"].casefold(), l["periodicity"], l.get("sla") or ""))
+                               l["loadModel"].casefold(), l["periodicity"]))
     return linhas
 
 

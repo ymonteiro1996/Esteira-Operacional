@@ -141,7 +141,7 @@ cabecalhoCargasHtml(window_, refDate){
   let html = `<thead><tr><th class="hdr-companyname">Company ${f('company', 'Company')}</th>`
     + `<th>Instituição ${f('institution', 'Instituição')}</th><th>Modelo ${f('loadModel', 'Modelo')}</th>`
     + `<th title="D = diária · M = mensal">D/M ${f('periodicity', 'D/M')}</th>`
-    + `<th title="Diária: Defasagem efetiva do Template (D-n). Mensal: fim do mês + du Recebimento PDF + du Upload.">SLA ${f('sla', 'SLA')}</th>`
+    + `<th title="Carências das carteiras da linha — diária: Defasagem efetiva do Template (D-n); mensal: fim do mês + du Recebimento PDF + du Upload. Não separa linhas.">SLA ${f('sla', 'SLA')}</th>`
     + `<th class="hdr-summary">Carteiras ${f('totalWallets', 'Carteiras')}</th>`;
   window_.forEach(d=>{
     const isRef = d === refDate;

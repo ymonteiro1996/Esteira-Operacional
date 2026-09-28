@@ -46,19 +46,30 @@ textoColunaCarga(linha, chave){
     return a[chave] || ControleCargas.VAZIO_FILTRO_CARGA;
   }
   if(chave === 'periodicity') return linha.periodicity === 'M' ? 'Mensal' : 'Diária';
+  if(chave === 'sla') return (linha.slas || [linha.sla || '—']).join(', ');
   if(chave === 'loadModel') return linha.loadModel + (linha.isManualLoad ? ' (manual)' : '');
   return String(linha[chave] == null ? '—' : linha[chave]);
+},
+
+/* Contexto: valores de uma linha numa coluna — 1 valor na maioria; na coluna SLA, cada carência da
+   linha (a linha junta carteiras com carências diferentes desde que o SLA saiu da chave, 28/09).
+   Retorna [str]. */
+valoresDaLinhaCarga(linha, chave){
+  if(chave === 'sla') return (linha.slas && linha.slas.length) ? linha.slas : [linha.sla || '—'];
+  return [ControleCargas.textoColunaCarga(linha, chave)];
 },
 
 /* Contexto: aplica os filtros de coluna (e o Status na Pauta, que mora no mesmo dicionário).
    `colunaIgnorada` monta a cascata do popover daquela coluna. Retorna array.
 
-   Pseudocódigo: 1. Para cada coluna com Set ativo (exceto a ignorada), o texto precisa estar nele. */
+   Pseudocódigo: 1. Para cada coluna com Set ativo (exceto a ignorada), ALGUM valor da linha precisa
+   estar nele (na coluna SLA: alguma carência da linha). */
 aplicarFiltrosColunaCargas(linhas, colunaIgnorada){
   const ativos = Object.entries(ControleCargas.state.filtrosColunaCargas || {})
     .filter(([chave, aceitos])=> aceitos && chave !== colunaIgnorada);
   if(!ativos.length) return linhas;
-  return linhas.filter(l=> ativos.every(([chave, aceitos])=> aceitos.has(ControleCargas.textoColunaCarga(l, chave))));
+  return linhas.filter(l=> ativos.every(([chave, aceitos])=>
+    ControleCargas.valoresDaLinhaCarga(l, chave).some(v=> aceitos.has(v))));
 },
 
 /* Contexto: valores distintos de 1 coluna com a contagem, em cascata (chip D/M + os outros filtros).
@@ -70,7 +81,7 @@ valoresFiltroCargas(chave){
   const base = ControleCargas.aplicarFiltrosColunaCargas(
     ControleCargas.filtrarLinhasCargas(ControleCargas.linhasCargas() || []), chave);
   const contagem = new Map();
-  base.forEach(l=>{ const t = ControleCargas.textoColunaCarga(l, chave); contagem.set(t, (contagem.get(t) || 0) + 1); });
+  base.forEach(l=> ControleCargas.valoresDaLinhaCarga(l, chave).forEach(t=> contagem.set(t, (contagem.get(t) || 0) + 1)));
   const ordemNivel = ['Falha prolongada', 'Não efetivada', 'Parcial', 'Aguardando', 'Efetivada', 'Não avaliada', ControleCargas.SEM_PAUTA_CARGA];
   const peso = (t)=>{ const i = ordemNivel.indexOf(t.replace(' · Pauta', '')); return i < 0 ? 99 : i * 2 + (t.endsWith(' · Pauta') ? 0 : 1); };
   return [...contagem.entries()]
