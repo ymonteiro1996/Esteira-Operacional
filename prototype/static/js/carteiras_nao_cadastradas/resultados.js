@@ -21,7 +21,9 @@ Object.assign(CarteirasNaoCadastradas, {
     botoes.forEach(botao => { botao.disabled = true; });
     document.getElementById('cnc-subtitulo').textContent = 'Consultando a API Beehus (carteiras + cargas)…';
     try {
-      const resposta = await fetch('/api/carteiras-nao-cadastradas');
+      // [CC-01] "Nova" e "carga nos últimos N dias" contados a partir do Data D0 da tela.
+      const d0 = (window.ControleCargas && ControleCargas.d0Atual) ? ControleCargas.d0Atual() : '';
+      const resposta = await fetch(`/api/carteiras-nao-cadastradas?d0=${encodeURIComponent(d0)}`);
       const corpo = await resposta.json();
       if (!resposta.ok) throw new Error(corpo.error || `HTTP ${resposta.status}`);
       this.resposta = corpo;

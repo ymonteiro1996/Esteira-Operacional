@@ -242,6 +242,9 @@ body{
 /* Mensagem de status genérica dentro de um modal (ok/erro) — usada hoje só
    pelo modal "🔑 Beehus API" (beehus_token.js). */
 .modal-status-msg{font-size:12px;margin-top:8px;min-height:1.2em;}
+/* [2026-09-25, CC-01] faixa "D0 simulado" na toolbar quando o Data D0 difere de hoje. */
+.d0-simulado{flex-basis:100%;font-size:11.5px;font-weight:600;padding:4px 8px;border-radius:6px;background:var(--overlay-pauta-wash);color:var(--ink);}
+.d0-simulado[hidden]{display:none;}
 .modal-status-msg.err{color:var(--state-r1-fg);}
 .modal-status-msg.ok{color:var(--state-p-fg);}
 

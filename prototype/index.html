@@ -124,6 +124,11 @@
        (◀/▶/mais recente) sobre uma fonte de dado totalmente diferente
        (ControleUpload.xlsx) — ver switchTab() em index.js. -->
   <div class="toolbar3" id="toolbar3">
+    <!-- [2026-09-25, pedido do usuário: "Campo Data D0 que começa como Default hoje" — CC-01]
+         Todo o "hoje" da ferramenta (atraso, Pauta, D-n, SLA, janela padrão, vigência de comentário)
+         sai deste campo. Abre sempre em hoje (não é salvo — D10); ver static/js/controle_cargas/data_d0.js. -->
+    <label class="datefield" title="Data D0: o 'hoje' da ferramenta. Abre em hoje; mudar recalcula De/Até, mas só vale depois de Atualizar.">D0 <input type="date" id="data-d0" autocomplete="off"></label>
+    <span class="d0-simulado" id="d0-simulado" role="status" hidden></span>
     <label class="datefield">De <input type="date" id="data-inicial" readonly autocomplete="off" title="Calculado automaticamente: até − 5 dias úteis (teto da janela de Atualizar)"></label>
     <label class="datefield">até <input type="date" id="data-final" autocomplete="off"><span class="reftag" title="Esta data vira a Data de Referência do grid (mesma data da coluna destacada &quot;▾ ref&quot; na matriz) — é contra ela que os painéis &quot;Publicadas&quot; e a prioridade de exibição são calculados por padrão.">▾ Data Referência</span></label>
     <!-- Filtro de divergência Rent Contrib × Rent NAV (badge "Rent" da matriz,
@@ -674,6 +679,7 @@
 <script src="/static/js/controle_cargas/exportar.js"></script>
 <script src="/static/js/controle_cargas/progresso.js"></script>
 <script src="/static/js/controle_cargas/atualizar.js"></script>
+<script src="/static/js/controle_cargas/data_d0.js"></script>
 <script src="/static/js/controle_cargas/sincronizacao.js"></script>
 <script src="/static/js/controle_cargas/beehus_token.js"></script>
 <!-- [2026-09-22] Rodapé de diagnóstico — precisa vir depois de anotacoes.js/

@@ -29,7 +29,7 @@ acesso direto a banco, nenhuma escrita.
 
 import datetime as dt
 
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 
 import db
 from beehus_api import BeehusAuthError
@@ -228,7 +228,11 @@ def listar_carteiras_nao_cadastradas():
       4. Qualquer outra falha -> 500 com mensagem, nunca 500 cru.
     """
     try:
-        return jsonify(montar_resposta_carteiras_nao_cadastradas(dt.date.today().isoformat()))
+        # [2026-09-25, CC-01] "hoje" = o Data D0 da tela (?d0=), senão o relógio.
+        d0 = (request.args.get("d0") or "").strip()
+        if not (len(d0) == 10 and d0[4] == "-" and d0[7] == "-"):
+            d0 = dt.date.today().isoformat()
+        return jsonify(montar_resposta_carteiras_nao_cadastradas(d0))
     except BeehusAuthError:
         return jsonify({"error": "Token da API Beehus ausente ou expirado — cole um token novo no "
                                  "botão \"🔑 Beehus API\" e clique em Atualizar lista.",

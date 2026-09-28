@@ -47,7 +47,8 @@ isVigente(c, todayStr){
    todo comentário do dia cair na lista de expirados. Ver o cabeçalho de
    static/js/utils/datas.js. */
 commentsForTarget(targetType, targetId){
-  const todayStr = UtilsDatas.hojeISO();
+  // [CC-01] vigentes NO D0 da tela (data_d0.js); sem D0 definido, o relógio local.
+  const todayStr = ControleCargas.d0Atual ? ControleCargas.d0Atual() : UtilsDatas.hojeISO();
   const all = ControleCargas.COMMENTS.filter(c=> c.targetType===targetType && c.targetId===targetId);
   const vigentes = all.filter(c=> ControleCargas.isVigente(c, todayStr)).sort((a,b)=> b.createdAt.localeCompare(a.createdAt));
   const expirados = all.filter(c=> !ControleCargas.isVigente(c, todayStr)).sort((a,b)=> b.createdAt.localeCompare(a.createdAt));
@@ -180,6 +181,8 @@ loadComments(){
      3. Resposta não-ok -> rejeita com o erro do servidor (ou status HTTP).
      4. Resposta ok -> resolve com o comentário criado. */
 postComment(payload){
+  // [CC-01] manda o D0: o servidor usa como vigência padrão quando o corpo não traz De/Até.
+  if(ControleCargas.d0Atual && !payload.d0) payload = {...payload, d0: ControleCargas.d0Atual()};
   return fetch('/api/comments', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)})
     .then(async r=>{
       const data = await r.json().catch(()=>({}));
@@ -303,7 +306,7 @@ commentsSectionHtml(targetType, targetId, cellDate){
   // uma data antiga nos campos De/Até e o comentário já era gravado
   // expirado — foi o que aconteceu com os comentários de 04/09 da pasta do
   // time, salvos com vigência 31/08 → 02/09.
-  const dataVigenciaDefault = cellDate || UtilsDatas.hojeISO();
+  const dataVigenciaDefault = cellDate || (ControleCargas.d0Atual ? ControleCargas.d0Atual() : UtilsDatas.hojeISO());   // [CC-01]
   html += `<div class="comment-form" data-target-type="${targetType}" data-target-id="${ControleCargas.escAttr(targetId)}">
     <div class="sevbtns">
       <button type="button" class="sevbtn" data-sev="green">Verde</button>

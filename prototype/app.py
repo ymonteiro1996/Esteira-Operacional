@@ -689,6 +689,23 @@ def _save_annotations(annotations):
     _escrever_json_atomico(ANNOTATIONS_PATH, {"annotations": annotations})
 
 
+def _d0_da_requisicao(valor):
+    """Contexto:
+    [2026-09-25, CC-01] Lê o "Data D0" mandado pela tela (querystring ou corpo). Retorna
+    (d0, erro): d0 = a data pedida ou hoje quando vazia; erro = mensagem se o formato é inválido.
+
+    Pseudocódigo:
+      1. Vazio -> (hoje, None).
+      2. Formato AAAA-MM-DD inválido -> (None, mensagem).
+      3. Senão -> (valor, None).
+    """
+    valor = (valor or "").strip()
+    if not valor:
+        return _today_str(), None
+    erro = _validar_data_iso(valor, "d0")
+    return (None, erro) if erro else (valor, None)
+
+
 def _today_str():
     """Contexto: data de hoje como string "YYYY-MM-DD", usada por
     post_comments() como default de validFrom/validTo quando o body não
@@ -922,7 +939,7 @@ def post_comments():
     if errors:
         return jsonify({"error": "; ".join(errors)}), 400
 
-    today = _today_str()
+    today = _d0_da_requisicao(body.get("d0"))[0] or _today_str()   # [CC-01] vigência padrão = D0
     valid_from = body.get("validFrom") or today
     valid_to = body.get("validTo") or today
     if valid_to < valid_from:
@@ -1124,7 +1141,9 @@ def janela_padrao():
       3. Devolve {dataInicial: janela[0], dataFinal: data_referencia}.
     """
     calendario = CalendarioDiasUteis()
-    hoje = _today_str()
+    hoje, erro = _d0_da_requisicao(request.args.get("d0"))   # [CC-01] janela padrão relativa ao D0
+    if erro:
+        return jsonify({"error": erro}), 400
     data_referencia, janela = calcular_janela_grid(calendario, hoje)
     return jsonify({"dataInicial": janela[0], "dataFinal": data_referencia})
 
@@ -1416,6 +1435,9 @@ def atualizar_snapshot():
     limiar_pct_bruto = request.args.get("limiar_divergencia_pct", "").strip()
     limiar_reais_bruto = request.args.get("limiar_divergencia_reais", "").strip()
     company_id = request.args.get("company_id", "").strip()
+    d0, erro_d0 = _d0_da_requisicao(request.args.get("d0"))   # [CC-01] Data D0 da tela
+    if erro_d0:
+        return jsonify({"error": erro_d0}), 400
 
     erro = (_validar_data_iso(data_inicial, "data_inicial")
             or _validar_data_iso(data_final, "data_final")
@@ -1425,6 +1447,8 @@ def atualizar_snapshot():
         return jsonify({"error": erro}), 400
     if data_inicial > data_final:
         return jsonify({"error": "data_inicial não pode ser depois de data_final"}), 400
+    if data_final > d0:
+        return jsonify({"error": f"A data \"até\" ({data_final}) não pode ser depois do D0 ({d0})."}), 400
 
     dias_uteis_pedidos = CalendarioDiasUteis().sequencia_dias_uteis(data_inicial, data_final)
     if len(dias_uteis_pedidos) - 1 > JANELA_MAXIMA_DIAS_UTEIS:
@@ -1441,7 +1465,7 @@ def atualizar_snapshot():
     try:
         snapshot = montar_snapshot(data_inicial=data_inicial, data_final=data_final, forcar_atualizacao=True,
                                     limiar_divergencia_pct=limiar_pct, limiar_divergencia_reais=limiar_reais,
-                                    company_id=company_id or None)
+                                    company_id=company_id or None, data_hoje=d0)
     except BeehusAuthError as exc:
         # [TRV-01] error_code estável p/ o front reconhecer token vencido sem depender do texto.
         return jsonify({"error": _mensagem_amigavel_erro_atualizacao(exc), "error_code": "BEEHUS_TOKEN_EXPIRED"}), 401

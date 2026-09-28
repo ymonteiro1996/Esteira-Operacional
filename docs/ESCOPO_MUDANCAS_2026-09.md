@@ -63,7 +63,7 @@ A ordem prioriza o que pode gerar **dado errado no Beehus**. Depois vêm o token
 | 3 | CC-05 | ControleCargas | Pauta com contorno azul; vermelho se o D-1 não foi processado | P | — | feito (anel azul sky-600/sky-400 — D9; vermelho na Pauta com D-1 sem processada; Excel azul/vermelho; testado no backend e na tela, 2 temas) |
 | 4 | SWAT-01 | swat | Log temporário na tela e limpeza ao trocar de Company | M | SWAT-08 | pendente |
 | 4 | SWAT-06 | swat | Várias empresas ou "Todas" nos 5 executores | M (Transações: G) | SWAT-05, SWAT-01 | pendente |
-| 4 | CC-01 | ControleCargas | Campo "Data D0" que muda todo o D0 da ferramenta | M | — | pendente |
+| 4 | CC-01 | ControleCargas | Campo "Data D0" que muda todo o D0 da ferramenta | M | — | feito (branch `onda-4/escopo-2026-09`; `data_hoje` no snapshot + `d0` nas 4 rotas; D10: abre em hoje, faixa "D0 simulado", não roda Atualizar sozinho; 8 checks servidor + 9 tela) |
 | 5 | CC-03 | ControleCargas | Novo "Controle de Cargas" (3A leitura · 3B API de jobs · 3C disparo) | G | CC-02, CC-01 | pendente |
 
 Aliases (o mesmo trabalho aparece em mais de um lugar do pedido original):

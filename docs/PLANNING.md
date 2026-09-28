@@ -1697,6 +1697,30 @@ vencia no meio do uso virava só "Erro ao atualizar".
   sem repetir nada (D11). Texto corrigido: o token fica salvo por navegador e sobrevive a restart.
 - Verificado com Playwright em servidor isolado (15 checks, só leitura no Beehus).
 
+**[2026-09-27, pedido do usuário: "Criar um Campo Data D0 que começa como Default hoje, e ao ser mudado
+altera todo D0 que a Ferramenta utiliza" — CC-01]** O "hoje" da ferramenta vinha do relógio. Agora vem do
+campo **D0** (`#data-d0`, 1º campo da `#toolbar3`, nos dois HTMLs idênticos;
+`static/js/controle_cargas/data_d0.js`, com `ControleCargas.d0Atual()`).
+- **Servidor** (o cálculo continua lá, com o calendário ANBIMA): `montar_snapshot(..., data_hoje=)` troca
+  `hoje = date.today()` por `data_hoje or date.today()` — janela padrão, atraso, estado, Pauta, SLA,
+  rótulos D-n e `meta.today` saem relativos ao D0. `app.py::_d0_da_requisicao()` lê `d0` em
+  `/api/atualizar` (400 se inválido ou se o "Até" passar do D0), `/api/janela-padrao` e no POST de
+  comentários (vigência padrão = D0). A aba Carteiras Não Cadastradas recebe `?d0=` ("Nova" e "carga nos
+  últimos N dias" contam a partir dele).
+- **Não seguem o D0** (de propósito): nome do arquivo Excel, checagem de snapshot velho, carimbos de
+  criação/edição de registros e a expiração do token. As anotações continuam na data de referência (o
+  "Até") ou no dia da célula selecionada, como já era.
+- **D10**: abre sempre em hoje (não é salvo entre recargas); trocar o D0 reescreve De/Até com a janela
+  padrão do novo D0 mas **não roda o Atualizar sozinho**; D0 diferente de hoje mostra a faixa
+  **"D0 simulado: dd/mm/aaaa"** com o aviso da limitação abaixo.
+- **Limitação**: a API Beehus devolve o estado ATUAL, sem histórico — um D0 no passado reavalia SLA e
+  atraso com os dados de hoje (uma carga que chegou atrasada aparece como presente).
+- **Corrida corrigida no teste**: o preenchimento de De/Até do carregamento (feito com o D0 de hoje) às
+  vezes respondia depois da troca de D0 e sobrescrevia a janela; as duas buscas agora descartam a
+  resposta se o D0 mudou nesse meio tempo.
+- Verificado: 8 checks no servidor (`app.test_client()`, DATA_DIR isolado) + 9 na tela (Playwright,
+  servidor isolado 5150, `/api/atualizar` interceptado — nada consultado no Beehus).
+
 ---
 
 ## Aba Checklist Manual Cargas (Custodiantes)

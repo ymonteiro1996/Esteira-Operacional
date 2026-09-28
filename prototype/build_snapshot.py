@@ -167,7 +167,7 @@ def _ler_controle_upload_custodiantes():
 
 def montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=False,
                      limiar_divergencia_pct=None, limiar_divergencia_reais=None,
-                     company_id=None):
+                     company_id=None, data_hoje=None):
     """Contexto:
     Ponto de entrada público do build — fino de propósito (CLAUDE.md §3): só
     embrulha `_montar_snapshot()` nos dois contextos que valem para a
@@ -195,12 +195,12 @@ def montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=False
             forcar_atualizacao=forcar_atualizacao,
             limiar_divergencia_pct=limiar_divergencia_pct,
             limiar_divergencia_reais=limiar_divergencia_reais,
-            company_id=company_id)
+            company_id=company_id, data_hoje=data_hoje)
 
 
 def _montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=False,
                      limiar_divergencia_pct=None, limiar_divergencia_reais=None,
-                     company_id=None):
+                     company_id=None, data_hoje=None):
     """Contexto:
     Ponto de entrada principal — monta o snapshot completo (mesma estrutura
     de sempre: meta/wallets/groupings/custodianUpload). Se `data_inicial`/
@@ -249,7 +249,9 @@ def _montar_snapshot(data_inicial=None, data_final=None, forcar_atualizacao=Fals
 
     timings = {}
     t_total0 = time.monotonic()
-    hoje = dt.date.today().isoformat()
+    # [2026-09-25, pedido do usuário: campo "Data D0" — CC-01] `data_hoje` (o D0 da tela) substitui
+    # o relógio: janela padrão, atraso, Pauta, SLA, rótulos D-n e meta.today saem relativos a ele.
+    hoje = data_hoje or dt.date.today().isoformat()
 
     progresso_atualizacao.iniciar_etapa(1, "lendo cadastro e coleções")
     print(f"[1/6] Lendo cadastro + coleções pequenas da API Beehus...")

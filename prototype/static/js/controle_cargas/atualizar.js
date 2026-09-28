@@ -159,9 +159,13 @@ preencherCamposDataAtualizar(){
   if(!de || !ate) return Promise.resolve();
   if(de.value && ate.value) return Promise.resolve();
 
-  return fetch('/api/janela-padrao')
+  // [CC-01] janela padrão relativa ao Data D0 (data_d0.js); resposta de um D0 que já mudou é
+  // ignorada (senão o preenchimento do carregamento sobrescrevia a janela do D0 escolhido).
+  const d0Pedido = ControleCargas.d0Atual ? ControleCargas.d0Atual() : '';
+  return fetch(`/api/janela-padrao?d0=${encodeURIComponent(d0Pedido)}`)
     .then(r=>{ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
     .then(({dataInicial, dataFinal})=>{
+      if(ControleCargas.d0Atual && ControleCargas.d0Atual() !== d0Pedido) return;
       if(!de.value) de.value = dataInicial;
       if(!ate.value) ate.value = dataFinal;
     })
@@ -541,6 +545,8 @@ enviarAtualizacao(){
   const campoReais = document.getElementById('limiar-divergencia-reais');
   const selectEmpresa = document.getElementById('empresa-atualizar');
   let url = `/api/atualizar?data_inicial=${encodeURIComponent(dataInicial)}&data_final=${encodeURIComponent(dataFinal)}`;
+  // [CC-01] o "hoje" do snapshot (atraso, Pauta, D-n, SLA) é o Data D0 da tela.
+  if(ControleCargas.d0Atual) url += `&d0=${encodeURIComponent(ControleCargas.d0Atual())}`;
   if(campoPct && campoPct.value) url += `&limiar_divergencia_pct=${encodeURIComponent(campoPct.value)}`;
   if(campoReais && campoReais.value) url += `&limiar_divergencia_reais=${encodeURIComponent(campoReais.value)}`;
   // [2026-09-22, pedido do usuário] Empresa escolhida no seletor — vazio
