@@ -1764,6 +1764,45 @@ Complementa a divisão de código da seção 4 — juntas atacam a causa dos con
     com o rodapé em faixa vermelha dizendo que está bloqueado, o que fazer e
     onde o app procurou, sem nenhum erro de JS.
 
+- **[2026-09-28, relato do usuário: "está ocorrendo de mostrar 0% e 80% e não
+  mostrar lista de carteiras faltantes"] O ÍNDICE DE CARTEIRAS POR ID VIROU UM
+  HELPER ÚNICO — `ControleCargas.carteirasPorId()` (state.js).** Na aba
+  "Controle de Cargas" a célula mostrava a cobertura certa (0%, 80%) e o painel
+  do 2º clique respondia "Faltantes (0) — Nenhuma.".
+  - **Causa**: `window._WALLETS_BY_ID` só era remontado dentro de
+    `buildMatrix()` e `buildCompanyMatrix()`. Na aba de Cargas, o Atualizar
+    passa por `redesenharVisaoAtual()` -> **só** `buildCargasMatrix()`, que não
+    toca no índice. Como a tela não consulta sozinha desde 22/09, o 1º render é
+    com snapshot VAZIO -> índice `{}`; depois do Atualizar ele continuava `{}`.
+    A matriz não dependia dele (cobertura e nFaltantes vêm prontos de
+    `cargas.linhas`, do backend), mas o painel sim: os walletIds das listas não
+    resolviam, `.filter(Boolean)` zerava tudo.
+  - **Por que o fallback não salvou**: `painel_carga.js` usava
+    `window._WALLETS_BY_ID || Object.fromEntries(...)`. Objeto vazio é
+    **truthy** — o `||` nunca dispara. É a reincidência da armadilha já
+    corrigida em 23/07 na matriz (cache com `||` que não sobrevivia a um
+    `/api/atualizar`), agora numa forma que o `||` sequer disfarça.
+  - **Regra que fica**: quem recebe walletId cru pede
+    `ControleCargas.carteirasPorId()` e **nunca** lê `window._WALLETS_BY_ID`
+    direto nem monta o índice por conta própria. O helper invalida por
+    **identidade do SNAPSHOT** (que é sempre substituído inteiro, nunca mutado
+    — atualizar.js:562 e index.js:20), então qualquer tela que peça o índice
+    depois de um Atualizar recebe o novo, independentemente de qual matriz foi
+    redesenhada. Os 4 pontos de uso passaram a chamá-lo: matriz.js (índice +
+    tooltip de Unprocessed + `computeGroupingPublishStat`), matriz_company.js e
+    painel_carga.js.
+  - **Verificado** (12 verificações, Playwright, servidor isolado na 5052 com
+    `CONTROLECARGAS_DATA_DIR` temporário — dados do time intocados), na
+    sequência exata do relato: abrir a tela com snapshot vazio -> aba Controle
+    de Cargas -> Atualizar -> 2 cliques na célula. Antes: célula "80% −2" e
+    painel "Faltantes (0) — Nenhuma." (reproduzido). Depois: "Faltantes (2)"
+    com os nomes das carteiras. Coberto também o **2º Atualizar na mesma aba**
+    (trocar de company sem sair dela): lista as carteiras novas e não sobra
+    nenhuma do snapshot anterior. Regressão nas abas que já montavam o índice:
+    Carteiras e Company continuam desenhando, sem erro de JS. A implementação
+    antiga, restaurada em runtime, volta a falhar nas mesmas verificações — o
+    teste pega o bug, não só acompanha o conserto.
+
 ---
 
 ## Checklist rápido (antes de considerar uma tarefa pronta)

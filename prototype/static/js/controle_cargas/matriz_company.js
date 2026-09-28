@@ -99,9 +99,9 @@ buildCompanyMatrix(){
   const porCompany = ControleCargas.computeCompanyPublishMatrix();
   const companies = Object.keys(porCompany).sort((a,b)=> a.localeCompare(b));
 
-  // mesmo índice global usado por buildMatrix() — ver comentário lá (CLAUDE.md
-  // §6, reaproveita em vez de duplicar a lógica de indexação).
-  window._WALLETS_BY_ID = Object.fromEntries(ControleCargas.SNAPSHOT.wallets.map(w=>[w.walletId,w]));
+  // mesmo índice usado por buildMatrix() — ver carteirasPorId() em state.js
+  // (CLAUDE.md §6, reaproveita em vez de duplicar a lógica de indexação).
+  ControleCargas.carteirasPorId();
 
   let thead = '<thead><tr><th class="hdr-companyname">Company</th>';
   window_.forEach(d=>{

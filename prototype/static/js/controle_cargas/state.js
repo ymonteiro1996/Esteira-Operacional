@@ -80,6 +80,44 @@ escAttr(s){ return ControleCargas.esc(s); },
 fmtNum(v){ return v==null ? '—' : Number(v).toLocaleString('pt-BR', {maximumFractionDigits:6}); },
 
 /* Contexto:
+   Índice {walletId: carteira} do snapshot CORRENTE — fonte única para quem
+   recebe walletId cru e precisa da linha da carteira: computeGroupingPublishStat()
+   e o tooltip de Unprocessed (matriz.js), a matriz por Company (matriz_company.js)
+   e as listas de faltantes/aguardando/onboarding/inativas do painel de cargas
+   (painel_carga.js). Retorna objeto ({} enquanto não há snapshot).
+
+   [CORRIGIDO 2026-09-28, relato do usuário: "está ocorrendo de mostrar 0% e 80%
+   e não mostrar lista de carteiras faltantes"] Antes cada tela montava/gravava
+   window._WALLETS_BY_ID por conta própria, e SÓ buildMatrix()/buildCompanyMatrix()
+   o refaziam. Na aba "Controle de Cargas" o Atualizar chama apenas
+   buildCargasMatrix(), então o índice ficava parado no snapshot anterior — vazio
+   no 1º load, já que a tela não consulta sozinha desde 22/09. A célula mostrava a
+   cobertura (que vem pronta de cargas.linhas) mas nenhum walletId resolvia, e o
+   painel exibia "Faltantes (0) — Nenhuma.". É a mesma armadilha do cache com "||"
+   corrigida em 23/07 na matriz: aqui o índice era um objeto VAZIO (truthy), então
+   nem o fallback "||" disparava. Agora a invalidação é por identidade do SNAPSHOT
+   (que é sempre substituído inteiro, nunca mutado — ver atualizar.js/index.js),
+   de modo que qualquer tela que peça o índice depois de um /api/atualizar recebe
+   o novo, sem depender de qual matriz foi redesenhada.
+
+   Pseudocódigo:
+     1. Sem snapshot/carteiras -> {}.
+     2. Snapshot diferente do indexado -> reindexa e memoriza qual foi.
+     3. Devolve o índice (segue publicado em window._WALLETS_BY_ID). */
+carteirasPorId(){
+  const snap = ControleCargas.SNAPSHOT;
+  if(!snap || !snap.wallets) return {};
+  if(ControleCargas._snapshotIndexado !== snap){
+    ControleCargas._snapshotIndexado = snap;
+    window._WALLETS_BY_ID = Object.fromEntries(snap.wallets.map(w=> [w.walletId, w]));
+  }
+  return window._WALLETS_BY_ID;
+},
+
+// Qual objeto SNAPSHOT gerou o window._WALLETS_BY_ID atual (ver carteirasPorId).
+_snapshotIndexado: null,
+
+/* Contexto:
    Monta o HTML do badge "Atraso" (rodada 7) — espelho visual do badge Rent,
    no canto inferior esquerdo da célula; amarelo = atraso leve (1-2du),
    vermelho = elevado (≥3du). [NOVO 2026-09-24, pedido do usuário] No

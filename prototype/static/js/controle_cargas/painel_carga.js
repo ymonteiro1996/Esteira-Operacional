@@ -15,9 +15,16 @@ Object.assign(ControleCargas, {
 /* Contexto: linhas de carteira do snapshot para uma lista de walletIds, na mesma ordem (as que não
    existirem no snapshot são puladas). Retorna array.
 
-   Pseudocódigo: 1. Índice por walletId (o global da grade, ou montado na hora). 2. Mapeia e filtra. */
+   [CORRIGIDO 2026-09-28] pegava window._WALLETS_BY_ID direto, com fallback "||".
+   Como esta aba não passa por buildMatrix(), o índice era o do snapshot anterior
+   — e vazio no 1º load. Objeto vazio é truthy, então o fallback não salvava: todo
+   id virava undefined, .filter(Boolean) zerava a lista e o painel dizia "Faltantes
+   (0) — Nenhuma." embaixo de uma célula marcando 80%. carteirasPorId() reindexa
+   sozinho quando o SNAPSHOT troca.
+
+   Pseudocódigo: 1. Índice por walletId do snapshot corrente. 2. Mapeia e filtra. */
 carteirasDoGrupoCarga(ids){
-  const porId = window._WALLETS_BY_ID || Object.fromEntries(ControleCargas.SNAPSHOT.wallets.map(w=> [w.walletId, w]));
+  const porId = ControleCargas.carteirasPorId();
   return (ids || []).map(id=> porId[id]).filter(Boolean);
 },
 

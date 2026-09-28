@@ -430,13 +430,15 @@ buildMatrix(){
   const window_ = ControleCargas.SNAPSHOT.meta.window;
   const refDate = ControleCargas.SNAPSHOT.meta.referenceDate;
 
-  // índice global de carteiras por id — usado por computeGroupingPublishStat()
-  // (resolve mustPublish/cells da carteira a partir do walletId do membro),
-  // mesmo quando a tabela corrente é a de Agrupamentos. [CORRIGIDO 2026-07-23] antes ficava em
-  // cache com "||" e nunca era refeito depois de um /api/atualizar (o
-  // SNAPSHOT troca de objeto, mas o índice antigo continuava valendo) —
-  // sempre recalcula, é barato (~800 carteiras) e evita dado parado.
-  window._WALLETS_BY_ID = Object.fromEntries(ControleCargas.SNAPSHOT.wallets.map(w=>[w.walletId,w]));
+  // Índice de carteiras por id — usado por computeGroupingPublishStat() (resolve
+  // mustPublish/cells da carteira a partir do walletId do membro), mesmo quando a
+  // tabela corrente é a de Agrupamentos. [CORRIGIDO 2026-07-23] antes ficava em
+  // cache com "||" e nunca era refeito depois de um /api/atualizar (o SNAPSHOT
+  // troca de objeto, mas o índice antigo continuava valendo). [2026-09-28] a
+  // montagem saiu daqui para carteirasPorId() (state.js): manter cada tela
+  // reindexando por conta própria fazia a aba de Cargas — que não passa por esta
+  // função — enxergar o índice do snapshot anterior.
+  ControleCargas.carteirasPorId();
 
   const thead = ControleCargas.buildCabecalhoMatriz(window_, refDate, isWallets);
   const { body, shownCount } = isWallets
@@ -564,7 +566,8 @@ groupingTooltip(r, entry){
   let extra = '';
   const unprocessedIds = tt.unprocessedIds || [];
   if(unprocessedIds.length){
-    const nomes = unprocessedIds.map(wid=> (window._WALLETS_BY_ID && window._WALLETS_BY_ID[wid]) ? window._WALLETS_BY_ID[wid].name : wid);
+    const porId = ControleCargas.carteirasPorId();
+    const nomes = unprocessedIds.map(wid=> porId[wid] ? porId[wid].name : wid);
     extra += `<div class="tt-row"><span class="tt-label tt-warn">Não processadas (${nomes.length})</span></div>
       <div class="tt-sub" style="margin:2px 0 0;line-height:1.5;">${nomes.map(nm=>ControleCargas.esc(nm)).join('<br>')}</div>`;
   }
@@ -902,7 +905,7 @@ membroAtivoNaData(membro, data){
 agrupamentoCarteirasQueDevemPublicarNaData(grouping, data){
   return (grouping.members||[])
     .filter(m=> m.tracked && ControleCargas.membroAtivoNaData(m, data))
-    .map(m=> window._WALLETS_BY_ID[m.walletId])
+    .map(m=> ControleCargas.carteirasPorId()[m.walletId])
     .filter(carteira=> carteira && carteira.mustPublish);
 },
 
