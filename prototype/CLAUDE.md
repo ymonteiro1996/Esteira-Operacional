@@ -1713,6 +1713,57 @@ Complementa a divisão de código da seção 4 — juntas atacam a causa dos con
     Recorte por marcador de texto em JS precisa de âncora que não apareça
     dentro de literais.
 
+- **[2026-09-28, relato do usuário: "um colega de time não está conseguindo
+  acessar o diretório coletivo" + regra reforçada: "deve ser sempre esse
+  diretório para consumo e edição de dados e nunca no git pull que a pessoa faz
+  local"] A PASTA DO TIME VIROU OBRIGATÓRIA — sem ela o app RECUSA operar, em
+  vez de cair na cópia local.** Desde 22/09 a pasta compartilhada já era
+  procurada de forma dinâmica (`Path.home()` + variantes de nome do OneDrive) e
+  o rodapé já avisava quando caía na ilha local. Faltava a consequência: o
+  fallback CONTINUAVA funcionando, então a pessoa usava o app o dia inteiro,
+  gravava responsável e comentário numa pasta que só ela enxerga — e que um
+  `git clean` apaga — sem nada impedir.
+  - **Guarda única** `exigir_data_dir_compartilhado()` (utils/caminhos.py):
+    levanta `DadosCompartilhadosIndisponiveis` quando o DATA_DIR resolvido é a
+    `data/` do clone. Chamada nos 3 `_ensure_data_dir()` que existem (app.py,
+    pages/controle_demandas.py, pages/anomalias.py — cada um roda antes de
+    qualquer leitura/escrita do seu arquivo) e no começo de `/api/atualizar`
+    (o TemplateCarteiras.xlsx mora lá; sem a guarda, o build morria num
+    "arquivo não encontrado" lá no fundo).
+  - **1 errorhandler no app** transforma isso em **503 com instrução** — e
+    pega também as rotas dos blueprints, porque handler registrado no app
+    cobre exceção de blueprint. 503 e não 500 de propósito: não é bug, é
+    dependência externa ausente (biblioteca do OneDrive não sincronizada).
+  - **O diagnóstico é imune à guarda**: `/api/diagnostico-dados` engole a
+    exceção e devolve contagens zeradas — era a única tela capaz de explicar o
+    problema, não podia cair junto. Ela ganhou também a lista `candidatos`:
+    ONDE o app procurou (caminho canônico + as bases varridas), que o rodapé
+    agora mostra. "Não encontrei" sozinho não diz à pessoa o que conferir.
+  - **Rodapé mudou de tom**: era "⚠ Dados NÃO compartilhados — lendo a cópia
+    local", agora é "⛔ ... estão bloqueados nesta máquina" + o que fazer +
+    onde procurou.
+  - **O caminho é por MÁQUINA, sempre** [lembrete do usuário: "onde está
+    efigueira, em cada máquina aparecerá um diretório diferente"]: nada no
+    código fixa usuário — o canônico é `Path.home()` + a estrutura da
+    biblioteca, e a busca cobre as variantes (`- Documents` em inglês,
+    biblioteca no OneDrive pessoal, pasta renomeada). Conferido nesta rodada:
+    o único "efigueira" que resta em código é DENTRO de um comentário de
+    `build_snapshot.py`, documentando o caminho fixo que saiu em julho.
+  - **Escape hatch preservado**: `CONTROLECARGAS_DATA_DIR` continua valendo e
+    conta como "compartilhada" (é uma escolha explícita de quem configurou) —
+    é o que permite, por exemplo, subir uma instância de teste isolada.
+  - **Verificado** (26 verificações, DUAS instâncias no ar ao mesmo tempo:
+    5052 com a pasta e 5053 simulando a máquina do colega, sem ela):
+    na 5052, `/api/comments`, `/api/annotations`, `/api/demandas` e
+    `/api/anomalias` continuam 200 e gravar anotação continua funcionando
+    (zero regressão); na 5053, as 4 rotas respondem 503 com a instrução,
+    gravar anotação e criar comentário são recusados, `/api/atualizar` falha
+    cedo com a mesma mensagem (em vez de "arquivo não encontrado"),
+    `/api/diagnostico-dados` continua 200 com `compartilhada: false`,
+    contagens zeradas e a lista de caminhos procurados; e a TELA da 5053 sobe,
+    com o rodapé em faixa vermelha dizendo que está bloqueado, o que fazer e
+    onde o app procurou, sem nenhum erro de JS.
+
 ---
 
 ## Checklist rápido (antes de considerar uma tarefa pronta)

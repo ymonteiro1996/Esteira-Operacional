@@ -62,7 +62,7 @@ from pathlib import Path
 
 from flask import Blueprint, jsonify, request
 
-from utils.caminhos import resolver_data_dir
+from utils.caminhos import exigir_data_dir_compartilhado, resolver_data_dir
 
 bp = Blueprint("controle_demandas", __name__)
 
@@ -246,8 +246,14 @@ def _ensure_data_dir():
     ter a pasta ainda). Não retorna nada.
 
     Pseudocódigo:
+      0. [2026-09-28, reforço do usuário: "deve ser sempre esse diretório...
+         e nunca no git pull que a pessoa faz local"] Antes de qualquer coisa,
+         exige a pasta compartilhada do time — sem ela, levanta
+         DadosCompartilhadosIndisponiveis (vira 503 com instrução na tela, ver
+         app.py) em vez de criar/usar a `data/` do clone.
       1. Cria DATA_DIR (e pais, se faltarem); não faz nada se já existir.
     """
+    exigir_data_dir_compartilhado(HERE.parent)
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 

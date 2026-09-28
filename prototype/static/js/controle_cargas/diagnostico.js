@@ -116,13 +116,23 @@ resumirAnotacoesDaDataEmTela(){
 
    Pseudocódigo:
      1. Pasta compartilhada encontrada -> diz isso e mostra o caminho.
-     2. Pasta local (ilha) -> avisa explicitamente que o dado NÃO é o do time.
+     2. Pasta NÃO encontrada -> diz que os dados estão bloqueados, o que fazer
+        e ONDE o app procurou [2026-09-28] — sem a lista de caminhos, "não
+        encontrei" não ajuda quem precisa conferir a sincronização.
      3. Acrescenta a origem "por busca" quando o caminho desta máquina não é o
         padrão (bom sinal de que a resolução automática entrou em ação). */
-descreverPastaDados(dados){
+descreverPastaDados(dados, candidatos){
   if(!dados.compartilhada){
-    return `⚠ Dados NÃO compartilhados — lendo a cópia local ${dados.caminho}. `
-         + 'O que você gravar aqui não chega ao time, e o que o time gravou não aparece.';
+    // [2026-09-28, reforço do usuário: os dados moram SEMPRE na pasta do
+    // OneDrive] O app agora RECUSA trabalhar aqui (503 nas rotas de dado), em
+    // vez de gravar numa cópia que só esta máquina enxerga. Então o texto
+    // deixou de ser "cuidado" e virou "está bloqueado, faça isto".
+    const procurados = (candidatos || []).length
+      ? ` Procurei em: ${candidatos.join('  ·  ')}.` : '';
+    return '⛔ Pasta compartilhada do time NÃO encontrada — comentários, responsáveis, demandas e '
+         + 'anomalias estão bloqueados nesta máquina (o app não grava na cópia local do clone). '
+         + 'Sincronize a biblioteca "Beehus Tecnologia Ltda - Documentos" (SWAT/ControleCargas/'
+         + 'prototype/data) ou aponte CONTROLECARGAS_DATA_DIR para ela.' + procurados;
   }
   const comoAchou = dados.origem === 'variavel' ? ' (via CONTROLECARGAS_DATA_DIR)'
                   : dados.origem === 'onedrive_variante' ? ' (encontrada por busca)'
@@ -157,7 +167,7 @@ renderizarRodapeDiagnostico(){
 
   rodape.classList.toggle('alerta', dados.compartilhada === false);
 
-  const partes = [ControleCargas.descreverPastaDados(dados)];
+  const partes = [ControleCargas.descreverPastaDados(dados, diagnostico.candidatos)];
   partes.push(`anotações gravadas por último em ${ControleCargas.formatarMomentoArquivo(anotacoesArquivo.atualizadoEm)}`);
   partes.push(`carregados: ${contagens.comentarios || 0} comentário(s), ${contagens.anotacoes || 0} anotação(ões)`);
   partes.push(daData.referenceDate

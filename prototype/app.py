@@ -134,7 +134,9 @@ from pages.anomalias import bp as anomalias_bp
 from pages.carteiras_nao_cadastradas import bp as carteiras_nao_cadastradas_bp
 from snapshot_builder import LIMIAR_DIVERGENCIA_PADRAO, LIMIAR_DIVERGENCIA_REAIS_PADRAO
 from utils.datas import CalendarioDiasUteis, GRID_REFERENCE_LAG_DU, JANELA_INICIAL_DIAS_UTEIS, calcular_janela_grid, mapear_distancia_dias_uteis_hoje
-from utils.caminhos import descrever_data_dir, diagnosticar_data_dir, resolver_data_dir
+from utils.caminhos import (DadosCompartilhadosIndisponiveis, descrever_data_dir,
+                            diagnosticar_data_dir, exigir_data_dir_compartilhado,
+                            resolver_data_dir)
 
 HERE = Path(__file__).resolve().parent
 # [2026-08-25, decisão do usuário: "consumirmos de um diretório" separado do código
@@ -580,8 +582,14 @@ def _ensure_data_dir():
     em alert_comments.json. Não retorna nada.
 
     Pseudocódigo:
+      0. [2026-09-28, reforço do usuário: "deve ser sempre esse diretório...
+         e nunca no git pull que a pessoa faz local"] Antes de qualquer coisa,
+         exige a pasta compartilhada do time — sem ela, levanta
+         DadosCompartilhadosIndisponiveis (vira 503 com instrução na tela, ver
+         app.py) em vez de criar/usar a `data/` do clone.
       1. Cria DATA_DIR (e pais, se faltarem); não faz nada se já existir.
     """
+    exigir_data_dir_compartilhado(HERE)
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
@@ -1285,6 +1293,37 @@ def _descrever_arquivo_compartilhado(caminho):
     return {"existe": True, "atualizadoEm": atualizado_em, "bytes": info.st_size}
 
 
+@app.errorhandler(DadosCompartilhadosIndisponiveis)
+def _dados_compartilhados_indisponiveis(exc):
+    """Contexto:
+    Transforma a recusa de trabalhar na cópia local (utils/caminhos.py::
+    exigir_data_dir_compartilhado) numa resposta 503 com instrução — vale pras
+    rotas deste arquivo E pras dos blueprints (handler de app pega exceção de
+    blueprint também) [2026-09-28, reforço do usuário: os dados do time moram
+    SEMPRE na pasta do OneDrive, nunca na `data/` do clone]. Retorna
+    (JSON, 503).
+
+    503 e não 500 de propósito: não é bug, é dependência externa ausente — a
+    biblioteca do OneDrive não está sincronizada nesta máquina. A tela mostra
+    a mensagem como está, então ela precisa dizer o que fazer.
+
+    Pseudocódigo:
+      1. Monta a mensagem curta de ação + o detalhe técnico que a guarda
+         levantou (caminhos procurados).
+      2. Devolve 503 com `dadosCompartilhados: false`, que o rodapé usa.
+    """
+    return jsonify({
+        "error": ("Os dados do time (comentários, responsáveis, demandas e anomalias) ficam na "
+                  "pasta compartilhada do OneDrive, e ela não foi encontrada nesta máquina. "
+                  "Sincronize a biblioteca 'Beehus Tecnologia Ltda - Documentos' (pasta SWAT/"
+                  "ControleCargas/prototype/data) ou aponte a variável CONTROLECARGAS_DATA_DIR "
+                  "para ela. O app NÃO grava na pasta data/ do clone do Git de propósito: o que "
+                  "fosse gravado lá ninguém mais veria."),
+        "detalhe": str(exc),
+        "dadosCompartilhados": False,
+    }), 503
+
+
 @app.route("/api/diagnostico-dados", methods=["GET"])
 def diagnostico_dados():
     """Contexto:
@@ -1310,8 +1349,14 @@ def diagnostico_dados():
          quem subiu o app da cópia velha do OneDrive em vez do clone do Git.
     """
     dados = descrever_data_dir(HERE)
-    comentarios = _load_comments()
-    anotacoes = _load_annotations()
+    # [2026-09-28] As contagens dependem de LER a pasta — e é exatamente
+    # quando ela falta que este rodapé mais importa. Sem o try, a guarda nova
+    # derrubaria a única tela capaz de explicar o problema.
+    try:
+        comentarios = _load_comments()
+        anotacoes = _load_annotations()
+    except DadosCompartilhadosIndisponiveis:
+        comentarios, anotacoes = [], {}
     return jsonify({
         "dados": {
             "caminho": dados["caminho"],
@@ -1319,6 +1364,9 @@ def diagnostico_dados():
             "compartilhada": dados["compartilhada"],
         },
         "codigo": {"caminho": str(HERE)},
+        # onde o app procurou a pasta do time — o que a pessoa precisa conferir
+        # quando ela não é achada [2026-09-28].
+        "candidatos": dados.get("candidatos") or [],
         "contagens": {"comentarios": len(comentarios), "anotacoes": len(anotacoes)},
         "arquivos": {
             "alertComments": _descrever_arquivo_compartilhado(COMMENTS_PATH),
@@ -1432,6 +1480,11 @@ def atualizar_snapshot():
          Beehus ausente/expirado) viram JSON {error:...} com status
          400/401/500 — nunca um 500 cru.
     """
+    # [2026-09-28] O TemplateCarteiras.xlsx também mora na pasta do time: sem
+    # ela, o build morreria num "arquivo não encontrado" lá no fundo. Falha
+    # aqui, com a instrução do que fazer.
+    exigir_data_dir_compartilhado(HERE)
+
     data_inicial = request.args.get("data_inicial", "").strip()
     data_final = request.args.get("data_final", "").strip()
     limiar_pct_bruto = request.args.get("limiar_divergencia_pct", "").strip()

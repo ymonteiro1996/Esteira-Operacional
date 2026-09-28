@@ -60,6 +60,16 @@ _MARCA_PASTA_BIBLIOTECA = "beehus"
 _CACHE_BUSCA = {}
 
 
+class DadosCompartilhadosIndisponiveis(RuntimeError):
+    """Contexto:
+    A pasta `data/` compartilhada do time não foi encontrada nesta máquina.
+    Levantada por `exigir_data_dir_compartilhado()` e transformada em HTTP 503
+    por app.py [2026-09-28, reforço do usuário: "deve ser sempre esse diretório
+    para consumo e edição de dados e nunca no git pull que a pessoa faz
+    local"]. Existe como tipo próprio pra rota nenhuma precisar checar caminho:
+    quem toca em dado chama a guarda, e o erro sobe pronto pra tela."""
+
+
 def _bases_de_busca():
     """Contexto:
     Lista as pastas onde a biblioteca compartilhada do time pode ter sido
@@ -165,16 +175,23 @@ def descrever_data_dir(raiz_projeto):
     if chave in _CACHE_BUSCA:
         return _CACHE_BUSCA[chave]
 
+    # Onde o app procurou — vai pro rodapé de diagnóstico quando não acha
+    # [2026-09-28]: sem isso, "não encontrei" não diz à pessoa o que conferir.
+    candidatos = [str(_CAMINHO_ONEDRIVE_DATA)] + [
+        str(base / f"<pasta com 'beehus' no nome>" / _SUFIXO_BIBLIOTECA) for base in _bases_de_busca()]
+
     override = os.environ.get("CONTROLECARGAS_DATA_DIR")
     if override:
         descricao = {
             "caminho": override, "origem": "variavel", "compartilhada": True,
+            "candidatos": candidatos,
             "mensagem": f"[ControleCargas] DATA_DIR (via CONTROLECARGAS_DATA_DIR): {override}",
         }
     elif _CAMINHO_ONEDRIVE_DATA.is_dir():
         caminho = str(_CAMINHO_ONEDRIVE_DATA)
         descricao = {
             "caminho": caminho, "origem": "onedrive", "compartilhada": True,
+            "candidatos": candidatos,
             "mensagem": f"[ControleCargas] DATA_DIR (OneDrive compartilhado do time): {caminho}",
         }
     else:
@@ -183,6 +200,7 @@ def descrever_data_dir(raiz_projeto):
             caminho = str(encontrado)
             descricao = {
                 "caminho": caminho, "origem": "onedrive_variante", "compartilhada": True,
+            "candidatos": candidatos,
                 "mensagem": (f"[ControleCargas] DATA_DIR (OneDrive compartilhado do time, "
                              f"encontrado por busca — o caminho desta maquina nao e o padrao): {caminho}"),
             }
@@ -190,6 +208,7 @@ def descrever_data_dir(raiz_projeto):
             caminho = os.path.join(raiz_projeto, "data")
             descricao = {
                 "caminho": caminho, "origem": "local", "compartilhada": False,
+            "candidatos": candidatos,
                 "mensagem": (
                     f"AVISO: a pasta compartilhada do time NAO foi encontrada "
                     f"(procurada em {_CAMINHO_ONEDRIVE_DATA} e nas variantes do OneDrive desta maquina).\n"
@@ -266,3 +285,32 @@ def diagnosticar_data_dir(raiz_projeto):
     """
     descricao = descrever_data_dir(raiz_projeto)
     return descricao["caminho"], descricao["mensagem"]
+
+
+def exigir_data_dir_compartilhado(raiz_projeto):
+    """Contexto:
+    Guarda de TODO acesso aos dados do time (comentários, anotações, demandas,
+    anomalias e o TemplateCarteiras.xlsx): levanta
+    `DadosCompartilhadosIndisponiveis` quando a pasta compartilhada não foi
+    encontrada, em vez de deixar o app trabalhar na cópia local do clone.
+    Chamada pelos `_ensure_data_dir()` dos 3 módulos que persistem dado e pela
+    rota /api/atualizar. Retorna o caminho (compartilhado) quando está tudo
+    certo.
+
+    [2026-09-28, reforço do usuário: "deve ser sempre esse diretório para
+    consumo e edição de dados e nunca no git pull que a pessoa faz local"]
+    Antes o fallback local FUNCIONAVA: a pessoa usava o app o dia inteiro,
+    gravava comentário e responsável numa pasta que só ela enxerga, e o único
+    aviso era o rodapé vermelho. Agora o app se recusa a operar — é melhor não
+    deixar trabalhar do que deixar trabalhar num dado que ninguém mais vê (e
+    que um `git clean` apaga).
+
+    Pseudocódigo:
+      1. Resolve a origem do DATA_DIR (descrever_data_dir, memorizado).
+      2. É a pasta do time (ou o override explícito)? Devolve o caminho.
+      3. Não é -> levanta com a mensagem de AVISO + onde procurou.
+    """
+    descricao = descrever_data_dir(raiz_projeto)
+    if descricao["compartilhada"]:
+        return descricao["caminho"]
+    raise DadosCompartilhadosIndisponiveis(descricao["mensagem"])
