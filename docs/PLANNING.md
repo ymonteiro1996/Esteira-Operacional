@@ -1760,6 +1760,7 @@ Demandas". Arquitetura aprovada pelo usuário (confirmação 2 do escopo).
   (`tabelaEAlvoDaSelecao`); `wireRowClicks()` ignora células que não são da grade principal. As abas
   Demandas/Anomalias/Não Cadastradas não foram tocadas — `wireAbaCargas()` registra os listeners que
   faltam nelas.
+- **Rótulo D-n no cabeçalho** [2026-09-28, pedido do usuário: "replicar a lógica de D-1, D-2 da Carteiras" — "aplicar na aba Controle de Cargas"]: cada data mostra o mesmo "D-n" da aba Carteiras (`rotuloDistanciaHojeHtml`, de `meta.diasUteisAteHoje` — calendário ANBIMA, relativo ao Data D0).
 - **Limites**: a API devolve o estado ATUAL (sem histórico); com filtro de empresa no Atualizar, só a
   empresa escolhida aparece. Snapshot gravado antes desta aba mostra o convite para Atualizar.
 - **Fases seguintes**: 3B (ler `GET /beehus/jobs/logger`) depende de um exemplo de resposta capturado

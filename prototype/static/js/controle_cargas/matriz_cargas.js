@@ -114,14 +114,18 @@ linhaCargaHtml(linha, window_){
 
 /* Contexto: <thead> da matriz de cargas (mesmo destaque de referência das outras matrizes). Retorna
    string HTML.
+   [2026-09-28, pedido do usuário: "replicar a lógica de D-1, D-2 da Carteiras"] Cada data ganha o
+   mesmo rótulo "D-n" da aba Carteiras — reaproveita rotuloDistanciaHojeHtml (matriz.js), que lê
+   meta.diasUteisAteHoje (calendário ANBIMA, relativo ao Data D0) — em vez de recalcular aqui.
 
-   Pseudocódigo: 1. 5 colunas fixas; 2. um <th> por dia (ref marcada); 3. as 2 de anotação. */
+   Pseudocódigo: 1. 5 colunas fixas; 2. um <th> por dia (rótulo D-n + data; ref marcada); 3. as 2 de
+   anotação. */
 cabecalhoCargasHtml(window_, refDate){
   let html = '<thead><tr><th class="hdr-companyname">Company</th><th>Instituição</th><th>Modelo</th>'
     + '<th title="D = diária · M = mensal">D/M</th><th class="hdr-summary">Carteiras</th>';
   window_.forEach(d=>{
     const isRef = d === refDate;
-    html += `<th class="${isRef ? 'ref' : ''}">${ControleCargas.fmtDM(d)}`
+    html += `<th class="${isRef ? 'ref' : ''}">${ControleCargas.rotuloDistanciaHojeHtml(d)}${ControleCargas.fmtDM(d)}`
       + (isRef ? '<span class="refline">▾ ref</span>' : `<br><span style="font-weight:400">${ControleCargas.weekdayAbbrev(d)}</span>`)
       + '</th>';
   });
