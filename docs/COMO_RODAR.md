@@ -116,7 +116,7 @@ O token é o Bearer do dia (a Beehus renova a cada 24h). Cole no campo e clique 
   empresas se preenche e a tela espera você clicar em **Atualizar** (passo 5).
 
 O token fica guardado por navegador e sobrevive a um restart do servidor. Ele **nunca**
-vai para o OneDrive nem para o Git (mora em `~/.swat/beehus.token`).
+vai para o OneDrive nem para o Git (mora em `~/.swat/beehus_cc.token` — arquivo próprio do CC desde 27/09/2026; o `beehus.token` é do beehus-swat/conciliacao).
 
 ## 5. Escolha data e empresa e clique em Atualizar
 
@@ -199,6 +199,6 @@ sozinho — **nunca apague essas cópias na mão**, deixe o app processar.
 |---|---|
 | Código | seu clone do Git, branch `development` |
 | Dados do time (comentários, anotações, cadastro) | OneDrive → `SWAT\ControleCargas\prototype\data` |
-| Token da API | `~/.swat/beehus.token` (só sua máquina, nunca sincroniza) |
+| Token da API | `~/.swat/beehus_cc.token` (só sua máquina, nunca sincroniza; próprio do CC desde 27/09/2026) |
 | `snapshot.json` | gerado local, não versionado |
 | Log do servidor | `prototype\.controlecargas-server.err` / `.out` |

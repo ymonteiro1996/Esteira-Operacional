@@ -23,7 +23,9 @@ compartilhado. Os 3 pontos de fan-out do projeto (db.py ×2, positions.py ×1)
 já fazem isso.
 
 Os tokens de TODAS as sessões são **persistidos a disco**
-(`~/.swat/beehus.token`, agora um dict `{sid: {token, set_at}}`) e recarregados
+(`~/.swat/beehus_cc.token`, um dict `{sid: {token, set_at}}` — arquivo PRÓPRIO do CC desde
+2026-09-27, achado A2: antes era o `beehus.token` que o beehus-swat e o conciliacao gravam no
+formato `{token, set_at}`, e cada app descartava o token do outro a cada restart) e recarregados
 no import — como o cookie de sessão sobrevive a um restart (secret_key também
 persistido, ver app.py), cada navegador volta autenticado sem precisar colar
 de novo. Deliberadamente em `~/.swat/` (mesmo diretório local, só do usuário
@@ -222,9 +224,17 @@ def _record_timing(method, path, params, status, elapsed_ms):
 
 
 def _token_path() -> Path:
+    """Contexto: arquivo onde o CC persiste as sessões. [2026-09-27, achado A2] Próprio do CC
+    (`beehus_cc.token`): o `beehus.token` é do beehus-swat/conciliacao, em outro formato."""
     d = Path.home() / ".swat"
     d.mkdir(parents=True, exist_ok=True)
-    return d / "beehus.token"
+    return d / "beehus_cc.token"
+
+
+def _token_path_compartilhado_antigo() -> Path:
+    """Contexto: o arquivo que o CC usava até 2026-09-27 (e que swat/conciliacao continuam usando).
+    O CC só o LÊ, 1 vez, para migrar as próprias sessões — nunca grava nele (achado A2)."""
+    return Path.home() / ".swat" / "beehus.token"
 
 
 # Teto de idade de uma sessão persistida — o token em si já expira em ~1 dia
@@ -276,7 +286,7 @@ def _persist_sessions() -> None:
 
 def _load_persisted_sessions() -> None:
     """Contexto:
-    Popula `_sessions` a partir de `~/.swat/beehus.token` no import do
+    Popula `_sessions` a partir de `~/.swat/beehus_cc.token` no import do
     módulo — cada sid recupera o próprio token (o cookie de sessão do
     navegador sobrevive a um restart porque app.secret_key também é
     persistido, ver app.py). Ignora silenciosamente o formato ANTIGO do
@@ -284,9 +294,15 @@ def _load_persisted_sessions() -> None:
     (expira em 1 dia), perder ele na migração custa só um re-paste único, não
     é uma regressão real. Também não recarrega sessões já além do teto de
     idade (_SESSAO_MAX_IDADE_SEGUNDOS) — evita reviver pra sempre uma sessão
-    de alguém que não usa a ferramenta há semanas. Não retorna nada."""
+    de alguém que não usa a ferramenta há semanas. Não retorna nada.
+
+    [2026-09-27, achado A2] Migração: sem o arquivo próprio ainda, lê as sessões do `beehus.token`
+    antigo QUANDO ele estiver no formato do CC (`sessions`); no formato do swat/conciliacao
+    (`token`) não há nada do CC ali. Nunca grava no arquivo antigo."""
     try:
         p = _token_path()
+        if not p.exists():
+            p = _token_path_compartilhado_antigo()
         if not p.exists():
             return
         data = json.loads(p.read_text(encoding="utf-8") or "{}")
