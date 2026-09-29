@@ -199,6 +199,9 @@ celulaPublicacaoHoraHtml(incremento, acumulado, meta, data, labelBalde){
    Chamada ao clicar no botão "Por hora" do seletor novo (ver
    ligarSeletorSubVisaoCompany() logo abaixo) e sempre que a aba Company é
    reaberta com essa sub-visão ativa. Não retorna nada.
+   [2026-09-29, pedido do usuário: "Tem que trazer o D-1 também nas matrizes"] Cada data ganha o rótulo
+   "D-n" das abas Carteiras e Controle de Cargas (rotuloDistanciaHojeHtml, matriz.js — meta.diasUteisAteHoje,
+   calendário ANBIMA, relativo ao Data D0 da tela).
 
    Pseudocódigo:
      1. Sem a tabela no DOM (sub-visão nunca aberta ainda), sai.
@@ -228,7 +231,7 @@ buildPublicacaoHoraMatrix(){
       const isRef = d===refDate;
       const isFocus = d===focusDate;
       const classe = isRef ? 'ref' : (isFocus ? 'focuscol' : '');
-      thead += `<th class="${classe}" data-date="${d}" title="Clique para ver &quot;Agrupamentos Publicados&quot; nesta data">${ControleCargas.fmtDM(d)}${isRef?'<span class="refline">▾ ref</span>':`<br><span style="font-weight:400">${ControleCargas.weekdayAbbrev(d)}</span>`}${(isFocus&&!isRef)?'<span class="focusline">● foco</span>':''}</th>`;
+      thead += `<th class="${classe}" data-date="${d}" title="Clique para ver &quot;Agrupamentos Publicados&quot; nesta data">${ControleCargas.rotuloDistanciaHojeHtml(d)}${ControleCargas.fmtDM(d)}${isRef?'<span class="refline">▾ ref</span>':`<br><span style="font-weight:400">${ControleCargas.weekdayAbbrev(d)}</span>`}${(isFocus&&!isRef)?'<span class="focusline">● foco</span>':''}</th>`;
     });
     thead += '</tr></thead>';
 

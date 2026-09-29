@@ -1768,6 +1768,7 @@ Demandas". Arquitetura aprovada pelo usuário (confirmação 2 do escopo).
   Demandas/Anomalias/Não Cadastradas não foram tocadas — `wireAbaCargas()` registra os listeners que
   faltam nelas.
 - **Rótulo D-n no cabeçalho** [2026-09-28, pedido do usuário: "replicar a lógica de D-1, D-2 da Carteiras" — "aplicar na aba Controle de Cargas"]: cada data mostra o mesmo "D-n" da aba Carteiras (`rotuloDistanciaHojeHtml`, de `meta.diasUteisAteHoje` — calendário ANBIMA, relativo ao Data D0).
+  [2026-09-29, pedido do usuário: "Tem que trazer o D-1 também nas matrizes"] O mesmo rótulo entrou nas duas matrizes da aba Company ("Por empresa" — `matriz_company.js`; "Por hora" — `matriz_publicacao_hora.js`). Com isso todas as matrizes com uma coluna por data mostram o D-n (Carteiras/Agrupamentos, Company por empresa e por hora, Controle de Cargas e a matriz de processamento das faltantes).
 - **[2026-09-28, pedido do usuário — 4 itens]**
   - **SLA como coluna (não chave)** [entrou na chave e saiu no mesmo dia — pedido do usuário: "a carência não deve
     virar chave, reverter"]: a linha continua `companyId | Instituição | Modelo | D/M`; a coluna SLA (depois de D/M)

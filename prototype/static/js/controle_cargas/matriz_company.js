@@ -79,6 +79,9 @@ celulaCompanyHtml(company, data, info){
    pelo clique numa coluna de data do cabeçalho (wireHeaderDateClicks, que
    também funciona aqui — mesmo seletor "table.matrix thead th[data-date]").
    Não retorna nada.
+   [2026-09-29, pedido do usuário: "Tem que trazer o D-1 também nas matrizes"] Cada data ganha o rótulo
+   "D-n" das abas Carteiras e Controle de Cargas (rotuloDistanciaHojeHtml, matriz.js — meta.diasUteisAteHoje,
+   calendário ANBIMA, relativo ao Data D0 da tela).
 
    Pseudocódigo:
      1. Agrega os dados (computeCompanyPublishMatrix).
@@ -108,7 +111,7 @@ buildCompanyMatrix(){
     const isRef = d===refDate;
     const isFocus = d===focusDate;
     const classe = isRef ? 'ref' : (isFocus ? 'focuscol' : '');
-    thead += `<th class="${classe}" data-date="${d}" title="Clique para ver &quot;Publicadas&quot; nesta data">${ControleCargas.fmtDM(d)}${isRef?'<span class="refline">▾ ref</span>':`<br><span style="font-weight:400">${ControleCargas.weekdayAbbrev(d)}</span>`}${(isFocus&&!isRef)?'<span class="focusline">● foco</span>':''}</th>`;
+    thead += `<th class="${classe}" data-date="${d}" title="Clique para ver &quot;Publicadas&quot; nesta data">${ControleCargas.rotuloDistanciaHojeHtml(d)}${ControleCargas.fmtDM(d)}${isRef?'<span class="refline">▾ ref</span>':`<br><span style="font-weight:400">${ControleCargas.weekdayAbbrev(d)}</span>`}${(isFocus&&!isRef)?'<span class="focusline">● foco</span>':''}</th>`;
   });
   thead += '<th class="hdr-summary">Carteiras</th></tr></thead>';
 
