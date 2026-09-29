@@ -18,6 +18,7 @@ Object.assign(ControleCargas, {
         matriz já nascer com os balões/valores corretos. */
 startWithSnapshot(data){
   ControleCargas.SNAPSHOT = data;
+  if(ControleCargas.atualizarFaixaD0) ControleCargas.atualizarFaixaD0();   // [2026-09-29] D0 da tela x do campo
   Promise.all([ControleCargas.loadComments(), ControleCargas.loadAnnotations()]).then(ControleCargas.init);
 },
 

@@ -242,9 +242,20 @@ body{
 /* Mensagem de status genérica dentro de um modal (ok/erro) — usada hoje só
    pelo modal "🔑 Beehus API" (beehus_token.js). */
 .modal-status-msg{font-size:12px;margin-top:8px;min-height:1.2em;}
-/* [2026-09-25, CC-01] faixa "D0 simulado" na toolbar quando o Data D0 difere de hoje. */
-.d0-simulado{flex-basis:100%;font-size:11.5px;font-weight:600;padding:4px 8px;border-radius:6px;background:var(--overlay-pauta-wash);color:var(--ink);}
+/* [2026-09-25, CC-01] faixa "D0 simulado" na toolbar quando o Data D0 difere de hoje.
+   [2026-09-29, pedido do usuário: "deixar um alerta ... e pintar o campo da data D0"] virou aviso
+   amarelo (mesmos tokens do nível "atenção", com tema claro/escuro) e o campo D0 alterado fica pintado. */
+.d0-simulado{flex-basis:100%;display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:12px;font-weight:600;
+  padding:6px 10px;border-radius:6px;background:var(--tier-att-bg);color:var(--tier-att-fg);
+  border:1px solid var(--overlay-div);border-left-width:4px;}
 .d0-simulado[hidden]{display:none;}
+.d0-simulado-icone{font-size:14px;line-height:1;}
+.d0-voltar-hoje{margin-left:auto;font-size:11.5px;font-weight:600;padding:2px 10px;border-radius:5px;cursor:pointer;
+  border:1px solid var(--overlay-div);background:var(--surface-raised);color:var(--ink);}
+.d0-voltar-hoje:hover{background:var(--surface-sunk);}
+.datefield input[type=date].d0-alterado{background:var(--tier-att-bg);color:var(--tier-att-fg);font-weight:700;
+  border-color:var(--overlay-div);box-shadow:0 0 0 2px var(--overlay-div);}
+.datefield.d0-alterado-rotulo{color:var(--tier-att-fg);}
 .modal-status-msg.err{color:var(--state-r1-fg);}
 .modal-status-msg.ok{color:var(--state-p-fg);}
 

@@ -19,19 +19,49 @@ d0Atual(){
   return (ControleCargas.state && ControleCargas.state.d0) || UtilsDatas.hojeISO();
 },
 
-/* Contexto: mostra/esconde a faixa "D0 simulado" conforme o D0 difere de hoje. Não retorna nada.
-   Pseudocódigo: 1. D0 == hoje -> esconde. 2. Senão mostra dd/mm + o aviso da limitação. */
+/* Contexto: linha de aviso + campo D0 pintado quando a data olhada não é o D0 de hoje. Chamada ao
+   mudar o campo e sempre que chega um snapshot (index.js / atualizar.js). Não retorna nada.
+   [2026-09-29, pedido do usuário: "deixar um alerta, uma linha de aviso que a data olhada não é D0
+   quando mudarmos a data D0, e pintar o campo da data D0 que mudamos também"] A faixa discreta
+   "D0 simulado" virou aviso amarelo com ⚠, diz também se a TELA já está calculada com esse D0 (o
+   snapshot guarda o D0 em meta.today) e traz o botão "Voltar para hoje".
+
+   Pseudocódigo:
+     1. alterado = D0 do campo != hoje -> pinta o campo (classe d0-alterado).
+     2. tela = meta.today do snapshot; atrasada = snapshot com D0 diferente do campo.
+     3. Nem alterado nem atrasada -> esconde a faixa.
+     4. Senão monta: "D0 alterado: dd/mm (hoje é dd/mm)" e/ou "a tela mostra o D0 dd/mm — clique em
+        Atualizar"; com D0 no passado, a limitação da API. */
 atualizarFaixaD0(){
   const faixa = document.getElementById('d0-simulado');
-  if(!faixa) return;
+  const campo = document.getElementById('data-d0');
   const d0 = ControleCargas.d0Atual();
-  const simulado = d0 !== UtilsDatas.hojeISO();
-  faixa.hidden = !simulado;
-  if(simulado){
-    const [a, m, d] = d0.split('-');
-    faixa.textContent = `D0 simulado: ${d}/${m}/${a} — a API devolve o estado ATUAL (sem histórico): `
-      + 'uma carga que chegou atrasada aparece como presente. Clique em Atualizar para aplicar.';
+  const hoje = UtilsDatas.hojeISO();
+  const alterado = d0 !== hoje;
+  if(campo){
+    campo.classList.toggle('d0-alterado', alterado);
+    const rotulo = campo.closest('label');
+    if(rotulo) rotulo.classList.toggle('d0-alterado-rotulo', alterado);
   }
+  if(!faixa) return;
+  const meta = ControleCargas.SNAPSHOT && ControleCargas.SNAPSHOT.meta;
+  const tela = meta && meta.today;
+  const atrasada = !!tela && tela !== d0;
+  faixa.hidden = !alterado && !atrasada;
+  if(faixa.hidden) return;
+  const br = (iso)=>{ const [a, m, d] = iso.split('-'); return `${d}/${m}/${a}`; };
+  const partes = [];
+  if(alterado) partes.push(`<b>D0 alterado: ${br(d0)}</b> (hoje é ${br(hoje)}) — a data olhada não é o D0 de hoje.`);
+  if(atrasada) partes.push(`A tela ainda mostra o D0 ${br(tela)}: clique em <b>Atualizar</b> para aplicar${alterado ? '' : ' o D0 de hoje'}.`);
+  else if(alterado) partes.push('A tela já está calculada com esse D0.');
+  if(alterado && d0 < hoje) partes.push('A API devolve o estado ATUAL (sem histórico): uma carga que chegou atrasada aparece como presente.');
+  faixa.innerHTML = `<span class="d0-simulado-icone" aria-hidden="true">⚠</span> <span>${partes.join(' ')}</span>`
+    + (alterado ? ' <button type="button" class="d0-voltar-hoje" id="d0-voltar-hoje">Voltar para hoje</button>' : '');
+  const voltar = document.getElementById('d0-voltar-hoje');
+  if(voltar && campo) voltar.addEventListener('click', ()=>{
+    campo.value = UtilsDatas.hojeISO();
+    campo.dispatchEvent(new Event('change'));
+  });
 },
 
 /* Contexto: liga o campo #data-d0 — chamada 1x no fim deste arquivo. Não retorna nada.

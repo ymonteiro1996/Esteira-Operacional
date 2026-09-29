@@ -560,6 +560,7 @@ enviarAtualizacao(){
       if(!ok) throw new Error(data.error || 'falha ao atualizar');
       ControleCargas.esconderAlertaAtualizacao();
       ControleCargas.SNAPSHOT = data;
+      if(ControleCargas.atualizarFaixaD0) ControleCargas.atualizarFaixaD0();   // [2026-09-29] "tela já calculada com esse D0"
       ControleCargas.preencherCamposLimiarDivergencia();
       // [2026-09-22, relato do usuário: "não aparece mais a company para
       // selecionar"] Um Atualizar que deu certo prova que há token válido —

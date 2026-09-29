@@ -1713,6 +1713,13 @@ campo **D0** (`#data-d0`, 1º campo da `#toolbar3`, nos dois HTMLs idênticos;
 - **D10**: abre sempre em hoje (não é salvo entre recargas); trocar o D0 reescreve De/Até com a janela
   padrão do novo D0 mas **não roda o Atualizar sozinho**; D0 diferente de hoje mostra a faixa
   **"D0 simulado: dd/mm/aaaa"** com o aviso da limitação abaixo.
+- **[2026-09-29, pedido do usuário: "deixar um alerta, uma linha de aviso que a data olhada não é D0 quando
+  mudarmos a data D0, e pintar o campo da data D0 que mudamos também"]** A faixa virou aviso amarelo com ⚠
+  ("D0 alterado: dd/mm (hoje é dd/mm) — a data olhada não é o D0 de hoje") e o campo D0 fica pintado
+  enquanto for diferente de hoje. A faixa compara também o D0 do campo com o da TELA (`meta.today` do
+  snapshot): "A tela ainda mostra o D0 dd/mm: clique em Atualizar" ou "A tela já está calculada com esse
+  D0" — e aparece mesmo depois de voltar o campo para hoje, até o Atualizar. Botão "Voltar para hoje". A
+  limitação da API só aparece com D0 no passado.
 - **Limitação**: a API Beehus devolve o estado ATUAL, sem histórico — um D0 no passado reavalia SLA e
   atraso com os dados de hoje (uma carga que chegou atrasada aparece como presente).
 - **Corrida corrigida no teste**: o preenchimento de De/Até do carregamento (feito com o D0 de hoje) às
