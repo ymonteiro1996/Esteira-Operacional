@@ -1108,6 +1108,26 @@ def montar_tooltip_celula_grouping(ativos, data, lookup_celulas):
     return {"n": len(ativos), "counts": dict(contagens), "unprocessedIds": nao_processadas}
 
 
+def marcar_publicacao_do_results(celula, grouping_id, data, nav_group_map):
+    """Contexto:
+    Grava na célula do agrupamento se ele está PUBLICADO segundo o Beehus — o campo
+    `published` de `groupingsDetailed` em GET /consolidation/nav-contribution-calculation/
+    results (mesma chamada que a esteira já faz por empresa × data; nav_group_map vem de
+    db.buscar_dados_esteira_para_datas). [2026-10-02, pedido do usuário: "Alterar rota dos
+    Painéis para .../nav-contribution-calculation/results"] É o que o painel "Agrupamentos
+    Publicados" e a matriz "Publicação por Hora" passam a contar (matriz.js,
+    agrupamentoEstaPublicadoNaData) — antes deduziam "publicado" de todas as carteiras-membro
+    estarem com processedPosition.published. Altera `celula` no lugar; não retorna nada.
+
+    Pseudocódigo:
+      1. Agrupamento presente no /results da data -> celula["pubR"] = published (bool).
+      2. Ausente (sem NAV de agrupamento calculado nesse dia) -> celula["pubR"] = False: não
+         há o que publicar ainda, então não conta como publicado.
+    """
+    navg = nav_group_map.get((grouping_id, data))
+    celula["pubR"] = bool(navg and navg.get("published"))
+
+
 def montar_celula_grouping_dia(grouping_id, data, ativos, lookup_celulas, nav_group_map):
     """Contexto:
     Monta a célula do grouping (blocos 1/2) para 1 dia da janela — junta
@@ -1285,7 +1305,9 @@ def compute_groupings_rows(agrupamentos_por_id, linhas_carteiras_por_id, registr
         for data in janela:
             ativos = [m["walletId"] for m in membros_no_registry if _membro_ativo_em(m, data)]
             max_ativos_no_dia = max(max_ativos_no_dia, len(ativos))
-            celulas.append(montar_celula_grouping_dia(grouping_id, data, ativos, lookup_celulas, nav_group_map))
+            celula = montar_celula_grouping_dia(grouping_id, data, ativos, lookup_celulas, nav_group_map)
+            marcar_publicacao_do_results(celula, grouping_id, data, nav_group_map)   # [2026-10-02] rota dos painéis
+            celulas.append(celula)
 
         ativos_na_referencia = [m for m in membros_rastreados if _membro_ativo_em(m, data_referencia)]
         chip_instituicao, contagem_instituicoes = metadados_instituicao_grouping(

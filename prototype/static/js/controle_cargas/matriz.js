@@ -917,14 +917,24 @@ agrupamentoCarteirasQueDevemPublicarNaData(grouping, data){
    do helper acima: comportamento IDÊNTICO, só reorganizado], reaproveitado
    também pela matriz "Publicação por Hora". Retorna bool.
 
+   [2026-10-02, pedido do usuário: "Alterar rota dos Painéis para .../nav-contribution-
+   calculation/results"] O "publicado" passou a vir do Beehus: a célula do agrupamento traz
+   `pubR` = campo `published` de groupingsDetailed no /results daquela data
+   (snapshot_builder.marcar_publicacao_do_results). Vale para o painel "Agrupamentos
+   Publicados" e para a matriz "Publicação por Hora". A regra antiga (todas as carteiras-membro
+   com s==='p') fica só para snapshot gerado antes desta mudança (sem `pubR`).
+
    Pseudocódigo:
      1. Sem nenhuma carteira no denominador -> não conta como publicado
         (o chamador normalmente já filtra esse caso antes de chegar aqui;
         devolve false por segurança, nunca lança exceção).
-     2. Publicado quando TODA carteira do array tem célula com s==='p'
-        nessa data. */
+     2. Célula do agrupamento com `pubR` -> é ele (o /results decide).
+     3. Snapshot antigo, sem `pubR` -> publicado quando TODA carteira do array
+        tem célula com s==='p' nessa data. */
 agrupamentoEstaPublicadoNaData(grouping, data, carteirasQueDevemPublicar){
   if(!carteirasQueDevemPublicar || !carteirasQueDevemPublicar.length) return false;
+  const celulaDoAgrupamento = ControleCargas.cellByDate(grouping)[data];
+  if(celulaDoAgrupamento && typeof celulaDoAgrupamento.pubR === 'boolean') return celulaDoAgrupamento.pubR;
   return carteirasQueDevemPublicar.every(carteira=>{
     const celula = ControleCargas.cellByDate(carteira)[data];
     return celula && celula.s === 'p';
@@ -1012,7 +1022,7 @@ buildGroupingPublishStat(){
     </div>
     <div class="publish-nums">${publicados}<span class="of"> / ${total}</span><span class="publish-caption">deveriam publicar</span></div>
     <div class="publish-meter"><div class="publish-meter-fill ${corStatus}" style="width:${larguraBarra}%"></div></div>
-    <div class="publish-scope">${escopo} · clique numa data no cabeçalho da grade pra trocar</div>
+    <div class="publish-scope">${escopo} · publicado segundo o Beehus (/results) · clique numa data no cabeçalho da grade pra trocar</div>
   `;
 },
 

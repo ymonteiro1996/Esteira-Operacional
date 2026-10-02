@@ -1548,6 +1548,22 @@ Chip de Company ao lado do nome do grouping (mesmo visual da aba Carteiras); fil
 
 ---
 
+### "Publicado" do agrupamento vem do /results [2026-10-02]
+
+**[pedido do usuário: "Alterar rota dos Painéis para `.../beehus/consolidation/nav-contribution-calculation/results?positionDate=…&companyId=…`"]**
+O painel **"Agrupamentos Publicados"** e a matriz **"Publicação por Hora"** (aba Company) contavam um agrupamento como
+publicado quando TODAS as carteiras-membro que deveriam publicar estavam com `processedPosition.published`. Agora quem
+decide é o Beehus: o campo `published` de `groupingsDetailed` no `/results` daquela data (a MESMA chamada que a esteira
+já faz por empresa × data — zero chamada nova).
+- Backend: `snapshot_builder.marcar_publicacao_do_results()` grava `pubR` (bool) em cada célula de agrupamento
+  (blocos 1–2). Agrupamento ausente do `/results` no dia (sem NAV de agrupamento calculado) = `pubR: false`.
+- Front: `agrupamentoEstaPublicadoNaData()` (matriz.js) usa `pubR`; snapshot antigo, sem o campo, cai na regra antiga.
+  O **denominador não muda** ("deveriam publicar" = agrupamentos com ao menos 1 carteira-membro ativa com mustPublish).
+  O card ganhou "publicado segundo o Beehus (/results)".
+- **Por carteira continua `processedPosition.published`** (painel "Carteiras Publicadas", matriz "Por empresa" e as
+  células `Pub`): o `/results` não traz publicação por carteira — `walletsWithNavDetailed` não tem `published`
+  (conferido ao vivo em 02/10, Oikos 28/09: 425 carteiras sem o campo; 67 agrupamentos, 53 publicados).
+
 ## Sistema de Comentários em Alertas
 
 **[pedido do usuário 2026-07-17]** Qualquer alerta/célula da matriz (carteira-dia, agrupamento-dia, ou a linha inteira) pode receber um **comentário humano** com três componentes: (a) **severidade manual** — verde / amarelo / vermelho, classificação do analista **independente** da cor calculada pelo sistema (ex.: célula vermelha automática + comentário amarelo "sabemos do atraso, fornecedor já avisou, não é crítico"); (b) **texto livre**; (c) **vigência** — data inicial e data final, **ambas pré-preenchidas com hoje**, editáveis para estender a validade.
